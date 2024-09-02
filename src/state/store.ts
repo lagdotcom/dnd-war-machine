@@ -1,9 +1,10 @@
 import { configureStore } from "@reduxjs/toolkit";
 
+import terrain from "./terrain";
 import units from "./units";
 
 export const store = configureStore({
-  reducer: { units },
+  reducer: { terrain, units },
 });
 
 export type AppStore = typeof store;

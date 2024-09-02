@@ -4,28 +4,21 @@ import { Hexagon, HexGrid, HexUtils, Layout, Text } from "react-hexgrid";
 import { HexagonProps } from "react-hexgrid/lib/Hexagon/Hexagon";
 import { useLayoutContext } from "react-hexgrid/lib/Layout";
 
-import { oddq_to_cube } from "../coord-tools";
+import { oddq_to_cube, xyTag } from "../coord-tools";
 import {
-  BlackEagleGuard,
   borders,
-  Bugbears,
-  DucalGuard,
-  EasternElves,
-  EasternGoblins,
-  Gnomes,
   hexData,
   locations,
-  Lycanthropes,
-  MenOfKelven,
-  NorthEasternGoblins,
-  Orcs,
-  positions,
-  territories,
-  ThyatianMercenaries,
-  WesternElves,
+  scenario3Units,
 } from "../data/karameikos";
 import { useAppDispatch, useAppSelector } from "../state/hooks";
-import { addUnits, selectUnits, Unit } from "../state/units";
+import {
+  getHexById,
+  HexData,
+  selectAllTerrain,
+  setTerrain,
+} from "../state/terrain";
+import { selectAllUnits, setUnits, Unit } from "../state/units";
 import { HexBorder, HexLocation, XY } from "../types";
 
 type HexagonXYProps = Omit<HexagonProps, "q" | "r" | "s"> & XY;
@@ -97,16 +90,19 @@ function getUnitRadius(troops: number) {
   return Math.min(10, Math.max(troops / 50, 4));
 }
 
-function UnitXY({ x, y, force, side, liegeTag }: Unit) {
-  const { q, r, s } = useMemo(() => oddq_to_cube({ x, y }), [x, y]);
+function UnitXY(unit: Unit) {
+  const { liegeTag, side, force } = unit;
+
+  const { q, r, s } = useMemo(() => oddq_to_cube(unit), [unit]);
   const { layout } = useLayoutContext();
   const pixel = useMemo(
     () => HexUtils.hexToPixel({ q, r, s }, layout),
     [q, r, s, layout],
   );
 
-  const inTerritoryOfLiege =
-    !!liegeTag && territories[liegeTag]?.includes(`${x},${y}`);
+  const tag = xyTag(unit);
+  const inHex = useAppSelector((state) => getHexById(state, tag));
+  const inTerritoryOfLiege = liegeTag && inHex.tags.includes(liegeTag);
 
   return (
     <g
@@ -120,110 +116,49 @@ function UnitXY({ x, y, force, side, liegeTag }: Unit) {
   );
 }
 
+function getTerrainExtents(terrain: HexData[]) {
+  if (!terrain.length) return `0 0 100 100`;
+
+  let left = Infinity;
+  let right = -Infinity;
+  let top = Infinity;
+  let bottom = -Infinity;
+
+  for (const { x, y } of terrain) {
+    left = Math.min(left, x);
+    right = Math.max(right, x);
+    top = Math.min(top, y);
+    bottom = Math.max(bottom, y);
+  }
+
+  const width = 30 + (right - left) * 15;
+  const height = 50 + (bottom - top) * 17;
+
+  // "0 -15 870 610"
+  // TODO left and top
+  return `0 -15 ${width} ${height}`;
+}
+
 export default function App() {
   const { width, height } = useWindowSize();
   const [hovered, setHovered] = useState<XY>();
+  const hoverHex = useAppSelector((state) =>
+    hovered ? getHexById(state, xyTag(hovered)) : undefined,
+  );
 
   const dispatch = useAppDispatch();
-  const units = useAppSelector(selectUnits);
+  const units = useAppSelector(selectAllUnits);
+  const hexes = useAppSelector(selectAllTerrain);
+  const viewBox = useMemo(() => getTerrainExtents(hexes), [hexes]);
 
   useEffect(() => {
-    dispatch(
-      addUnits([
-        {
-          id: BlackEagleGuard.name,
-          side: 2,
-          liegeTag: "Black Eagle",
-          type: "normal",
-          force: BlackEagleGuard,
-          ...positions["Black Eagle Guard"],
-        },
-        {
-          id: EasternGoblins.name,
-          side: 2,
-          type: "quick",
-          force: EasternGoblins,
-          ...positions["Goblins E"],
-        },
-        {
-          id: Bugbears.name,
-          side: 2,
-          type: "quick",
-          force: Bugbears,
-          ...positions["Bugbears"],
-        },
-        {
-          id: NorthEasternGoblins.name,
-          side: 2,
-          type: "quick",
-          force: NorthEasternGoblins,
-          ...positions["Goblins NE"],
-        },
-        {
-          id: Orcs.name,
-          side: 2,
-          type: "quick",
-          force: Orcs,
-          ...positions["Orcs"],
-        },
-        {
-          id: Lycanthropes.name,
-          side: 2,
-          type: "quick",
-          force: Lycanthropes,
-          ...positions["Were-creatures"],
-        },
-        {
-          id: DucalGuard.name,
-          side: 1,
-          liegeTag: "Karameikos",
-          type: "normal",
-          force: DucalGuard,
-          ...positions["Ducal Guard"],
-        },
-        {
-          id: MenOfKelven.name,
-          side: 1,
-          liegeTag: "Karameikos",
-          type: "normal",
-          force: MenOfKelven,
-          ...positions["Men of Kelven"],
-        },
-        {
-          id: WesternElves.name,
-          side: 1,
-          type: "normal",
-          force: WesternElves,
-          ...positions["Western Elves"],
-        },
-        {
-          id: Gnomes.name,
-          side: 1,
-          type: "quick",
-          force: Gnomes,
-          ...positions["Gnomes"],
-        },
-        {
-          id: EasternElves.name,
-          side: 1,
-          type: "normal",
-          force: EasternElves,
-          ...positions["Eastern Elves"],
-        },
-        {
-          id: ThyatianMercenaries.name,
-          side: 1,
-          type: "normal",
-          force: ThyatianMercenaries,
-          ...positions["Thyatian Mercenaries"],
-        },
-      ]),
-    );
+    dispatch(setTerrain(hexData));
+    dispatch(setUnits(scenario3Units));
   }, []);
 
-  const hexes = useMemo(
+  const hexElements = useMemo(
     () =>
-      hexData.map(({ x, y, terrain }, i) => (
+      hexes.map(({ x, y, terrain }, i) => (
         <HexagonXY
           key={i}
           x={x}
@@ -232,40 +167,41 @@ export default function App() {
           onMouseOver={() => setHovered({ x, y })}
         />
       )),
-    [hexData],
+    [hexes],
   );
 
-  const hexLocations = useMemo(
+  const locationElements = useMemo(
     () => locations.map((loc, i) => <LocationXY key={i} {...loc} />),
     [locations],
   );
 
-  const hexBorders = useMemo(
+  const borderElements = useMemo(
     () => borders.map((border, i) => <BorderXY key={i} {...border} />),
     [borders],
   );
 
+  const unitElements = useMemo(
+    () => units.map((u) => <UnitXY key={u.id} {...u} />),
+    [units],
+  );
+
   return (
     <>
-      {hovered && (
+      {hoverHex && (
         <div style={{ position: "absolute", fontSize: "3em" }}>
-          {hovered.x}, {hovered.y}
+          {xyTag(hoverHex)} {hoverHex.terrain} {hoverHex.tags.join(", ")}
         </div>
       )}
       <HexGrid
         width={width ?? undefined}
         height={height ?? undefined}
-        viewBox="0 -15 870 610"
+        viewBox={viewBox}
       >
         <Layout size={{ x: 10, y: 10 }}>
-          <g id="hexes">{hexes}</g>
-          <g id="borders">{hexBorders}</g>
-          <g id="locations">{hexLocations}</g>
-          <g id="units">
-            {units.ids.map((id) => (
-              <UnitXY key={id} {...units.entities[id]} />
-            ))}
-          </g>
+          <g id="hexes">{hexElements}</g>
+          <g id="borders">{borderElements}</g>
+          <g id="locations">{locationElements}</g>
+          <g id="units">{unitElements}</g>
         </Layout>
       </HexGrid>
     </>

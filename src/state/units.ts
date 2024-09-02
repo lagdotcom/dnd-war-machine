@@ -1,5 +1,6 @@
 import { createEntityAdapter, createSlice } from "@reduxjs/toolkit";
 
+import { HexTag } from "../flavours";
 import { Force, QuickForce, XY } from "../types";
 import { RootState } from "./store";
 
@@ -15,7 +16,7 @@ interface QuickUnit {
 
 export type Unit = {
   id: string;
-  liegeTag?: string;
+  liegeTag?: HexTag;
   side: number;
 } & XY &
   (NormalUnit | QuickUnit);
@@ -27,12 +28,13 @@ const unitsSlice = createSlice({
   initialState: unitsAdapter.getInitialState(),
   reducers: {
     addUnit: unitsAdapter.addOne,
-    addUnits: unitsAdapter.addMany,
+    setUnits: unitsAdapter.setAll,
     updateUnit: unitsAdapter.updateOne,
   },
 });
 
-export const { addUnit, addUnits, updateUnit } = unitsSlice.actions;
+export const { addUnit, setUnits, updateUnit } = unitsSlice.actions;
 export default unitsSlice.reducer;
 
-export const selectUnits = (state: RootState) => state.units;
+export const { selectAll: selectAllUnits } =
+  unitsAdapter.getSelectors<RootState>((s) => s.units);

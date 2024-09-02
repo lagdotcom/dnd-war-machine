@@ -79,14 +79,6 @@ export interface XY {
 
 export type XYTag = `${number},${number}`;
 
-export interface HexData extends XY {
-  terrain: string;
-  label?: {
-    type: string;
-    name: string;
-  };
-}
-
 export interface HexLocation extends XY {
   type: string;
   name: string;

@@ -1,78 +1,175 @@
-import {
-  Force,
-  HexBorder,
-  HexData,
-  HexLocation,
-  QuickForce,
-  XY,
-  XYTag,
-} from "../types";
+import { HexTag } from "../flavours";
+import { HexData } from "../state/terrain";
+import { Unit } from "../state/units";
+import { Force, HexBorder, HexLocation, QuickForce } from "../types";
+import { row, xy } from "./tools";
 
-const hex = (terrain: string, x: number, y: number): HexData => ({
-  x,
-  y,
-  terrain,
-});
-
-const conversions: Record<string, string> = {
-  h: "hill",
-  H: "mountain",
-  g: "grass",
-  w: "wood",
-  m: "marsh",
-  s: "sea",
-};
-
-function* row(y: number, x: number, data: string) {
-  for (const ch of data) {
-    const terrain = conversions[ch];
-    if (terrain) yield hex(terrain, x, y);
-    x++;
-  }
-}
-
-// square = castle
-// empty square = ruins
-// star circle = capitol
-// circle circle = city
-// circle = town
-// empty circle = village
+const rebel: HexTag = "Black Eagle";
+const loyal: HexTag = "Karameikos";
 
 export const hexData: HexData[] = [
-  ...row(0, 1, "HHHHHHhHHHHHHHHhHhHHhhhhHhHHhhhhhhhHHHHHHHHHHHhhHHHhHHHhh"),
-  ...row(1, 1, "HhHhhhhHhhHHHHHHhhHHhhhhHHHHHhhhhHHhhHHHHHhHHHhHHHHHHHHHH"),
-  ...row(2, 1, "HhHhhhhhhhhHHhhHHhHHHhhHhhhhhhHhhHHHHHHhHHhHHHhHHHHHHHhHH"),
-  ...row(3, 1, "hhhhhhhhhhHHhHhHHHhHHHHHHHHHHHHHhhHHHHHhHHhHHhhhhhhHHhHhH"),
-  ...row(4, 1, "hhhhhhhhhhhhhhHHhhHHHHHHHHHHHHHhHHHHHHhhhHhhhhhhhhHHhhHhH"),
-  ...row(5, 1, "hhhhhhggghhhhhHHhhHHHHHHHHHHHHHHHHHHHHHhhhhhhhhhhHHHHHHhh"),
-  ...row(6, 1, "hhhhggggghhhhhhhhhHhHHHHHHHhHHHHHHhhhHhhhhhhhhhhhhhhHHhHh"),
-  ...row(7, 1, "hhhhggggggghhhhhhhhhhHhHHHHhHHhHhHHHhhhhhhhhhhhhhhHHHHhhh"),
-  ...row(8, 1, "HhhhggggggghhhhhhhhhhhHHHHHhhHhHHhhHhhhhhhhhhhhhhhHHhhhhh"),
-  ...row(9, 1, "hhhhggggggggghghghhhhHHhhHHhhHhHHhhhhhhhhhhhhhhhhhHHhhhhh"),
-  ...row(10, 1, "hhhhhgwwwgggggggghhhhhhhhHhHhhhhhhhhhhhhhhhhhhhhhhHhhhhhw"),
-  ...row(11, 1, "hhghgwwwwwwghhhhhhhhhhhhhHhHHhhhhhhhhhhhhhhhhhhhhhhhhwwww"),
-  ...row(12, 1, "gggggwwwwwwwhhhhhhhhhhhhhhghhhhhhhghghghhhgghhhhhhhhhwwww"),
-  ...row(13, 1, "ggggggmwwwwwhhhhhhhhhhggggggghhhhhggggghgwggghhhhhhhhhhww"),
-  ...row(14, 1, "hgggggmmmwgwhhhhhhhhhhwgggggghwhhhggggggwwgggghhhhhhhhwww"),
-  ...row(15, 1, "gggggmmmmgggghhhhhhhhwwggggggwwwhhgggggwwgggghwwwhhhhwwww"),
-  ...row(16, 1, "ggggmmmmmgggghhhhhwhwhwwwgggwwwwwhggwwwwwgwgwwwwwhhhwwwww"),
-  ...row(17, 1, "ggsgsssmmgggghhwhhwwgwgwwwgwwwwwwggggwwwwwwwwwwwwwwwwwwww"),
-  ...row(18, 1, "ggsssssssggggghhwwwwgggggwwwwwgwggggggwwwwwwwwwwwwwwwwwww"),
-  ...row(19, 1, "ggssssssssgggghhhhgwgggggwwwggggggggggwwwwwwwwwwwwwwwwwww"),
-  ...row(20, 1, "gsssssssssggghhhhhgggggggggggggggggggwwwwwwwwwwwwwwwwwwww"),
-  ...row(21, 1, "gssssssssgggghhhgggggggggggggggggggggwwwwwwwwwwwwwwwwwwgg"),
-  ...row(22, 1, "sssssssssgggggghgggggggggggggggggggggggggwwwwwwwwwwwggggg"),
-  ...row(23, 1, "ssssssssssgggggggggggggggggggggggggggggggwwwwwwwwwwwggggg"),
-  ...row(24, 1, "sssssssssssgggggggggggggggggggggggggggggswsgswwwwwsssgsgs"),
-  ...row(25, 1, "sssssssssssssgggggggggggggggggggggggggssssssssswsssssssss"),
-  ...row(26, 1, "sssssssssssssggggggggggssssgsggggggggssssssssssssssssssss"),
-  ...row(27, 1, "ssssssssssssssggggggsssssssssggggggggggssssssssssssssssss"),
-  ...row(28, 1, "ssssssssssssssgggggggssssssssssggggggggssssssssssssssssss"),
-  ...row(29, 1, "sssssssssssssssgssggggssssssssssgggggggssssssssssssssssss"),
-  ...row(30, 1, "sssssssssssssssssssgssssssssssssgggggggssssssssssssssssss"),
-  ...row(31, 1, "sssssssssssssssssssssssssssssssggssssggssssssssssssssssss"),
-  ...row(32, 1, "sssssssssssssssssssssssssssssssggsssssgssssssssssssssssss"),
-  ...row(33, 1, "sssssssssssssssssssssssssssssssgsssssssssssssssssssssssss"),
+  ...row(0, 1, "HHHHHHhHHHHHHHHhHhHHhhhhHhHHhhhhhhhHHHHHHHHHHHhhHHHhHHHhh", [
+    loyal,
+    [10, 12],
+    [43, 53],
+  ]),
+  ...row(1, 1, "HhHhhhhHhhHHHHHHhhHHhhhhHHHHHhhhhHHhhHHHHHhHHHhHHHHHHHHHH", [
+    loyal,
+    [8, 15],
+    [41, 53],
+  ]),
+  ...row(2, 1, "HhHhhhhhhhhHHhhHHhHHHhhHhhhhhhHhhHHHHHHhHHhHHHhHHHHHHHhHH", [
+    loyal,
+    [6, 16],
+    [39, 53],
+  ]),
+  ...row(3, 1, "hhhhhhhhhhHHhHhHHHhHHHHHHHHHHHHHhhHHHHHhHHhHHhhhhhhHHhHhH", [
+    loyal,
+    [6, 18],
+    [37, 53],
+  ]),
+  ...row(4, 1, "hhhhhhhhhhhhhhHHhhHHHHHHHHHHHHHhHHHHHHhhhHhhhhhhhhHHhhHhH", [
+    loyal,
+    [6, 21],
+    [35, 53],
+  ]),
+  ...row(5, 1, "hhhhhhggghhhhhHHhhHHHHHHHHHHHHHHHHHHHHHhhhhhhhhhhHHHHHHhh", [
+    loyal,
+    [6, 53],
+  ]),
+  ...row(6, 1, "hhhhggggghhhhhhhhhHhHHHHHHHhHHHHHHhhhHhhhhhhhhhhhhhhHHhHh", [
+    loyal,
+    [6, 53],
+  ]),
+  ...row(7, 1, "hhhhggggggghhhhhhhhhhHhHHHHhHHhHhHHHhhhhhhhhhhhhhhHHHHhhh", [
+    loyal,
+    [6, 53],
+  ]),
+  ...row(8, 1, "HhhhggggggghhhhhhhhhhhHHHHHhhHhHHhhHhhhhhhhhhhhhhhHHhhhhh", [
+    loyal,
+    [6, 53],
+  ]),
+  ...row(9, 1, "hhhhggggggggghghghhhhHHhhHHhhHhHHhhhhhhhhhhhhhhhhhHHhhhhh", [
+    loyal,
+    [6, 53],
+  ]),
+  ...row(10, 1, "hhhhhgwwwgggggggghhhhhhhhHhHhhhhhhhhhhhhhhhhhhhhhhHhhhhhw", [
+    loyal,
+    [6, 53],
+  ]),
+  ...row(11, 1, "hhghgwwwwwwghhhhhhhhhhhhhHhHHhhhhhhhhhhhhhhhhhhhhhhhhwwww", [
+    loyal,
+    [6, 57],
+  ]),
+  ...row(12, 1, "gggggwwwwwwwhhhhhhhhhhhhhhghhhhhhhghghghhhgghhhhhhhhhwwww", [
+    loyal,
+    [6, 57],
+  ]),
+  ...row(13, 1, "ggggggmwwwwwhhhhhhhhhhggggggghhhhhggggghgwggghhhhhhhhhhww", [
+    loyal,
+    [6, 57],
+  ]),
+  ...row(14, 1, "hgggggmmmwgwhhhhhhhhhhwgggggghwhhhggggggwwgggghhhhhhhhwww", [
+    loyal,
+    [6, 57],
+  ]),
+  ...row(15, 1, "gggggmmmmgggghhhhhhhhwwggggggwwwhhgggggwwgggghwwwhhhhwwww", [
+    loyal,
+    [6, 57],
+  ]),
+  ...row(
+    16,
+    1,
+    "ggggmmmmmgggghhhhhwhwhwwwgggwwwwwhggwwwwwgwgwwwwwhhhwwwww",
+    [rebel, 13],
+    [loyal, [6, 12], [14, 57]],
+  ),
+  ...row(
+    17,
+    1,
+    "ggsgsssmmgggghhwhhwwgwgwwwgwwwwwwggggwwwwwwwwwwwwwwwwwwww",
+    [rebel, [8, 13]],
+    [loyal, [14, 57]],
+  ),
+  ...row(
+    18,
+    1,
+    "ggsssssssggggghhwwwwgggggwwwwwgwggggggwwwwwwwwwwwwwwwwwww",
+    [rebel, [10, 13]],
+    [loyal, [14, 57]],
+  ),
+  ...row(
+    19,
+    1,
+    "ggssssssssgggghhhhgwgggggwwwggggggggggwwwwwwwwwwwwwwwwwww",
+    [rebel, 11, 12],
+    [loyal, [13, 57]],
+  ),
+  ...row(
+    20,
+    1,
+    "gsssssssssggghhhhhgggggggggggggggggggwwwwwwwwwwwwwwwwwwww",
+    [rebel, 11, 12],
+    [loyal, [13, 57]],
+  ),
+  ...row(
+    21,
+    1,
+    "gssssssssgggghhhgggggggggggggggggggggwwwwwwwwwwwwwwwwwwgg",
+    [rebel, [10, 12]],
+    [loyal, [13, 56]],
+  ),
+  ...row(
+    22,
+    1,
+    "sssssssssgggggghgggggggggggggggggggggggggwwwwwwwwwwwggggg",
+    [rebel, 10],
+    [loyal, [11, 54]],
+  ),
+  ...row(23, 1, "ssssssssssgggggggggggggggggggggggggggggggwwwwwwwwwwwggggg", [
+    loyal,
+    [6, 53],
+  ]),
+  ...row(24, 1, "sssssssssssgggggggggggggggggggggggggggggswsgswwwwwsssgsgs", [
+    loyal,
+    [6, 53],
+  ]),
+  ...row(25, 1, "sssssssssssssgggggggggggggggggggggggggssssssssswsssssssss", [
+    loyal,
+    [6, 53],
+  ]),
+  ...row(26, 1, "sssssssssssssggggggggggssssgsggggggggssssssssssssssssssss", [
+    loyal,
+    [6, 53],
+  ]),
+  ...row(27, 1, "ssssssssssssssggggggsssssssssggggggggggssssssssssssssssss", [
+    loyal,
+    [6, 53],
+  ]),
+  ...row(28, 1, "ssssssssssssssgggggggssssssssssggggggggssssssssssssssssss", [
+    loyal,
+    [6, 53],
+  ]),
+  ...row(29, 1, "sssssssssssssssgssggggssssssssssgggggggssssssssssssssssss", [
+    loyal,
+    [6, 53],
+  ]),
+  ...row(30, 1, "sssssssssssssssssssgssssssssssssgggggggssssssssssssssssss", [
+    loyal,
+    [6, 53],
+  ]),
+  ...row(31, 1, "sssssssssssssssssssssssssssssssggssssggssssssssssssssssss", [
+    loyal,
+    [6, 53],
+  ]),
+  ...row(32, 1, "sssssssssssssssssssssssssssssssggsssssgssssssssssssssssss", [
+    loyal,
+    [6, 53],
+  ]),
+  ...row(33, 1, "sssssssssssssssssssssssssssssssgsssssssssssssssssssssssss", [
+    loyal,
+    [6, 53],
+  ]),
 ];
 
 export const locations: HexLocation[] = [
@@ -86,32 +183,6 @@ export const locations: HexLocation[] = [
   { x: 26, y: 25, type: "castle", name: "Estate of Marilenev" },
   { x: 28, y: 26, type: "capitol", name: "Specularum" },
 ];
-
-export const territories: Record<string, XYTag[]> = {
-  "Black Eagle": [
-    "13,16",
-    "8,17",
-    "9,17",
-    "10,17",
-    "11,17",
-    "12,17",
-    "10,18",
-    "11,18",
-    "12,18",
-    "13,18",
-    "11,19",
-    "12,19",
-    "11,20",
-    "12,20",
-    "10,21",
-    "11,21",
-    "12,21",
-    "10,22",
-  ],
-  Karameikos: [
-    /// TODO OH GOD SO MUCH
-  ],
-};
 
 const border = (
   x: number,
@@ -136,9 +207,81 @@ export const borders = [
   border(12, 21, 5, 8),
   border(11, 21, 0, 2),
   border(10, 22, 0, 2),
-];
 
-const xy = (x: number, y: number): XY => ({ x, y });
+  // Grand Duchy of Karameikos
+  border(6, 16, 2, 4, 2),
+  border(6, 15, 2, 4, 2),
+  border(6, 14, 2, 4, 2),
+  border(6, 13, 2, 4, 2),
+  border(6, 12, 2, 4, 2),
+  border(6, 11, 2, 4, 2),
+  border(6, 10, 2, 4, 2),
+  border(6, 9, 2, 4, 2),
+  border(6, 8, 2, 4, 2),
+  border(6, 7, 2, 4, 2),
+  border(6, 6, 2, 4, 2),
+  border(6, 5, 2, 4, 2),
+  border(6, 4, 2, 4, 2),
+  border(6, 3, 2, 4, 2),
+  border(6, 2, 2, 5, 2),
+  border(7, 1, 3, 5, 2),
+  border(8, 1, 3, 5, 2),
+  border(9, 0, 3, 5, 2),
+  border(10, 0, 3, 5, 2),
+  border(12, 0, 4, 6, 2),
+  border(13, 0, 4, 6, 2),
+  border(14, 1, 4, 6, 2),
+  border(15, 1, 4, 6, 2),
+  border(16, 2, 4, 6, 2),
+  border(17, 2, 4, 6, 2),
+  border(18, 3, 4, 6, 2),
+  border(19, 3, 4, 6, 2),
+  border(20, 4, 4, 6, 2),
+  border(21, 4, 4, 6, 2),
+  border(22, 5, 4, 6, 2),
+  border(23, 5, 4, 5, 2),
+  border(24, 5, 3, 6, 2),
+  border(25, 5, 4, 5, 2),
+  border(26, 5, 3, 6, 2),
+  border(27, 5, 4, 5, 2),
+  border(28, 5, 3, 6, 2),
+  border(29, 5, 4, 5, 2),
+  border(30, 5, 3, 6, 2),
+  border(31, 5, 4, 5, 2),
+  border(32, 5, 3, 6, 2),
+  border(33, 5, 4, 5, 2),
+  border(34, 5, 3, 5, 2),
+  border(35, 4, 3, 5, 2),
+  border(36, 4, 3, 5, 2),
+  border(37, 3, 3, 5, 2),
+  border(38, 3, 3, 5, 2),
+  border(39, 2, 3, 5, 2),
+  border(40, 2, 3, 5, 2),
+  border(41, 1, 3, 5, 2),
+  border(42, 1, 3, 5, 2),
+  border(43, 0, 3, 5, 2),
+  border(53, 0, 5, 7, 2),
+  border(53, 1, 5, 7, 2),
+  border(53, 2, 5, 7, 2),
+  border(53, 3, 5, 7, 2),
+  border(53, 4, 5, 7, 2),
+  border(53, 5, 5, 7, 2),
+  border(53, 6, 5, 7, 2),
+  border(53, 7, 5, 7, 2),
+  border(53, 8, 5, 7, 2),
+  border(53, 9, 5, 7, 2),
+  border(53, 10, 5, 6, 2),
+  border(54, 11, 4, 6, 2),
+  border(55, 11, 4, 5, 2),
+  border(56, 11, 3, 6, 2),
+  border(57, 11, 4, 5, 2),
+  border(57, 20, 0, 2, 2),
+  border(56, 21, 0, 2, 2),
+  border(55, 21, 0, 2, 2),
+  border(54, 22, 0, 2, 2),
+  border(53, 22, 0, 1, 2),
+  border(53, 23, 5, 7, 2),
+];
 
 export const positions = {
   "Black Eagle Guard": xy(11, 19),
@@ -249,7 +392,7 @@ Gnomes
 Eastern Elves
 Thyatian Mercenaries
 
-For this scenario, the Eastern Elves are all equipped with silver weapons, Thyatian mer¬ cenaries start on the coast road, at the border of the Grand Duchy. Lycanthropes begin at Wereskalot.
+For this scenario, the Eastern Elves are all equipped with silver weapons, Thyatian mercenaries start on the coast road, at the border of the Grand Duchy. Lycanthropes begin at Wereskalot.
 */
 
 const Average = 5;
@@ -465,3 +608,93 @@ export const Lycanthropes: QuickForce = {
   hasArchers: true,
   hasMagicalBeings: true,
 };
+
+export const scenario3Units: Unit[] = [
+  {
+    id: BlackEagleGuard.name,
+    side: 2,
+    liegeTag: rebel,
+    type: "normal",
+    force: BlackEagleGuard,
+    ...positions["Black Eagle Guard"],
+  },
+  {
+    id: EasternGoblins.name,
+    side: 2,
+    type: "quick",
+    force: EasternGoblins,
+    ...positions["Goblins E"],
+  },
+  {
+    id: Bugbears.name,
+    side: 2,
+    type: "quick",
+    force: Bugbears,
+    ...positions["Bugbears"],
+  },
+  {
+    id: NorthEasternGoblins.name,
+    side: 2,
+    type: "quick",
+    force: NorthEasternGoblins,
+    ...positions["Goblins NE"],
+  },
+  {
+    id: Orcs.name,
+    side: 2,
+    type: "quick",
+    force: Orcs,
+    ...positions["Orcs"],
+  },
+  {
+    id: Lycanthropes.name,
+    side: 2,
+    type: "quick",
+    force: Lycanthropes,
+    ...positions["Were-creatures"],
+  },
+  {
+    id: DucalGuard.name,
+    side: 1,
+    liegeTag: loyal,
+    type: "normal",
+    force: DucalGuard,
+    ...positions["Ducal Guard"],
+  },
+  {
+    id: MenOfKelven.name,
+    side: 1,
+    liegeTag: loyal,
+    type: "normal",
+    force: MenOfKelven,
+    ...positions["Men of Kelven"],
+  },
+  {
+    id: WesternElves.name,
+    side: 1,
+    type: "normal",
+    force: WesternElves,
+    ...positions["Western Elves"],
+  },
+  {
+    id: Gnomes.name,
+    side: 1,
+    type: "quick",
+    force: Gnomes,
+    ...positions["Gnomes"],
+  },
+  {
+    id: EasternElves.name,
+    side: 1,
+    type: "normal",
+    force: EasternElves,
+    ...positions["Eastern Elves"],
+  },
+  {
+    id: ThyatianMercenaries.name,
+    side: 1,
+    type: "normal",
+    force: ThyatianMercenaries,
+    ...positions["Thyatian Mercenaries"],
+  },
+];

@@ -5,7 +5,7 @@ import { config as loadDotEnvConfig } from "dotenv";
 const envConfig = loadDotEnvConfig();
 const define = {
   [`process.env.APP_BUILD_VERSION`]: JSON.stringify(
-    process.env.npm_package_version
+    process.env.npm_package_version,
   ),
 };
 
@@ -15,7 +15,7 @@ if (envConfig.parsed) {
   console.log(`[env] loaded ${Object.keys(define).length} values`);
 } else
   console.warn(
-    `[env] failed to load, ${envConfig.error?.message ?? "unknown error"}`
+    `[env] failed to load, ${envConfig.error?.message ?? "unknown error"}`,
   );
 
 /** @type {import('esbuild').BuildOptions} */

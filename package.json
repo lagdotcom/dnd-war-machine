@@ -5,7 +5,7 @@
   "author": "Paul Davies <lagdotcom@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "lint": "eslint .",
+    "lint": "eslint src",
     "build": "node scripts/build.mjs",
     "watch": "node scripts/watch.mjs",
     "start": "node scripts/watch.mjs",
@@ -25,6 +25,7 @@
     "eslint": "^9.8.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
+    "eslint-plugin-react": "^7.35.0",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "prettier": "^3.3.3",
     "react": "^18.3.1",

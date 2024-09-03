@@ -9,6 +9,7 @@
     "build": "node scripts/build.mjs",
     "watch": "node scripts/watch.mjs",
     "start": "node scripts/watch.mjs",
+    "start-prod": "node scripts/watch.mjs production",
     "fotbe": "ts-node src/FallOfTheBlackEagle.ts"
   },
   "devDependencies": {
@@ -20,6 +21,7 @@
     "@types/react-dom": "^18.3.0",
     "@uidotdev/usehooks": "^2.4.1",
     "arcsecond": "^5.0.0",
+    "classnames": "^2.5.1",
     "dotenv": "^16.4.5",
     "esbuild": "^0.23.1",
     "eslint": "^9.8.0",

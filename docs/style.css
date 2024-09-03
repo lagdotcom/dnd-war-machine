@@ -1,0 +1,143 @@
+html,
+head,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+#app {
+  display: flex;
+  overflow: hidden;
+}
+
+.hexagon polygon {
+  stroke: #666;
+  stroke-width: 0.5px;
+}
+.hexagon polygon:hover {
+  filter: brightness(1.2);
+}
+
+.beach polygon {
+  fill: #fff899;
+}
+.deepsea polygon {
+  fill: #6699cc;
+}
+.forest polygon {
+  fill: #4f9e44;
+}
+.grass polygon {
+  fill: #9fd66b;
+}
+.grassland polygon {
+  fill: #e5f29b;
+}
+.hill polygon {
+  fill: #e8ce59;
+}
+.lake polygon {
+  fill: #99ccff;
+}
+.marsh polygon {
+  fill: #84ce93;
+}
+.mountain polygon {
+  fill: #c68e00;
+}
+.sea polygon {
+  fill: #8cb2d8;
+}
+.swamp polygon {
+  fill: #addda5;
+}
+.wood polygon {
+  fill: #7ab244;
+}
+
+.border {
+  stroke: red;
+  pointer-events: none;
+}
+
+.coord {
+  font-family: "Courier New", Courier, monospace;
+  font-size: 3px;
+  pointer-events: none;
+  user-select: none;
+}
+
+.location {
+  font-size: 5px;
+  font-weight: bold;
+  stroke: white;
+  paint-order: stroke;
+  pointer-events: none;
+  user-select: none;
+}
+
+.unit {
+  filter: drop-shadow(0 0 2px black);
+}
+.unit.selected {
+  filter: brightness(1.2) drop-shadow(0 0 6px black);
+}
+
+.unit circle {
+  stroke: white;
+}
+.unit text {
+  font-size: 5px;
+  font-weight: bold;
+  stroke: white;
+  paint-order: stroke;
+  pointer-events: none;
+  user-select: none;
+}
+
+.unit.side-1 circle {
+  fill: green;
+  cursor: pointer;
+}
+.unit.side-1 text {
+  fill: #020;
+  stroke: #dfd;
+}
+
+.unit.side-2 circle {
+  fill: red;
+  cursor: not-allowed;
+}
+.unit.side-2 text {
+  fill: #200;
+  stroke: #fdd;
+}
+
+.unit.in-liege circle {
+  stroke: gold;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  row-gap: 2px;
+  border: 2px solid silver;
+  background-color: white;
+  padding: 4px;
+}
+
+.unit-views {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  row-gap: 4px;
+  margin: 4px;
+}
+
+.unit-view .name {
+  font-size: 1.1em;
+  font-weight: bold;
+}

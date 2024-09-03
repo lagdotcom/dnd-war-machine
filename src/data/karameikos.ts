@@ -587,7 +587,7 @@ export const EasternGoblins: QuickForce = {
   name: "Goblins E",
   numberOfTroops: 300,
   leaderLevel: 3,
-  averageHitDice: 1.1,
+  averageHitDice: [1, 1],
   highestMaximumDamagePerRound: 6,
 };
 
@@ -595,7 +595,7 @@ export const NorthEasternGoblins: QuickForce = {
   name: "Goblins NE",
   numberOfTroops: 300,
   leaderLevel: 3,
-  averageHitDice: 1.1,
+  averageHitDice: [1, 1],
   highestMaximumDamagePerRound: 6,
 };
 

@@ -25,11 +25,13 @@ export interface Force {
   averageMovement: number;
 }
 
+export type HitDice = number | [dice: number, bonus: number];
+
 export interface QuickForce {
   name: string;
   numberOfTroops: number;
   leaderLevel: number;
-  averageHitDice: number;
+  averageHitDice: HitDice;
   hasArchers?: boolean;
   hasSpellcasters?: boolean;
   hasMagicalBeings?: boolean;

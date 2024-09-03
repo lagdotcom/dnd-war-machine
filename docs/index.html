@@ -4,76 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>War Machine Test</title>
-  <style>
-html, head, body {
-  margin: 0;
-  padding: 0;
-}
-
-#app {
-  display: flex;
-  overflow: hidden;
-}
-
-.hexagon polygon {
-  stroke: #666;
-  stroke-width: 0.5px;
-}
-.hexagon polygon:hover {
-  filter: brightness(1.2);
-}
-
-.beach polygon { fill: #FFF899; }
-.deepsea polygon { fill: #6699CC; }
-.forest polygon { fill: #4F9E44; }
-.grass polygon { fill: #9FD66B; }
-.grassland polygon { fill: #E5F29B; }
-.hill polygon { fill: #E8CE59; }
-.lake polygon { fill: #99CCFF; }
-.marsh polygon { fill: #84CE93; }
-.mountain polygon { fill: #C68E00; }
-.sea polygon { fill: #8CB2D8; }
-.swamp polygon { fill: #ADDDA5; }
-.wood polygon { fill: #7AB244; }
-
-.border { stroke: red; pointer-events: none; }
-
-.coord {
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 3px;
-  pointer-events: none;
-  user-select: none;
-}
-
-.location {
-  font-size: 5px;
-  font-weight: bold;
-  stroke: white;
-  paint-order: stroke;
-  pointer-events: none;
-  user-select: none;
-}
-
-.unit circle {
-  stroke: white;
-}
-.unit text {
-  font-size: 5px;
-  font-weight: bold;
-  stroke: white;
-  paint-order: stroke;
-  pointer-events: none;
-  user-select: none;
-}
-
-.unit.side-1 circle { fill: green; cursor: pointer; }
-.unit.side-1 text { fill: #020; stroke: #dfd; }
-
-.unit.side-2 circle { fill: red; cursor: not-allowed; }
-.unit.side-2 text { fill: #200; stroke: #fdd; }
-
-.unit.in-liege circle { stroke: gold; }
-</style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div id="app"></div>

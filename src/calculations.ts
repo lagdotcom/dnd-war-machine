@@ -1,4 +1,4 @@
-import { Force, QuickForce, Situation } from "./types";
+import { Force, HitDice, QuickForce, Situation } from "./types";
 
 export class BasicForceRater {
   ratings: Map<string, number>;
@@ -187,12 +187,13 @@ export class QuickBattleRater {
     return this.total;
   }
 
-  hitDiceFactor(hd: number) {
-    if (hd < 1) return 20;
-    if (hd < 3) return 30;
-    if (hd < 5) return 40;
-    if (hd < 7) return 55;
-    if (hd < 9) return 65;
+  hitDiceFactor(hd: HitDice) {
+    const dice = typeof hd === "number" ? hd : hd[0];
+    if (dice < 1) return 20;
+    if (dice < 3) return 30;
+    if (dice < 5) return 40;
+    if (dice < 7) return 55;
+    if (dice < 9) return 65;
     return 80;
   }
 

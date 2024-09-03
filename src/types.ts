@@ -1,21 +1,33 @@
+import {
+  AbilityBonus,
+  ArmourClass,
+  CartesianCoord,
+  Damage,
+  ExperienceLevel,
+  Months,
+  Percentage,
+  Ratio,
+  Weeks,
+} from "./flavours";
+
 export interface Force {
   name: string;
   numberOfTroops: number;
-  leaderLevel: number;
-  leaderAbilityBonus: number;
-  percentageNameLevelChar: number;
-  averageOfficerLevel: number;
-  averageTroopLevel: number;
-  weeksTraining: number;
-  weeksTrainingWithLeader: number;
-  monthsTogether: number;
+  leaderLevel: ExperienceLevel;
+  leaderAbilityBonus: AbilityBonus;
+  percentageNameLevelChar: Percentage;
+  averageOfficerLevel: ExperienceLevel;
+  averageTroopLevel: ExperienceLevel;
+  weeksTraining: Weeks;
+  weeksTrainingWithLeader: Weeks;
+  monthsTogether: Months;
   pastVictories: number;
   pastRouts: number;
   weaponsQuality: number;
   weaponsPerTroop: number;
-  averageAC: number;
+  averageAC: ArmourClass;
   demihuman?: boolean;
-  percentageSpecial: number;
+  percentageSpecial: Percentage;
   missileTroops: number;
   longRangeMissileTroops: number;
   magicalTroops: number;
@@ -30,17 +42,17 @@ export type HitDice = number | [dice: number, bonus: number];
 export interface QuickForce {
   name: string;
   numberOfTroops: number;
-  leaderLevel: number;
+  leaderLevel: ExperienceLevel;
   averageHitDice: HitDice;
   hasArchers?: boolean;
   hasSpellcasters?: boolean;
   hasMagicalBeings?: boolean;
   hasFlyingBeings?: boolean;
-  highestMaximumDamagePerRound: number;
+  highestMaximumDamagePerRound: Damage;
 }
 
 export interface Situation {
-  troopRatio: number;
+  troopRatio: Ratio;
 
   inDominionOfLiege?: boolean;
   haveBeatenFoeBefore?: boolean;
@@ -61,33 +73,22 @@ export interface Situation {
   shiftingGround?: boolean;
 
   isDefender?: boolean;
-  percentFlyingAttackers: number;
+  percentFlyingAttackers: Percentage;
   defendingInPlace?: boolean;
   defendingNarrowDefile?: boolean;
   attackerMustCrossDeepWater?: boolean;
   defendingInMountainsHillsRoughTerrainOrBehindWall?: boolean;
   defendingStronghold?: boolean;
 
-  percentImmuneToEnemyAttacks: number;
+  percentImmuneToEnemyAttacks: Percentage;
 
   moderatelyFatigued?: boolean;
   seriouslyFatigued?: boolean;
 }
 
 export interface XY {
-  x: number;
-  y: number;
+  x: CartesianCoord;
+  y: CartesianCoord;
 }
 
-export type XYTag = `${number},${number}`;
-
-export interface HexLocation extends XY {
-  type: string;
-  name: string;
-}
-
-export interface HexBorder extends XY {
-  thickness: number;
-  start: number;
-  end: number;
-}
+export type XYTag = `${CartesianCoord},${CartesianCoord}`;

@@ -1,15 +1,16 @@
+import { CubicCoord } from "./flavours";
 import { XY, XYTag } from "./types";
 
-export function cube_to_oddq({ q, r }: { q: number; r: number }) {
+export function cube_to_oddq({ q, r }: { q: CubicCoord; r: CubicCoord }) {
   const x = q;
   const y = r + (q - (q & 1)) / 2;
   return { x, y };
 }
 
 export function oddq_to_cube({ x, y }: XY) {
-  const q = x;
-  const r = y - (x - (x & 1)) / 2;
-  const s = -q - r;
+  const q = x as CubicCoord;
+  const r = (y - (x - (x & 1)) / 2) as CubicCoord;
+  const s = (-q - r) as CubicCoord;
   return { q, r, s };
 }
 

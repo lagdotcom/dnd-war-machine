@@ -1,10 +1,8 @@
 import { useWindowSize } from "@uidotdev/usehooks";
-import classNames from "classnames";
-import { StrictMode, useCallback, useEffect, useMemo, useState } from "react";
-import { Hexagon, HexGrid, HexUtils, Layout, Text } from "react-hexgrid";
-import { useLayoutContext } from "react-hexgrid/lib/Layout";
+import { useEffect, useMemo, useState } from "react";
+import { HexGrid, Layout } from "react-hexgrid";
 
-import { oddq_to_cube, xyTag } from "../coord-tools";
+import { xyTag } from "../coord-tools";
 import {
   borders,
   hexData,
@@ -12,133 +10,22 @@ import {
   scenario3Units,
 } from "../data/karameikos";
 import { useClearableState } from "../hooks";
+import { setBorders } from "../state/borders";
 import { useAppDispatch, useAppSelector } from "../state/hooks";
+import { setLocations } from "../state/locations";
 import {
   getHexById,
   HexData,
   selectAllTerrain,
   setTerrain,
 } from "../state/terrain";
-import { selectAllUnits, setUnits, Unit } from "../state/units";
-import { HexBorder, HexLocation, XY } from "../types";
+import { setUnits, Unit } from "../state/units";
+import { XY } from "../types";
+import BorderLayer from "./BorderLayer";
+import HexLayer from "./HexLayer";
+import LocationLayer from "./LocationLayer";
+import UnitLayer from "./UnitLayer";
 import UnitView from "./UnitView";
-
-type HexagonProps = Parameters<typeof Hexagon>[0];
-type HexagonXYProps = Omit<HexagonProps, "q" | "r" | "s"> & XY;
-
-function HexagonXY({ x, y, children, ...props }: HexagonXYProps) {
-  const { q, r, s } = useMemo(() => oddq_to_cube({ x, y }), [x, y]);
-  return (
-    <Hexagon q={q} r={r} s={s} {...props}>
-      {children}
-    </Hexagon>
-  );
-}
-
-function LocationXY({ x, y, type, name }: HexLocation) {
-  const { q, r, s } = useMemo(() => oddq_to_cube({ x, y }), [x, y]);
-  const { layout } = useLayoutContext();
-  const pixel = useMemo(
-    () => HexUtils.hexToPixel({ q, r, s }, layout),
-    [q, r, s, layout],
-  );
-
-  return (
-    <g
-      className={classNames("location", type)}
-      transform={`translate(${pixel.x},${pixel.y})`}
-    >
-      <Text>{name}</Text>
-    </g>
-  );
-}
-
-function BorderXY({ x, y, thickness, start, end }: HexBorder) {
-  const { q, r, s } = useMemo(() => oddq_to_cube({ x, y }), [x, y]);
-  const { layout, points } = useLayoutContext();
-
-  const linePoints = useMemo(() => {
-    const positionPoints = points
-      .split(" ")
-      .map((p) => p.split(","))
-      .map(([px, py]) => ({ x: Number(px), y: Number(py) }));
-
-    const linePoints: string[] = [];
-
-    for (let s = start; s <= end; s++) {
-      const pp = positionPoints[s % 6];
-      linePoints.push(`${pp.x},${pp.y}`);
-    }
-
-    return linePoints.join(" ");
-  }, [points, start, end]);
-
-  const pixel = useMemo(
-    () => HexUtils.hexToPixel({ q, r, s }, layout),
-    [q, r, s, layout],
-  );
-
-  return (
-    <g className="border" transform={`translate(${pixel.x},${pixel.y})`}>
-      <polyline
-        points={linePoints}
-        fill="transparent"
-        strokeWidth={thickness}
-      />
-    </g>
-  );
-}
-
-function getUnitRadius(troops: number) {
-  return Math.min(10, Math.max(troops / 50, 4));
-}
-
-function UnitXY({
-  selected,
-  unit,
-  onClick,
-  onHover,
-  onHoverEnd,
-}: {
-  selected?: boolean;
-  unit: Unit;
-  onClick?: (unit: Unit) => void;
-  onHover?: (unit: Unit) => void;
-  onHoverEnd?: (unit: Unit) => void;
-}) {
-  const { liegeTag, side, force } = unit;
-  const click = useCallback(() => onClick?.(unit), [onClick, unit]);
-  const mouseEnter = useCallback(() => onHover?.(unit), [onHover, unit]);
-  const mouseLeave = useCallback(() => onHoverEnd?.(unit), [onHoverEnd, unit]);
-
-  const { q, r, s } = useMemo(() => oddq_to_cube(unit), [unit]);
-  const { layout } = useLayoutContext();
-  const pixel = useMemo(
-    () => HexUtils.hexToPixel({ q, r, s }, layout),
-    [q, r, s, layout],
-  );
-
-  const tag = xyTag(unit);
-  const inHex = useAppSelector((state) => getHexById(state, tag));
-  const inTerritoryOfLiege = liegeTag && inHex.tags.includes(liegeTag);
-
-  return (
-    <g
-      className={classNames("unit", `side-${side}`, {
-        "in-liege": inTerritoryOfLiege,
-        selected,
-      })}
-      transform={`translate(${pixel.x},${pixel.y})`}
-      onClick={click}
-      onMouseEnter={mouseEnter}
-      onMouseLeave={mouseLeave}
-    >
-      <circle x={0} y={0} r={getUnitRadius(force.numberOfTroops)} />
-      <Text y="1.25em">{force.name} </Text>
-      {inTerritoryOfLiege && <Text>👑</Text>}
-    </g>
-  );
-}
 
 function getTerrainExtents(terrain: HexData[]) {
   if (!terrain.length) return `0 0 100 100`;
@@ -174,57 +61,18 @@ export default function App() {
   const [clickUnit, setClickUnit, clearClickUnit] = useClearableState<Unit>();
 
   const dispatch = useAppDispatch();
-  const units = useAppSelector(selectAllUnits);
   const hexes = useAppSelector(selectAllTerrain);
   const viewBox = useMemo(() => getTerrainExtents(hexes), [hexes]);
 
   useEffect(() => {
     dispatch(setTerrain(hexData));
+    dispatch(setBorders(borders));
+    dispatch(setLocations(locations));
     dispatch(setUnits(scenario3Units));
   }, []);
 
-  const hexElements = useMemo(
-    () =>
-      hexes.map(({ x, y, terrain }, i) => (
-        <HexagonXY
-          key={i}
-          x={x}
-          y={y}
-          className={terrain}
-          onClick={clearClickUnit}
-          onMouseOver={() => setHoverXY({ x, y })}
-        />
-      )),
-    [hexes, clearClickUnit, setHoverXY],
-  );
-
-  const locationElements = useMemo(
-    () => locations.map((loc, i) => <LocationXY key={i} {...loc} />),
-    [locations],
-  );
-
-  const borderElements = useMemo(
-    () => borders.map((border, i) => <BorderXY key={i} {...border} />),
-    [borders],
-  );
-
-  const unitElements = useMemo(
-    () =>
-      units.map((u) => (
-        <UnitXY
-          key={u.id}
-          unit={u}
-          selected={clickUnit === u}
-          onHover={setHoverUnit}
-          onHoverEnd={clearHoverUnit}
-          onClick={setClickUnit}
-        />
-      )),
-    [units, clickUnit],
-  );
-
   return (
-    <StrictMode>
+    <>
       {hoverHex && (
         <div
           className="panel"
@@ -249,12 +97,17 @@ export default function App() {
         viewBox={viewBox}
       >
         <Layout size={{ x: 10, y: 10 }}>
-          <g id="hexes">{hexElements}</g>
-          <g id="borders">{borderElements}</g>
-          <g id="locations">{locationElements}</g>
-          <g id="units">{unitElements}</g>
+          <HexLayer onClick={clearClickUnit} onHover={setHoverXY} />
+          <BorderLayer />
+          <LocationLayer />
+          <UnitLayer
+            selected={clickUnit}
+            onClick={setClickUnit}
+            onHover={setHoverUnit}
+            onHoverEnd={clearHoverUnit}
+          />
         </Layout>
       </HexGrid>
-    </StrictMode>
+    </>
   );
 }

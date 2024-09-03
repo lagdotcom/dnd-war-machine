@@ -7312,66 +7312,6 @@
     }
   });
 
-  // node_modules/classnames/index.js
-  var require_classnames = __commonJS({
-    "node_modules/classnames/index.js"(exports, module) {
-      (function() {
-        "use strict";
-        var hasOwn2 = {}.hasOwnProperty;
-        function classNames4() {
-          var classes = "";
-          for (var i = 0; i < arguments.length; i++) {
-            var arg = arguments[i];
-            if (arg) {
-              classes = appendClass(classes, parseValue(arg));
-            }
-          }
-          return classes;
-        }
-        function parseValue(arg) {
-          if (typeof arg === "string" || typeof arg === "number") {
-            return arg;
-          }
-          if (typeof arg !== "object") {
-            return "";
-          }
-          if (Array.isArray(arg)) {
-            return classNames4.apply(null, arg);
-          }
-          if (arg.toString !== Object.prototype.toString && !arg.toString.toString().includes("[native code]")) {
-            return arg.toString();
-          }
-          var classes = "";
-          for (var key in arg) {
-            if (hasOwn2.call(arg, key) && arg[key]) {
-              classes = appendClass(classes, key);
-            }
-          }
-          return classes;
-        }
-        function appendClass(value, newClass) {
-          if (!newClass) {
-            return value;
-          }
-          if (value) {
-            return value + " " + newClass;
-          }
-          return value + newClass;
-        }
-        if (typeof module !== "undefined" && module.exports) {
-          classNames4.default = classNames4;
-          module.exports = classNames4;
-        } else if (typeof define === "function" && typeof define.amd === "object" && define.amd) {
-          define("classnames", [], function() {
-            return classNames4;
-          });
-        } else {
-          window.classNames = classNames4;
-        }
-      })();
-    }
-  });
-
   // node_modules/react/cjs/react-jsx-runtime.production.min.js
   var require_react_jsx_runtime_production_min = __commonJS({
     "node_modules/react/cjs/react-jsx-runtime.production.min.js"(exports) {
@@ -7622,7 +7562,68 @@
     }
   });
 
+  // node_modules/classnames/index.js
+  var require_classnames = __commonJS({
+    "node_modules/classnames/index.js"(exports, module) {
+      (function() {
+        "use strict";
+        var hasOwn2 = {}.hasOwnProperty;
+        function classNames5() {
+          var classes = "";
+          for (var i = 0; i < arguments.length; i++) {
+            var arg = arguments[i];
+            if (arg) {
+              classes = appendClass(classes, parseValue(arg));
+            }
+          }
+          return classes;
+        }
+        function parseValue(arg) {
+          if (typeof arg === "string" || typeof arg === "number") {
+            return arg;
+          }
+          if (typeof arg !== "object") {
+            return "";
+          }
+          if (Array.isArray(arg)) {
+            return classNames5.apply(null, arg);
+          }
+          if (arg.toString !== Object.prototype.toString && !arg.toString.toString().includes("[native code]")) {
+            return arg.toString();
+          }
+          var classes = "";
+          for (var key in arg) {
+            if (hasOwn2.call(arg, key) && arg[key]) {
+              classes = appendClass(classes, key);
+            }
+          }
+          return classes;
+        }
+        function appendClass(value, newClass) {
+          if (!newClass) {
+            return value;
+          }
+          if (value) {
+            return value + " " + newClass;
+          }
+          return value + newClass;
+        }
+        if (typeof module !== "undefined" && module.exports) {
+          classNames5.default = classNames5;
+          module.exports = classNames5;
+        } else if (typeof define === "function" && typeof define.amd === "object" && define.amd) {
+          define("classnames", [], function() {
+            return classNames5;
+          });
+        } else {
+          window.classNames = classNames5;
+        }
+      })();
+    }
+  });
+
   // src/index.tsx
+  var import_react13 = __toESM(require_react());
   var import_client = __toESM(require_client());
 
   // node_modules/react-redux/dist/react-redux.mjs
@@ -8038,8 +8039,7 @@
   }
 
   // src/components/App.tsx
-  var import_classnames3 = __toESM(require_classnames());
-  var import_react4 = __toESM(require_react());
+  var import_react12 = __toESM(require_react());
 
   // node_modules/react-hexgrid/lib/models/Hex.js
   var Hex = class {
@@ -8969,9 +8969,9 @@
 
   // node_modules/@emotion/utils/dist/emotion-utils.browser.esm.js
   var isBrowser = true;
-  function getRegisteredStyles(registered, registeredStyles, classNames4) {
+  function getRegisteredStyles(registered, registeredStyles, classNames5) {
     var rawClassName = "";
-    classNames4.split(" ").forEach(function(className) {
+    classNames5.split(" ").forEach(function(className) {
       if (registered[className] !== void 0) {
         registeredStyles.push(registered[className] + ";");
       } else {
@@ -9749,18 +9749,19 @@
       [6, 53]
     ])
   ];
+  var location = (x, y, type, name) => ({ id: xyTag({ x, y }), x, y, type, name });
   var locations = [
-    { x: 29, y: 8, type: "village", name: "Threshold" },
-    { x: 3, y: 11, type: "ruins", name: "Wereskalot" },
-    { x: 50, y: 12, type: "village", name: "Haven" },
-    { x: 35, y: 15, type: "village", name: "Kelven" },
-    { x: 18, y: 17, type: "castle", name: "Haunted Keep" },
-    { x: 11, y: 19, type: "castle", name: "Fort Doom" },
-    { x: 31, y: 23, type: "castle", name: "Krakatos" },
-    { x: 26, y: 25, type: "castle", name: "Estate of Marilenev" },
-    { x: 28, y: 26, type: "capitol", name: "Specularum" }
+    location(29, 8, "village", "Threshold"),
+    location(3, 11, "ruins", "Wereskalot"),
+    location(50, 12, "village", "Haven"),
+    location(35, 15, "village", "Kelven"),
+    location(18, 17, "castle", "Haunted Keep"),
+    location(11, 19, "castle", "Fort Doom"),
+    location(31, 23, "castle", "Krakatos"),
+    location(26, 25, "castle", "Estate of Marilenev"),
+    location(28, 26, "capitol", "Specularum")
   ];
-  var border = (x, y, start, end, thickness = 1) => ({ x, y, thickness, start, end });
+  var border = (x, y, start, end, thickness = 1) => ({ id: xyTag({ x, y }), x, y, thickness, start, end });
   var borders = [
     // Black Eagle Barony
     border(8, 17, 3, 6),
@@ -10162,10 +10163,6 @@
     const clearValue = (0, import_react3.useCallback)(() => setValue(void 0), []);
     return [value, setValue, clearValue];
   }
-
-  // src/state/hooks.ts
-  var useAppDispatch = useDispatch;
-  var useAppSelector = useSelector;
 
   // node_modules/redux/dist/redux.mjs
   function formatProdErrorMessage(code) {
@@ -12600,6 +12597,32 @@
     return `Minified Redux Toolkit error #${code}; visit https://redux-toolkit.js.org/Errors?code=${code} for the full message or use the non-minified dev environment for full errors. `;
   }
 
+  // src/state/borders.ts
+  var bordersAdapter = createEntityAdapter();
+  var bordersSlice = createSlice({
+    name: "borders",
+    initialState: bordersAdapter.getInitialState(),
+    reducers: { setBorders: bordersAdapter.setAll }
+  });
+  var { setBorders } = bordersSlice.actions;
+  var borders_default = bordersSlice.reducer;
+  var { selectAll: selectAllBorders } = bordersAdapter.getSelectors((s) => s.borders);
+
+  // src/state/hooks.ts
+  var useAppDispatch = useDispatch;
+  var useAppSelector = useSelector;
+
+  // src/state/locations.ts
+  var locationsAdapter = createEntityAdapter();
+  var locationsSlice = createSlice({
+    name: "locations",
+    initialState: locationsAdapter.getInitialState(),
+    reducers: { setLocations: locationsAdapter.setAll }
+  });
+  var { setLocations } = locationsSlice.actions;
+  var locations_default = locationsSlice.reducer;
+  var { selectAll: selectAllLocations } = locationsAdapter.getSelectors((s) => s.locations);
+
   // src/state/terrain.ts
   var hexAdapter = createEntityAdapter();
   var terrainSlice = createSlice({
@@ -12626,91 +12649,12 @@
   var units_default = unitsSlice.reducer;
   var { selectAll: selectAllUnits } = unitsAdapter.getSelectors((s) => s.units);
 
-  // src/components/UnitView.tsx
-  var import_classnames2 = __toESM(require_classnames());
-  var import_jsx_runtime5 = __toESM(require_jsx_runtime());
-  function UnitView({ unit }) {
-    return /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "panel unit-view", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("div", { className: "name", children: unit.force.name }),
-      unit.liegeTag && /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { children: [
-        "Liege: ",
-        unit.liegeTag
-      ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { children: [
-        "Troops: ",
-        unit.force.numberOfTroops
-      ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { children: [
-        "Leader LV ",
-        unit.force.leaderLevel
-      ] }),
-      unit.type === "normal" && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(NormalForceView, { force: unit.force }),
-      unit.type === "quick" && /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(QuickForceView, { force: unit.force })
-    ] });
-  }
-  function NormalForceView({ force }) {
-    return /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(import_jsx_runtime5.Fragment, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { children: [
-        "Officer LV ",
-        force.averageOfficerLevel
-      ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { children: [
-        "Troop LV ",
-        force.averageTroopLevel
-      ] })
-    ] });
-  }
-  function hdView(hd) {
-    if (typeof hd === "number") return String(hd);
-    const [dice, bonus] = hd;
-    return `${dice}+${bonus}`;
-  }
-  function QuickForceView({ force }) {
-    const tags = (0, import_classnames2.default)({
-      archers: force.hasArchers,
-      flying: force.hasFlyingBeings,
-      magical: force.hasMagicalBeings,
-      spellcasters: force.hasSpellcasters
-    });
-    return /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)(import_jsx_runtime5.Fragment, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { children: [
-        hdView(force.averageHitDice),
-        " HD"
-      ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { children: [
-        "up to ",
-        force.highestMaximumDamagePerRound,
-        " damage per round"
-      ] }),
-      tags && /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { children: [
-        "has: ",
-        tags
-      ] })
-    ] });
-  }
+  // src/components/BorderLayer.tsx
+  var import_react5 = __toESM(require_react());
 
-  // src/components/App.tsx
-  var import_jsx_runtime6 = __toESM(require_jsx_runtime());
-  function HexagonXY({ x, y, children, ...props }) {
-    const { q, r, s } = (0, import_react4.useMemo)(() => oddq_to_cube({ x, y }), [x, y]);
-    return /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(Hexagon, { q, r, s, ...props, children });
-  }
-  function LocationXY({ x, y, type, name }) {
-    const { q, r, s } = (0, import_react4.useMemo)(() => oddq_to_cube({ x, y }), [x, y]);
-    const { layout } = useLayoutContext();
-    const pixel = (0, import_react4.useMemo)(
-      () => HexUtils.hexToPixel({ q, r, s }, layout),
-      [q, r, s, layout]
-    );
-    return /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
-      "g",
-      {
-        className: (0, import_classnames3.default)("location", type),
-        transform: `translate(${pixel.x},${pixel.y})`,
-        children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(Text, { children: name })
-      }
-    );
-  }
+  // src/components/BorderXY.tsx
+  var import_react4 = __toESM(require_react());
+  var import_jsx_runtime5 = __toESM(require_jsx_runtime());
   function BorderXY({ x, y, thickness, start, end }) {
     const { q, r, s } = (0, import_react4.useMemo)(() => oddq_to_cube({ x, y }), [x, y]);
     const { layout, points } = useLayoutContext();
@@ -12727,7 +12671,7 @@
       () => HexUtils.hexToPixel({ q, r, s }, layout),
       [q, r, s, layout]
     );
-    return /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("g", { className: "border", transform: `translate(${pixel.x},${pixel.y})`, children: /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("g", { className: "border", transform: `translate(${pixel.x},${pixel.y})`, children: /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
       "polyline",
       {
         points: linePoints,
@@ -12736,6 +12680,101 @@
       }
     ) });
   }
+
+  // src/components/BorderLayer.tsx
+  var import_jsx_runtime6 = __toESM(require_jsx_runtime());
+  function BorderLayer() {
+    const borders2 = useAppSelector(selectAllBorders);
+    const borderElements = (0, import_react5.useMemo)(
+      () => borders2.map((border2, i) => /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(BorderXY, { ...border2 }, i)),
+      [borders2]
+    );
+    return /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("g", { id: "borders", children: borderElements });
+  }
+
+  // src/components/HexLayer.tsx
+  var import_react7 = __toESM(require_react());
+
+  // src/components/HexagonXY.tsx
+  var import_react6 = __toESM(require_react());
+  var import_jsx_runtime7 = __toESM(require_jsx_runtime());
+  function HexagonXY({
+    x,
+    y,
+    children,
+    onClick,
+    onHover,
+    ...props
+  }) {
+    const click = (0, import_react6.useCallback)(() => onClick?.({ x, y }), [onClick, x, y]);
+    const hover = (0, import_react6.useCallback)(() => onHover?.({ x, y }), [onHover, x, y]);
+    const { q, r, s } = (0, import_react6.useMemo)(() => oddq_to_cube({ x, y }), [x, y]);
+    return /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(Hexagon, { q, r, s, onClick: click, onMouseOver: hover, ...props, children });
+  }
+
+  // src/components/HexLayer.tsx
+  var import_jsx_runtime8 = __toESM(require_jsx_runtime());
+  function HexLayer({ onClick, onHover }) {
+    const hexes = useAppSelector(selectAllTerrain);
+    const hexElements = (0, import_react7.useMemo)(
+      () => hexes.map(({ x, y, terrain }, i) => /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
+        HexagonXY,
+        {
+          x,
+          y,
+          className: terrain,
+          onClick,
+          onHover
+        },
+        i
+      )),
+      [hexes, onClick, onHover]
+    );
+    return /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("g", { id: "hexes", children: hexElements });
+  }
+
+  // src/components/LocationLayer.tsx
+  var import_react9 = __toESM(require_react());
+
+  // src/components/LocationXY.tsx
+  var import_classnames2 = __toESM(require_classnames());
+  var import_react8 = __toESM(require_react());
+  var import_jsx_runtime9 = __toESM(require_jsx_runtime());
+  function LocationXY({ x, y, type, name }) {
+    const { q, r, s } = (0, import_react8.useMemo)(() => oddq_to_cube({ x, y }), [x, y]);
+    const { layout } = useLayoutContext();
+    const pixel = (0, import_react8.useMemo)(
+      () => HexUtils.hexToPixel({ q, r, s }, layout),
+      [q, r, s, layout]
+    );
+    return /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+      "g",
+      {
+        className: (0, import_classnames2.default)("location", type),
+        transform: `translate(${pixel.x},${pixel.y})`,
+        children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(Text, { children: name })
+      }
+    );
+  }
+
+  // src/components/LocationLayer.tsx
+  var import_jsx_runtime10 = __toESM(require_jsx_runtime());
+  function LocationLayer() {
+    const locations2 = useAppSelector(selectAllLocations);
+    const locationElements = (0, import_react9.useMemo)(
+      () => locations2.map((loc, i) => /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(LocationXY, { ...loc }, i)),
+      [locations2]
+    );
+    return /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("g", { id: "locations", children: locationElements });
+  }
+
+  // src/components/UnitLayer.tsx
+  var import_react11 = __toESM(require_react());
+
+  // src/components/UnitXY.tsx
+  var import_classnames3 = __toESM(require_classnames());
+  var import_react10 = __toESM(require_react());
+  var import_jsx_runtime11 = __toESM(require_jsx_runtime());
   function getUnitRadius(troops) {
     return Math.min(10, Math.max(troops / 50, 4));
   }
@@ -12747,19 +12786,19 @@
     onHoverEnd
   }) {
     const { liegeTag, side, force } = unit;
-    const click = (0, import_react4.useCallback)(() => onClick?.(unit), [onClick, unit]);
-    const mouseEnter = (0, import_react4.useCallback)(() => onHover?.(unit), [onHover, unit]);
-    const mouseLeave = (0, import_react4.useCallback)(() => onHoverEnd?.(unit), [onHoverEnd, unit]);
-    const { q, r, s } = (0, import_react4.useMemo)(() => oddq_to_cube(unit), [unit]);
+    const click = (0, import_react10.useCallback)(() => onClick?.(unit), [onClick, unit]);
+    const mouseEnter = (0, import_react10.useCallback)(() => onHover?.(unit), [onHover, unit]);
+    const mouseLeave = (0, import_react10.useCallback)(() => onHoverEnd?.(unit), [onHoverEnd, unit]);
+    const { q, r, s } = (0, import_react10.useMemo)(() => oddq_to_cube(unit), [unit]);
     const { layout } = useLayoutContext();
-    const pixel = (0, import_react4.useMemo)(
+    const pixel = (0, import_react10.useMemo)(
       () => HexUtils.hexToPixel({ q, r, s }, layout),
       [q, r, s, layout]
     );
     const tag = xyTag(unit);
     const inHex = useAppSelector((state) => getHexById(state, tag));
     const inTerritoryOfLiege = liegeTag && inHex.tags.includes(liegeTag);
-    return /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(
+    return /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)(
       "g",
       {
         className: (0, import_classnames3.default)("unit", `side-${side}`, {
@@ -12771,16 +12810,108 @@
         onMouseEnter: mouseEnter,
         onMouseLeave: mouseLeave,
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("circle", { x: 0, y: 0, r: getUnitRadius(force.numberOfTroops) }),
-          /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(Text, { y: "1.25em", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("circle", { x: 0, y: 0, r: getUnitRadius(force.numberOfTroops) }),
+          /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)(Text, { y: "1.25em", children: [
             force.name,
             " "
           ] }),
-          inTerritoryOfLiege && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(Text, { children: "\u{1F451}" })
+          inTerritoryOfLiege && /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(Text, { children: "\u{1F451}" })
         ]
       }
     );
   }
+
+  // src/components/UnitLayer.tsx
+  var import_jsx_runtime12 = __toESM(require_jsx_runtime());
+  function UnitLayer({
+    selected,
+    onClick,
+    onHover,
+    onHoverEnd
+  }) {
+    const units = useAppSelector(selectAllUnits);
+    const unitElements = (0, import_react11.useMemo)(
+      () => units.map((u) => /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+        UnitXY,
+        {
+          unit: u,
+          selected: selected === u,
+          onClick,
+          onHover,
+          onHoverEnd
+        },
+        u.id
+      )),
+      [selected, units, onClick, onHover, onHoverEnd]
+    );
+    return /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("g", { id: "units", children: unitElements });
+  }
+
+  // src/components/UnitView.tsx
+  var import_classnames4 = __toESM(require_classnames());
+  var import_jsx_runtime13 = __toESM(require_jsx_runtime());
+  function UnitView({ unit }) {
+    return /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { className: "panel unit-view", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime13.jsx)("div", { className: "name", children: unit.force.name }),
+      unit.liegeTag && /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { children: [
+        "Liege: ",
+        unit.liegeTag
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { children: [
+        "Troops: ",
+        unit.force.numberOfTroops
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { children: [
+        "Leader LV ",
+        unit.force.leaderLevel
+      ] }),
+      unit.type === "normal" && /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(NormalForceView, { force: unit.force }),
+      unit.type === "quick" && /* @__PURE__ */ (0, import_jsx_runtime13.jsx)(QuickForceView, { force: unit.force })
+    ] });
+  }
+  function NormalForceView({ force }) {
+    return /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)(import_jsx_runtime13.Fragment, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { children: [
+        "Officer LV ",
+        force.averageOfficerLevel
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { children: [
+        "Troop LV ",
+        force.averageTroopLevel
+      ] })
+    ] });
+  }
+  function hdView(hd) {
+    if (typeof hd === "number") return String(hd);
+    const [dice, bonus] = hd;
+    return `${dice}+${bonus}`;
+  }
+  function QuickForceView({ force }) {
+    const tags = (0, import_classnames4.default)({
+      archers: force.hasArchers,
+      flying: force.hasFlyingBeings,
+      magical: force.hasMagicalBeings,
+      spellcasters: force.hasSpellcasters
+    });
+    return /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)(import_jsx_runtime13.Fragment, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { children: [
+        hdView(force.averageHitDice),
+        " HD"
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { children: [
+        "up to ",
+        force.highestMaximumDamagePerRound,
+        " damage per round"
+      ] }),
+      tags && /* @__PURE__ */ (0, import_jsx_runtime13.jsxs)("div", { children: [
+        "has: ",
+        tags
+      ] })
+    ] });
+  }
+
+  // src/components/App.tsx
+  var import_jsx_runtime14 = __toESM(require_jsx_runtime());
   function getTerrainExtents(terrain) {
     if (!terrain.length) return `0 0 100 100`;
     let left = Infinity;
@@ -12799,58 +12930,23 @@
   }
   function App() {
     const { width, height } = useWindowSize();
-    const [hoverXY, setHoverXY] = (0, import_react4.useState)();
+    const [hoverXY, setHoverXY] = (0, import_react12.useState)();
     const hoverHex = useAppSelector(
       (state) => hoverXY ? getHexById(state, xyTag(hoverXY)) : void 0
     );
     const [hoverUnit, setHoverUnit, clearHoverUnit] = useClearableState();
     const [clickUnit, setClickUnit, clearClickUnit] = useClearableState();
     const dispatch = useAppDispatch();
-    const units = useAppSelector(selectAllUnits);
     const hexes = useAppSelector(selectAllTerrain);
-    const viewBox = (0, import_react4.useMemo)(() => getTerrainExtents(hexes), [hexes]);
-    (0, import_react4.useEffect)(() => {
+    const viewBox = (0, import_react12.useMemo)(() => getTerrainExtents(hexes), [hexes]);
+    (0, import_react12.useEffect)(() => {
       dispatch(setTerrain(hexData));
+      dispatch(setBorders(borders));
+      dispatch(setLocations(locations));
       dispatch(setUnits(scenario3Units));
     }, []);
-    const hexElements = (0, import_react4.useMemo)(
-      () => hexes.map(({ x, y, terrain }, i) => /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
-        HexagonXY,
-        {
-          x,
-          y,
-          className: terrain,
-          onClick: clearClickUnit,
-          onMouseOver: () => setHoverXY({ x, y })
-        },
-        i
-      )),
-      [hexes, clearClickUnit, setHoverXY]
-    );
-    const locationElements = (0, import_react4.useMemo)(
-      () => locations.map((loc, i) => /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(LocationXY, { ...loc }, i)),
-      [locations]
-    );
-    const borderElements = (0, import_react4.useMemo)(
-      () => borders.map((border2, i) => /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(BorderXY, { ...border2 }, i)),
-      [borders]
-    );
-    const unitElements = (0, import_react4.useMemo)(
-      () => units.map((u) => /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
-        UnitXY,
-        {
-          unit: u,
-          selected: clickUnit === u,
-          onHover: setHoverUnit,
-          onHoverEnd: clearHoverUnit,
-          onClick: setClickUnit
-        },
-        u.id
-      )),
-      [units, clickUnit]
-    );
-    return /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(import_react4.StrictMode, { children: [
-      hoverHex && /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(
+    return /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(import_jsx_runtime14.Fragment, { children: [
+      hoverHex && /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(
         "div",
         {
           className: "panel",
@@ -12870,21 +12966,29 @@
           ]
         }
       ),
-      /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)("div", { className: "unit-views", children: [
-        clickUnit && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(UnitView, { unit: clickUnit }),
-        hoverUnit && hoverUnit !== clickUnit && /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(UnitView, { unit: hoverUnit })
+      /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)("div", { className: "unit-views", children: [
+        clickUnit && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(UnitView, { unit: clickUnit }),
+        hoverUnit && hoverUnit !== clickUnit && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(UnitView, { unit: hoverUnit })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(
+      /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
         HexGrid,
         {
           width: width ?? void 0,
           height: height ?? void 0,
           viewBox,
-          children: /* @__PURE__ */ (0, import_jsx_runtime6.jsxs)(Layout, { size: { x: 10, y: 10 }, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("g", { id: "hexes", children: hexElements }),
-            /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("g", { id: "borders", children: borderElements }),
-            /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("g", { id: "locations", children: locationElements }),
-            /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("g", { id: "units", children: unitElements })
+          children: /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(Layout, { size: { x: 10, y: 10 }, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(HexLayer, { onClick: clearClickUnit, onHover: setHoverXY }),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(BorderLayer, {}),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(LocationLayer, {}),
+            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
+              UnitLayer,
+              {
+                selected: clickUnit,
+                onClick: setClickUnit,
+                onHover: setHoverUnit,
+                onHoverEnd: clearHoverUnit
+              }
+            )
           ] })
         }
       )
@@ -12893,14 +12997,14 @@
 
   // src/state/store.ts
   var store = configureStore({
-    reducer: { terrain: terrain_default, units: units_default }
+    reducer: { borders: borders_default, locations: locations_default, terrain: terrain_default, units: units_default }
   });
 
   // src/index.tsx
-  var import_jsx_runtime7 = __toESM(require_jsx_runtime());
+  var import_jsx_runtime15 = __toESM(require_jsx_runtime());
   var root = (0, import_client.createRoot)(document.getElementById("app"));
   root.render(
-    /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(Provider_default, { store, children: /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(App, {}) })
+    /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(import_react13.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(Provider_default, { store, children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(App, {}) }) })
   );
 })();
 /*! Bundled license information:
@@ -12949,13 +13053,6 @@ use-sync-external-store/cjs/use-sync-external-store-with-selector.production.min
    * LICENSE file in the root directory of this source tree.
    *)
 
-classnames/index.js:
-  (*!
-  	Copyright (c) 2018 Jed Watson.
-  	Licensed under the MIT License (MIT), see
-  	http://jedwatson.github.io/classnames
-  *)
-
 react/cjs/react-jsx-runtime.production.min.js:
   (**
    * @license React
@@ -12976,5 +13073,12 @@ react-is/cjs/react-is.production.min.js:
    * This source code is licensed under the MIT license found in the
    * LICENSE file in the root directory of this source tree.
    *)
+
+classnames/index.js:
+  (*!
+  	Copyright (c) 2018 Jed Watson.
+  	Licensed under the MIT License (MIT), see
+  	http://jedwatson.github.io/classnames
+  *)
 */
 //# sourceMappingURL=bundle.js.map

@@ -1,3 +1,5 @@
+import { TerrainType } from "./flavours";
+
 export function zeroPad(n: number, len = 2) {
   let s = String(n);
   while (s.length < len) s = "0" + s;
@@ -5,7 +7,10 @@ export function zeroPad(n: number, len = 2) {
   return s;
 }
 
-export function autoHexes(mapping: Record<string, string>, rows: string[]) {
+export function autoHexes(
+  mapping: Record<string, TerrainType>,
+  rows: string[],
+) {
   const lines: string[] = [];
   let r = 0;
 

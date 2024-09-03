@@ -1,13 +1,15 @@
-import { HexTag } from "../flavours";
-import { HexData } from "../state/terrain";
+import { xyTag } from "../coord-tools";
+import { CartesianCoord, HexTag, LocationType } from "../flavours";
+import { HexBorder } from "../state/borders";
+import { HexLocation } from "../state/locations";
 import { Unit } from "../state/units";
-import { Force, HexBorder, HexLocation, QuickForce } from "../types";
+import { Force, QuickForce } from "../types";
 import { row, xy } from "./tools";
 
 const rebel: HexTag = "Black Eagle";
 const loyal: HexTag = "Karameikos";
 
-export const hexData: HexData[] = [
+export const hexData = [
   ...row(0, 1, "HHHHHHhHHHHHHHHhHhHHhhhhHhHHhhhhhhhHHHHHHHHHHHhhHHHhHHHhh", [
     loyal,
     [10, 12],
@@ -172,25 +174,32 @@ export const hexData: HexData[] = [
   ]),
 ];
 
-export const locations: HexLocation[] = [
-  { x: 29, y: 8, type: "village", name: "Threshold" },
-  { x: 3, y: 11, type: "ruins", name: "Wereskalot" },
-  { x: 50, y: 12, type: "village", name: "Haven" },
-  { x: 35, y: 15, type: "village", name: "Kelven" },
-  { x: 18, y: 17, type: "castle", name: "Haunted Keep" },
-  { x: 11, y: 19, type: "castle", name: "Fort Doom" },
-  { x: 31, y: 23, type: "castle", name: "Krakatos" },
-  { x: 26, y: 25, type: "castle", name: "Estate of Marilenev" },
-  { x: 28, y: 26, type: "capitol", name: "Specularum" },
+const location = (
+  x: CartesianCoord,
+  y: CartesianCoord,
+  type: LocationType,
+  name: string,
+): HexLocation => ({ id: xyTag({ x, y }), x, y, type, name });
+
+export const locations = [
+  location(29, 8, "village", "Threshold"),
+  location(3, 11, "ruins", "Wereskalot"),
+  location(50, 12, "village", "Haven"),
+  location(35, 15, "village", "Kelven"),
+  location(18, 17, "castle", "Haunted Keep"),
+  location(11, 19, "castle", "Fort Doom"),
+  location(31, 23, "castle", "Krakatos"),
+  location(26, 25, "castle", "Estate of Marilenev"),
+  location(28, 26, "capitol", "Specularum"),
 ];
 
 const border = (
-  x: number,
-  y: number,
+  x: CartesianCoord,
+  y: CartesianCoord,
   start: number,
   end: number,
   thickness = 1,
-): HexBorder => ({ x, y, thickness, start, end });
+): HexBorder => ({ id: xyTag({ x, y }), x, y, thickness, start, end });
 
 export const borders = [
   // Black Eagle Barony

@@ -1,12 +1,12 @@
 import { xyTag } from "../coord-tools";
-import { HexTag, TerrainType } from "../flavours";
+import { CartesianCoord, HexTag, TerrainType } from "../flavours";
 import { HexData } from "../state/terrain";
 import { XY } from "../types";
 
 const hex = (
   terrain: TerrainType,
-  x: number,
-  y: number,
+  x: CartesianCoord,
+  y: CartesianCoord,
   tags: HexTag[] = [],
 ): HexData => ({
   id: xyTag({ x, y }),
@@ -26,13 +26,13 @@ const conversions: Record<string, TerrainType> = {
 };
 
 class Tags {
-  data: Record<number, HexTag[]>;
+  data: Record<CartesianCoord, HexTag[]>;
 
   constructor() {
     this.data = {};
   }
 
-  set(x: number, tag: HexTag) {
+  set(x: CartesianCoord, tag: HexTag) {
     const array = this.data[x] ?? [];
     array.push(tag);
     this.data[x] = array;
@@ -43,7 +43,12 @@ class Tags {
     return this.data;
   }
 }
-function makeHexTags(...groups: [HexTag, ...(number | [number, number])[]][]) {
+function makeHexTags(
+  ...groups: [
+    HexTag,
+    ...(CartesianCoord | [CartesianCoord, CartesianCoord])[],
+  ][]
+) {
   const tags = new Tags();
   for (const [tag, ...gs] of groups) {
     for (const g of gs) {
@@ -59,8 +64,8 @@ function makeHexTags(...groups: [HexTag, ...(number | [number, number])[]][]) {
 }
 
 export function* row(
-  y: number,
-  x: number,
+  y: CartesianCoord,
+  x: CartesianCoord,
   data: string,
   ...hexTagParams: Parameters<typeof makeHexTags>
 ) {
@@ -72,4 +77,4 @@ export function* row(
   }
 }
 
-export const xy = (x: number, y: number): XY => ({ x, y });
+export const xy = (x: CartesianCoord, y: CartesianCoord): XY => ({ x, y });

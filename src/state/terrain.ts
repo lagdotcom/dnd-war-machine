@@ -1,11 +1,11 @@
 import { createEntityAdapter, createSlice } from "@reduxjs/toolkit";
 
 import { HexTag, TerrainType } from "../flavours";
-import { XY } from "../types";
+import { XY, XYTag } from "../types";
 import { RootState } from "./store";
 
 export interface HexData extends XY {
-  id: string;
+  id: XYTag;
   terrain: TerrainType;
   tags: HexTag[];
 }

@@ -32,11 +32,7 @@ export function BorderXY({ x, y, thickness, start, end }: HexBorder) {
 
   return (
     <g className="border" transform={`translate(${pixel.x},${pixel.y})`}>
-      <polyline
-        points={linePoints}
-        fill="transparent"
-        strokeWidth={thickness}
-      />
+      <polyline points={linePoints} strokeWidth={thickness} />
     </g>
   );
 }

@@ -9,6 +9,9 @@ import { row, xy } from "./tools";
 const rebel: HexTag = "Black Eagle";
 const loyal: HexTag = "Karameikos";
 
+const stronghold: HexTag = "stronghold";
+const walled: HexTag = "walled";
+
 export const hexData = [
   ...row(0, 1, "HHHHHHhHHHHHHHHhHhHHhhhhHhHHhhhhhhhHHHHHHHHHHHhhHHHhHHHhh", [
     loyal,
@@ -47,10 +50,13 @@ export const hexData = [
     loyal,
     [6, 53],
   ]),
-  ...row(8, 1, "HhhhggggggghhhhhhhhhhhHHHHHhhHhHHhhHhhhhhhhhhhhhhhHHhhhhh", [
-    loyal,
-    [6, 53],
-  ]),
+  ...row(
+    8,
+    1,
+    "HhhhggggggghhhhhhhhhhhHHHHHhhHhHHhhHhhhhhhhhhhhhhhHHhhhhh",
+    [loyal, [6, 53]],
+    [walled, 29],
+  ),
   ...row(9, 1, "hhhhggggggggghghghhhhHHhhHHhhHhHHhhhhhhhhhhhhhhhhhHHhhhhh", [
     loyal,
     [6, 53],
@@ -59,14 +65,20 @@ export const hexData = [
     loyal,
     [6, 53],
   ]),
-  ...row(11, 1, "hhghgwwwwwwghhhhhhhhhhhhhHhHHhhhhhhhhhhhhhhhhhhhhhhhhwwww", [
-    loyal,
-    [6, 57],
-  ]),
-  ...row(12, 1, "gggggwwwwwwwhhhhhhhhhhhhhhghhhhhhhghghghhhgghhhhhhhhhwwww", [
-    loyal,
-    [6, 57],
-  ]),
+  ...row(
+    11,
+    1,
+    "hhghgwwwwwwghhhhhhhhhhhhhHhHHhhhhhhhhhhhhhhhhhhhhhhhhwwww",
+    [loyal, [6, 57]],
+    [walled, 3],
+  ),
+  ...row(
+    12,
+    1,
+    "gggggwwwwwwwhhhhhhhhhhhhhhghhhhhhhghghghhhgghhhhhhhhhwwww",
+    [loyal, [6, 57]],
+    [walled, 50],
+  ),
   ...row(13, 1, "ggggggmwwwwwhhhhhhhhhhggggggghhhhhggggghgwggghhhhhhhhhhww", [
     loyal,
     [6, 57],
@@ -75,10 +87,13 @@ export const hexData = [
     loyal,
     [6, 57],
   ]),
-  ...row(15, 1, "gggggmmmmgggghhhhhhhhwwggggggwwwhhgggggwwgggghwwwhhhhwwww", [
-    loyal,
-    [6, 57],
-  ]),
+  ...row(
+    15,
+    1,
+    "gggggmmmmgggghhhhhhhhwwggggggwwwhhgggggwwgggghwwwhhhhwwww",
+    [loyal, [6, 57]],
+    [walled, 35],
+  ),
   ...row(
     16,
     1,
@@ -92,6 +107,7 @@ export const hexData = [
     "ggsgsssmmgggghhwhhwwgwgwwwgwwwwwwggggwwwwwwwwwwwwwwwwwwww",
     [rebel, [8, 13]],
     [loyal, [14, 57]],
+    [walled, 18],
   ),
   ...row(
     18,
@@ -106,6 +122,7 @@ export const hexData = [
     "ggssssssssgggghhhhgwgggggwwwggggggggggwwwwwwwwwwwwwwwwwww",
     [rebel, 11, 12],
     [loyal, [13, 57]],
+    [stronghold, 11],
   ),
   ...row(
     20,
@@ -128,22 +145,31 @@ export const hexData = [
     [rebel, 10],
     [loyal, [11, 54]],
   ),
-  ...row(23, 1, "ssssssssssgggggggggggggggggggggggggggggggwwwwwwwwwwwggggg", [
-    loyal,
-    [6, 53],
-  ]),
+  ...row(
+    23,
+    1,
+    "ssssssssssgggggggggggggggggggggggggggggggwwwwwwwwwwwggggg",
+    [loyal, [6, 53]],
+    [walled, 31],
+  ),
   ...row(24, 1, "sssssssssssgggggggggggggggggggggggggggggswsgswwwwwsssgsgs", [
     loyal,
     [6, 53],
   ]),
-  ...row(25, 1, "sssssssssssssgggggggggggggggggggggggggssssssssswsssssssss", [
-    loyal,
-    [6, 53],
-  ]),
-  ...row(26, 1, "sssssssssssssggggggggggssssgsggggggggssssssssssssssssssss", [
-    loyal,
-    [6, 53],
-  ]),
+  ...row(
+    25,
+    1,
+    "sssssssssssssgggggggggggggggggggggggggssssssssswsssssssss",
+    [loyal, [6, 53]],
+    [walled, 26],
+  ),
+  ...row(
+    26,
+    1,
+    "sssssssssssssggggggggggssssgsggggggggssssssssssssssssssss",
+    [loyal, [6, 53]],
+    [stronghold, 28],
+  ),
   ...row(27, 1, "ssssssssssssssggggggsssssssssggggggggggssssssssssssssssss", [
     loyal,
     [6, 53],
@@ -179,18 +205,19 @@ const location = (
   y: CartesianCoord,
   type: LocationType,
   name: string,
-): HexLocation => ({ id: xyTag({ x, y }), x, y, type, name });
+  defence?: "walled" | "stronghold",
+): HexLocation => ({ id: xyTag({ x, y }), x, y, type, name, defence });
 
 export const locations = [
-  location(29, 8, "village", "Threshold"),
-  location(3, 11, "ruins", "Wereskalot"),
-  location(50, 12, "village", "Haven"),
-  location(35, 15, "village", "Kelven"),
-  location(18, 17, "castle", "Haunted Keep"),
-  location(11, 19, "castle", "Fort Doom"),
-  location(31, 23, "castle", "Krakatos"),
-  location(26, 25, "castle", "Estate of Marilenev"),
-  location(28, 26, "capitol", "Specularum"),
+  location(29, 8, "village", "Threshold", "walled"),
+  location(3, 11, "ruins", "Wereskalot", "walled"),
+  location(50, 12, "village", "Haven", "walled"),
+  location(35, 15, "village", "Kelven", "walled"),
+  location(18, 17, "castle", "Haunted Keep", "walled"),
+  location(11, 19, "castle", "Fort Doom", "stronghold"),
+  location(31, 23, "castle", "Krakatos", "walled"),
+  location(26, 25, "castle", "Estate of Marilenev", "walled"),
+  location(28, 26, "capitol", "Specularum", "stronghold"),
 ];
 
 const border = (
@@ -696,7 +723,7 @@ export const scenario3Units: Unit[] = [
     id: EasternElves.name,
     side: 1,
     type: "normal",
-    force: EasternElves,
+    force: EasternElves, // TODO these elves are equipped with silver weapons
     ...positions["Eastern Elves"],
   },
   {

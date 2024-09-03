@@ -59,6 +59,9 @@ body {
   stroke: red;
   pointer-events: none;
 }
+.border polyline {
+  fill: transparent;
+}
 
 .coord {
   font-family: "Courier New", Courier, monospace;
@@ -74,6 +77,16 @@ body {
   paint-order: stroke;
   pointer-events: none;
   user-select: none;
+}
+.location polygon {
+  fill: transparent;
+  stroke: #aaa;
+  stroke-width: 2px;
+  stroke-dasharray: 2 1;
+}
+.stronghold polygon {
+  stroke: #aaa;
+  stroke-width: 3px;
 }
 
 .unit {

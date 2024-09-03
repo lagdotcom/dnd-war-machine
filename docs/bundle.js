@@ -9585,6 +9585,8 @@
   // src/data/karameikos.ts
   var rebel = "Black Eagle";
   var loyal = "Karameikos";
+  var stronghold = "stronghold";
+  var walled = "walled";
   var hexData = [
     ...row(0, 1, "HHHHHHhHHHHHHHHhHhHHhhhhHhHHhhhhhhhHHHHHHHHHHHhhHHHhHHHhh", [
       loyal,
@@ -9623,10 +9625,13 @@
       loyal,
       [6, 53]
     ]),
-    ...row(8, 1, "HhhhggggggghhhhhhhhhhhHHHHHhhHhHHhhHhhhhhhhhhhhhhhHHhhhhh", [
-      loyal,
-      [6, 53]
-    ]),
+    ...row(
+      8,
+      1,
+      "HhhhggggggghhhhhhhhhhhHHHHHhhHhHHhhHhhhhhhhhhhhhhhHHhhhhh",
+      [loyal, [6, 53]],
+      [walled, 29]
+    ),
     ...row(9, 1, "hhhhggggggggghghghhhhHHhhHHhhHhHHhhhhhhhhhhhhhhhhhHHhhhhh", [
       loyal,
       [6, 53]
@@ -9635,14 +9640,20 @@
       loyal,
       [6, 53]
     ]),
-    ...row(11, 1, "hhghgwwwwwwghhhhhhhhhhhhhHhHHhhhhhhhhhhhhhhhhhhhhhhhhwwww", [
-      loyal,
-      [6, 57]
-    ]),
-    ...row(12, 1, "gggggwwwwwwwhhhhhhhhhhhhhhghhhhhhhghghghhhgghhhhhhhhhwwww", [
-      loyal,
-      [6, 57]
-    ]),
+    ...row(
+      11,
+      1,
+      "hhghgwwwwwwghhhhhhhhhhhhhHhHHhhhhhhhhhhhhhhhhhhhhhhhhwwww",
+      [loyal, [6, 57]],
+      [walled, 3]
+    ),
+    ...row(
+      12,
+      1,
+      "gggggwwwwwwwhhhhhhhhhhhhhhghhhhhhhghghghhhgghhhhhhhhhwwww",
+      [loyal, [6, 57]],
+      [walled, 50]
+    ),
     ...row(13, 1, "ggggggmwwwwwhhhhhhhhhhggggggghhhhhggggghgwggghhhhhhhhhhww", [
       loyal,
       [6, 57]
@@ -9651,10 +9662,13 @@
       loyal,
       [6, 57]
     ]),
-    ...row(15, 1, "gggggmmmmgggghhhhhhhhwwggggggwwwhhgggggwwgggghwwwhhhhwwww", [
-      loyal,
-      [6, 57]
-    ]),
+    ...row(
+      15,
+      1,
+      "gggggmmmmgggghhhhhhhhwwggggggwwwhhgggggwwgggghwwwhhhhwwww",
+      [loyal, [6, 57]],
+      [walled, 35]
+    ),
     ...row(
       16,
       1,
@@ -9667,7 +9681,8 @@
       1,
       "ggsgsssmmgggghhwhhwwgwgwwwgwwwwwwggggwwwwwwwwwwwwwwwwwwww",
       [rebel, [8, 13]],
-      [loyal, [14, 57]]
+      [loyal, [14, 57]],
+      [walled, 18]
     ),
     ...row(
       18,
@@ -9681,7 +9696,8 @@
       1,
       "ggssssssssgggghhhhgwgggggwwwggggggggggwwwwwwwwwwwwwwwwwww",
       [rebel, 11, 12],
-      [loyal, [13, 57]]
+      [loyal, [13, 57]],
+      [stronghold, 11]
     ),
     ...row(
       20,
@@ -9704,22 +9720,31 @@
       [rebel, 10],
       [loyal, [11, 54]]
     ),
-    ...row(23, 1, "ssssssssssgggggggggggggggggggggggggggggggwwwwwwwwwwwggggg", [
-      loyal,
-      [6, 53]
-    ]),
+    ...row(
+      23,
+      1,
+      "ssssssssssgggggggggggggggggggggggggggggggwwwwwwwwwwwggggg",
+      [loyal, [6, 53]],
+      [walled, 31]
+    ),
     ...row(24, 1, "sssssssssssgggggggggggggggggggggggggggggswsgswwwwwsssgsgs", [
       loyal,
       [6, 53]
     ]),
-    ...row(25, 1, "sssssssssssssgggggggggggggggggggggggggssssssssswsssssssss", [
-      loyal,
-      [6, 53]
-    ]),
-    ...row(26, 1, "sssssssssssssggggggggggssssgsggggggggssssssssssssssssssss", [
-      loyal,
-      [6, 53]
-    ]),
+    ...row(
+      25,
+      1,
+      "sssssssssssssgggggggggggggggggggggggggssssssssswsssssssss",
+      [loyal, [6, 53]],
+      [walled, 26]
+    ),
+    ...row(
+      26,
+      1,
+      "sssssssssssssggggggggggssssgsggggggggssssssssssssssssssss",
+      [loyal, [6, 53]],
+      [stronghold, 28]
+    ),
     ...row(27, 1, "ssssssssssssssggggggsssssssssggggggggggssssssssssssssssss", [
       loyal,
       [6, 53]
@@ -9749,17 +9774,17 @@
       [6, 53]
     ])
   ];
-  var location = (x, y, type, name) => ({ id: xyTag({ x, y }), x, y, type, name });
+  var location = (x, y, type, name, defence) => ({ id: xyTag({ x, y }), x, y, type, name, defence });
   var locations = [
-    location(29, 8, "village", "Threshold"),
-    location(3, 11, "ruins", "Wereskalot"),
-    location(50, 12, "village", "Haven"),
-    location(35, 15, "village", "Kelven"),
-    location(18, 17, "castle", "Haunted Keep"),
-    location(11, 19, "castle", "Fort Doom"),
-    location(31, 23, "castle", "Krakatos"),
-    location(26, 25, "castle", "Estate of Marilenev"),
-    location(28, 26, "capitol", "Specularum")
+    location(29, 8, "village", "Threshold", "walled"),
+    location(3, 11, "ruins", "Wereskalot", "walled"),
+    location(50, 12, "village", "Haven", "walled"),
+    location(35, 15, "village", "Kelven", "walled"),
+    location(18, 17, "castle", "Haunted Keep", "walled"),
+    location(11, 19, "castle", "Fort Doom", "stronghold"),
+    location(31, 23, "castle", "Krakatos", "walled"),
+    location(26, 25, "castle", "Estate of Marilenev", "walled"),
+    location(28, 26, "capitol", "Specularum", "stronghold")
   ];
   var border = (x, y, start, end, thickness = 1) => ({ id: xyTag({ x, y }), x, y, thickness, start, end });
   var borders = [
@@ -10145,6 +10170,7 @@
       side: 1,
       type: "normal",
       force: EasternElves,
+      // TODO these elves are equipped with silver weapons
       ...positions["Eastern Elves"]
     },
     {
@@ -12671,14 +12697,7 @@
       () => HexUtils.hexToPixel({ q, r, s }, layout),
       [q, r, s, layout]
     );
-    return /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("g", { className: "border", transform: `translate(${pixel.x},${pixel.y})`, children: /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
-      "polyline",
-      {
-        points: linePoints,
-        fill: "transparent",
-        strokeWidth: thickness
-      }
-    ) });
+    return /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("g", { className: "border", transform: `translate(${pixel.x},${pixel.y})`, children: /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("polyline", { points: linePoints, strokeWidth: thickness }) });
   }
 
   // src/components/BorderLayer.tsx
@@ -12740,19 +12759,22 @@
   var import_classnames2 = __toESM(require_classnames());
   var import_react8 = __toESM(require_react());
   var import_jsx_runtime9 = __toESM(require_jsx_runtime());
-  function LocationXY({ x, y, type, name }) {
+  function LocationXY({ x, y, type, name, defence }) {
     const { q, r, s } = (0, import_react8.useMemo)(() => oddq_to_cube({ x, y }), [x, y]);
-    const { layout } = useLayoutContext();
+    const { layout, points } = useLayoutContext();
     const pixel = (0, import_react8.useMemo)(
       () => HexUtils.hexToPixel({ q, r, s }, layout),
       [q, r, s, layout]
     );
-    return /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(
       "g",
       {
-        className: (0, import_classnames2.default)("location", type),
+        className: (0, import_classnames2.default)("location", type, defence),
         transform: `translate(${pixel.x},${pixel.y})`,
-        children: /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(Text, { children: name })
+        children: [
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("polygon", { points }),
+          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(Text, { children: name })
+        ]
       }
     );
   }
@@ -12810,7 +12832,7 @@
         onMouseEnter: mouseEnter,
         onMouseLeave: mouseLeave,
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("circle", { x: 0, y: 0, r: getUnitRadius(force.numberOfTroops) }),
+          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("circle", { r: getUnitRadius(force.numberOfTroops) }),
           /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)(Text, { y: "1.25em", children: [
             force.name,
             " "

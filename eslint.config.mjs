@@ -1,6 +1,7 @@
 import eslint from "@eslint/js";
 import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
 import react from "eslint-plugin-react";
+import reactHooks from "eslint-plugin-react-hooks";
 import simpleImportSort from "eslint-plugin-simple-import-sort";
 import tseslint from "typescript-eslint";
 
@@ -18,5 +19,9 @@ export default tseslint.config(
     },
   },
   react.configs.flat.recommended,
-  react.configs.flat["jsx-runtime"]
+  react.configs.flat["jsx-runtime"],
+  {
+    plugins: { "react-hooks": reactHooks },
+    rules: reactHooks.configs.recommended.rules,
+  }
 );

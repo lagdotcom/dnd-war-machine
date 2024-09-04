@@ -1,6 +1,6 @@
 import { HexUtils } from "react-hexgrid";
-import { LayoutDimension } from "react-hexgrid/lib/Layout";
 
+import { LayoutDimension } from "./components/Layout";
 import { CartesianCoord, CubicCoord } from "./flavours";
 import { XY, XYTag } from "./types";
 

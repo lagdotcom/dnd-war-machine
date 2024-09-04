@@ -48,7 +48,7 @@ export default function StrategyView({
       if (dragging) return;
       onClickHex(xy);
     },
-    [dragging],
+    [dragging, onClickHex],
   );
 
   const clickUnit = useCallback(
@@ -56,7 +56,7 @@ export default function StrategyView({
       if (dragging) return;
       onClickUnit(u);
     },
-    [dragging],
+    [dragging, onClickUnit],
   );
 
   useEffect(() => {
@@ -77,7 +77,7 @@ export default function StrategyView({
 
       return () => instance.dispose();
     }
-  }, []);
+  }, [clearDraggingSoon, setDragging]);
 
   return (
     <svg

@@ -43,11 +43,11 @@ export default function HexLayer({
 
   const click = useCallback<MouseEventHandler>(
     (e) => onClick?.(pixelToOddQ(layout, convert(e))),
-    [layout, onClick],
+    [convert, layout, onClick],
   );
   const move = useCallback<MouseEventHandler>(
     (e) => onHover?.(pixelToOddQ(layout, convert(e))),
-    [layout, onHover],
+    [convert, layout, onHover],
   );
 
   return (

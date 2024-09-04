@@ -40,7 +40,7 @@ export default function App() {
     dispatch(setBorders(borders));
     dispatch(setLocations(locations));
     dispatch(setUnits(scenario3Units));
-  }, []);
+  }, [dispatch]);
 
   return (
     <>

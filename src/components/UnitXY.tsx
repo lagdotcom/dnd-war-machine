@@ -1,13 +1,13 @@
 import classNames from "classnames";
 import { useCallback, useMemo } from "react";
 import { HexUtils, Text } from "react-hexgrid";
-import { useLayoutContext } from "react-hexgrid/lib/Layout";
 
 import { oddQToCube, xyTag } from "../coord-tools";
 import { useAppSelector } from "../state/hooks";
 import { getHexById } from "../state/terrain";
 import { Unit } from "../state/units";
 import clamp from "../tools/clamp";
+import { useLayoutContext } from "./Layout";
 
 function getUnitRadius(troops: number) {
   return clamp(troops / 50, 4, 10);

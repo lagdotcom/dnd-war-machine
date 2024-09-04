@@ -1,11 +1,11 @@
-import panzoom, { Transform } from "panzoom";
+import panZoom, { Transform } from "panzoom";
 import { useEffect, useRef, useState } from "react";
-import { Layout } from "react-hexgrid";
 
 import { Unit } from "../state/units";
 import { XY } from "../types";
 import BorderLayer from "./BorderLayer";
 import HexLayer from "./HexLayer";
+import Layout from "./Layout";
 import LocationLayer from "./LocationLayer";
 import UnitLayer from "./UnitLayer";
 
@@ -19,7 +19,9 @@ export interface StrategyViewProps {
   onHoverHex(xy: XY): void;
 }
 
-export function StrategyView({
+const LAYOUT_ORIGIN = { x: 0, y: 15 };
+
+export default function StrategyView({
   selectedUnit,
   onClickUnit,
   onHoverUnit,
@@ -36,16 +38,16 @@ export function StrategyView({
 
   useEffect(() => {
     if (ref.current) {
-      const instance = panzoom(ref.current, {
+      const instance = panZoom(ref.current, {
         smoothScroll: false,
         initialZoom: 2,
         maxZoom: 10,
         minZoom: 0.5,
       });
-
-      setTransform(instance.getTransform());
-      instance.on("zoom", () => setTransform(instance.getTransform()));
-      instance.on("zoomend", () => setTransform(instance.getTransform()));
+      const updateTransform = () => setTransform(instance.getTransform());
+      updateTransform();
+      instance.on("zoom", updateTransform);
+      instance.on("zoomend", updateTransform);
 
       return () => instance.dispose();
     }
@@ -58,7 +60,7 @@ export function StrategyView({
       version="1.1"
       xmlns="http://www.w3.org/2000/svg"
     >
-      <Layout size={{ x: 10, y: 10 }} origin={{ x: 0, y: 15 }}>
+      <Layout origin={LAYOUT_ORIGIN}>
         <HexLayer
           zoom={transform.scale}
           offset={transform}

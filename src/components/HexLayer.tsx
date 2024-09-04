@@ -1,5 +1,4 @@
 import { MouseEvent, MouseEventHandler, useCallback, useMemo } from "react";
-import { useLayoutContext } from "react-hexgrid/lib/Layout";
 
 import { pixelToOddQ } from "../coord-tools";
 import { ClassName } from "../flavours";
@@ -7,6 +6,7 @@ import { useAppSelector } from "../state/hooks";
 import { selectAllTerrain } from "../state/terrain";
 import { XY } from "../types";
 import HexagonXY from "./HexagonXY";
+import { useLayoutContext } from "./Layout";
 
 interface HexLayerProps {
   offset: XY;

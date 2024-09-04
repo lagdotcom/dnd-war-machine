@@ -2,7 +2,7 @@ import { useMemo } from "react";
 
 import { selectAllBorders } from "../state/borders";
 import { useAppSelector } from "../state/hooks";
-import { BorderXY } from "./BorderXY";
+import BorderXY from "./BorderXY";
 
 export default function BorderLayer() {
   const borders = useAppSelector(selectAllBorders);

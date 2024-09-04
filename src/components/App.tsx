@@ -14,7 +14,7 @@ import { setLocations } from "../state/locations";
 import { getHexById, setTerrain } from "../state/terrain";
 import { setUnits, Unit } from "../state/units";
 import { XY } from "../types";
-import { StrategyView } from "./StrategyView";
+import StrategyView from "./StrategyView";
 import UnitView from "./UnitView";
 
 export default function App() {

@@ -8,6 +8,11 @@ body {
 #app {
   display: flex;
   overflow: hidden;
+  height: 100vh;
+}
+
+.grid {
+  flex-grow: 1;
 }
 
 .hexagon polygon {

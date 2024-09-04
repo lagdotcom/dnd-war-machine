@@ -2,11 +2,11 @@ import { useMemo } from "react";
 import { HexUtils } from "react-hexgrid";
 import { useLayoutContext } from "react-hexgrid/lib/Layout";
 
-import { oddq_to_cube } from "../coord-tools";
+import { oddQToCube } from "../coord-tools";
 import { HexBorder } from "../state/borders";
 
 export function BorderXY({ x, y, thickness, start, end }: HexBorder) {
-  const { q, r, s } = useMemo(() => oddq_to_cube({ x, y }), [x, y]);
+  const { q, r, s } = useMemo(() => oddQToCube({ x, y }), [x, y]);
   const { layout, points } = useLayoutContext();
 
   const linePoints = useMemo(() => {

@@ -7312,6 +7312,1406 @@
     }
   });
 
+  // node_modules/wheel/index.js
+  var require_wheel = __commonJS({
+    "node_modules/wheel/index.js"(exports, module) {
+      module.exports = addWheelListener;
+      module.exports.addWheelListener = addWheelListener;
+      module.exports.removeWheelListener = removeWheelListener;
+      function addWheelListener(element, listener2, useCapture) {
+        element.addEventListener("wheel", listener2, useCapture);
+      }
+      function removeWheelListener(element, listener2, useCapture) {
+        element.removeEventListener("wheel", listener2, useCapture);
+      }
+    }
+  });
+
+  // node_modules/bezier-easing/src/index.js
+  var require_src = __commonJS({
+    "node_modules/bezier-easing/src/index.js"(exports, module) {
+      var NEWTON_ITERATIONS = 4;
+      var NEWTON_MIN_SLOPE = 1e-3;
+      var SUBDIVISION_PRECISION = 1e-7;
+      var SUBDIVISION_MAX_ITERATIONS = 10;
+      var kSplineTableSize = 11;
+      var kSampleStepSize = 1 / (kSplineTableSize - 1);
+      var float32ArraySupported = typeof Float32Array === "function";
+      function A(aA1, aA2) {
+        return 1 - 3 * aA2 + 3 * aA1;
+      }
+      function B(aA1, aA2) {
+        return 3 * aA2 - 6 * aA1;
+      }
+      function C(aA1) {
+        return 3 * aA1;
+      }
+      function calcBezier(aT, aA1, aA2) {
+        return ((A(aA1, aA2) * aT + B(aA1, aA2)) * aT + C(aA1)) * aT;
+      }
+      function getSlope(aT, aA1, aA2) {
+        return 3 * A(aA1, aA2) * aT * aT + 2 * B(aA1, aA2) * aT + C(aA1);
+      }
+      function binarySubdivide(aX, aA, aB, mX1, mX2) {
+        var currentX, currentT, i = 0;
+        do {
+          currentT = aA + (aB - aA) / 2;
+          currentX = calcBezier(currentT, mX1, mX2) - aX;
+          if (currentX > 0) {
+            aB = currentT;
+          } else {
+            aA = currentT;
+          }
+        } while (Math.abs(currentX) > SUBDIVISION_PRECISION && ++i < SUBDIVISION_MAX_ITERATIONS);
+        return currentT;
+      }
+      function newtonRaphsonIterate(aX, aGuessT, mX1, mX2) {
+        for (var i = 0; i < NEWTON_ITERATIONS; ++i) {
+          var currentSlope = getSlope(aGuessT, mX1, mX2);
+          if (currentSlope === 0) {
+            return aGuessT;
+          }
+          var currentX = calcBezier(aGuessT, mX1, mX2) - aX;
+          aGuessT -= currentX / currentSlope;
+        }
+        return aGuessT;
+      }
+      function LinearEasing(x) {
+        return x;
+      }
+      module.exports = function bezier(mX1, mY1, mX2, mY2) {
+        if (!(0 <= mX1 && mX1 <= 1 && 0 <= mX2 && mX2 <= 1)) {
+          throw new Error("bezier x values must be in [0, 1] range");
+        }
+        if (mX1 === mY1 && mX2 === mY2) {
+          return LinearEasing;
+        }
+        var sampleValues = float32ArraySupported ? new Float32Array(kSplineTableSize) : new Array(kSplineTableSize);
+        for (var i = 0; i < kSplineTableSize; ++i) {
+          sampleValues[i] = calcBezier(i * kSampleStepSize, mX1, mX2);
+        }
+        function getTForX(aX) {
+          var intervalStart = 0;
+          var currentSample = 1;
+          var lastSample = kSplineTableSize - 1;
+          for (; currentSample !== lastSample && sampleValues[currentSample] <= aX; ++currentSample) {
+            intervalStart += kSampleStepSize;
+          }
+          --currentSample;
+          var dist = (aX - sampleValues[currentSample]) / (sampleValues[currentSample + 1] - sampleValues[currentSample]);
+          var guessForT = intervalStart + dist * kSampleStepSize;
+          var initialSlope = getSlope(guessForT, mX1, mX2);
+          if (initialSlope >= NEWTON_MIN_SLOPE) {
+            return newtonRaphsonIterate(aX, guessForT, mX1, mX2);
+          } else if (initialSlope === 0) {
+            return guessForT;
+          } else {
+            return binarySubdivide(aX, intervalStart, intervalStart + kSampleStepSize, mX1, mX2);
+          }
+        }
+        return function BezierEasing(x) {
+          if (x === 0) {
+            return 0;
+          }
+          if (x === 1) {
+            return 1;
+          }
+          return calcBezier(getTForX(x), mY1, mY2);
+        };
+      };
+    }
+  });
+
+  // node_modules/amator/index.js
+  var require_amator = __commonJS({
+    "node_modules/amator/index.js"(exports, module) {
+      var BezierEasing = require_src();
+      var animations = {
+        ease: BezierEasing(0.25, 0.1, 0.25, 1),
+        easeIn: BezierEasing(0.42, 0, 1, 1),
+        easeOut: BezierEasing(0, 0, 0.58, 1),
+        easeInOut: BezierEasing(0.42, 0, 0.58, 1),
+        linear: BezierEasing(0, 0, 1, 1)
+      };
+      module.exports = animate;
+      module.exports.makeAggregateRaf = makeAggregateRaf;
+      module.exports.sharedScheduler = makeAggregateRaf();
+      function animate(source, target, options) {
+        var start = /* @__PURE__ */ Object.create(null);
+        var diff = /* @__PURE__ */ Object.create(null);
+        options = options || {};
+        var easing = typeof options.easing === "function" ? options.easing : animations[options.easing];
+        if (!easing) {
+          if (options.easing) {
+            console.warn("Unknown easing function in amator: " + options.easing);
+          }
+          easing = animations.ease;
+        }
+        var step = typeof options.step === "function" ? options.step : noop2;
+        var done = typeof options.done === "function" ? options.done : noop2;
+        var scheduler = getScheduler(options.scheduler);
+        var keys = Object.keys(target);
+        keys.forEach(function(key) {
+          start[key] = source[key];
+          diff[key] = target[key] - source[key];
+        });
+        var durationInMs = typeof options.duration === "number" ? options.duration : 400;
+        var durationInFrames = Math.max(1, durationInMs * 0.06);
+        var previousAnimationId;
+        var frame = 0;
+        previousAnimationId = scheduler.next(loop);
+        return {
+          cancel
+        };
+        function cancel() {
+          scheduler.cancel(previousAnimationId);
+          previousAnimationId = 0;
+        }
+        function loop() {
+          var t = easing(frame / durationInFrames);
+          frame += 1;
+          setValues(t);
+          if (frame <= durationInFrames) {
+            previousAnimationId = scheduler.next(loop);
+            step(source);
+          } else {
+            previousAnimationId = 0;
+            setTimeout(function() {
+              done(source);
+            }, 0);
+          }
+        }
+        function setValues(t) {
+          keys.forEach(function(key) {
+            source[key] = diff[key] * t + start[key];
+          });
+        }
+      }
+      function noop2() {
+      }
+      function getScheduler(scheduler) {
+        if (!scheduler) {
+          var canRaf = typeof window !== "undefined" && window.requestAnimationFrame;
+          return canRaf ? rafScheduler() : timeoutScheduler();
+        }
+        if (typeof scheduler.next !== "function") throw new Error("Scheduler is supposed to have next(cb) function");
+        if (typeof scheduler.cancel !== "function") throw new Error("Scheduler is supposed to have cancel(handle) function");
+        return scheduler;
+      }
+      function rafScheduler() {
+        return {
+          next: window.requestAnimationFrame.bind(window),
+          cancel: window.cancelAnimationFrame.bind(window)
+        };
+      }
+      function timeoutScheduler() {
+        return {
+          next: function(cb) {
+            return setTimeout(cb, 1e3 / 60);
+          },
+          cancel: function(id) {
+            return clearTimeout(id);
+          }
+        };
+      }
+      function makeAggregateRaf() {
+        var frontBuffer = /* @__PURE__ */ new Set();
+        var backBuffer = /* @__PURE__ */ new Set();
+        var frameToken = 0;
+        return {
+          next: next2,
+          cancel: next2,
+          clearAll
+        };
+        function clearAll() {
+          frontBuffer.clear();
+          backBuffer.clear();
+          cancelAnimationFrame(frameToken);
+          frameToken = 0;
+        }
+        function next2(callback) {
+          backBuffer.add(callback);
+          renderNextFrame();
+        }
+        function renderNextFrame() {
+          if (!frameToken) frameToken = requestAnimationFrame(renderFrame);
+        }
+        function renderFrame() {
+          frameToken = 0;
+          var t = backBuffer;
+          backBuffer = frontBuffer;
+          frontBuffer = t;
+          frontBuffer.forEach(function(callback) {
+            callback();
+          });
+          frontBuffer.clear();
+        }
+        function cancel(callback) {
+          backBuffer.delete(callback);
+        }
+      }
+    }
+  });
+
+  // node_modules/ngraph.events/index.js
+  var require_ngraph = __commonJS({
+    "node_modules/ngraph.events/index.js"(exports, module) {
+      module.exports = function eventify(subject) {
+        validateSubject(subject);
+        var eventsStorage = createEventsStorage(subject);
+        subject.on = eventsStorage.on;
+        subject.off = eventsStorage.off;
+        subject.fire = eventsStorage.fire;
+        return subject;
+      };
+      function createEventsStorage(subject) {
+        var registeredEvents = /* @__PURE__ */ Object.create(null);
+        return {
+          on: function(eventName, callback, ctx) {
+            if (typeof callback !== "function") {
+              throw new Error("callback is expected to be a function");
+            }
+            var handlers = registeredEvents[eventName];
+            if (!handlers) {
+              handlers = registeredEvents[eventName] = [];
+            }
+            handlers.push({ callback, ctx });
+            return subject;
+          },
+          off: function(eventName, callback) {
+            var wantToRemoveAll = typeof eventName === "undefined";
+            if (wantToRemoveAll) {
+              registeredEvents = /* @__PURE__ */ Object.create(null);
+              return subject;
+            }
+            if (registeredEvents[eventName]) {
+              var deleteAllCallbacksForEvent = typeof callback !== "function";
+              if (deleteAllCallbacksForEvent) {
+                delete registeredEvents[eventName];
+              } else {
+                var callbacks = registeredEvents[eventName];
+                for (var i = 0; i < callbacks.length; ++i) {
+                  if (callbacks[i].callback === callback) {
+                    callbacks.splice(i, 1);
+                  }
+                }
+              }
+            }
+            return subject;
+          },
+          fire: function(eventName) {
+            var callbacks = registeredEvents[eventName];
+            if (!callbacks) {
+              return subject;
+            }
+            var fireArguments;
+            if (arguments.length > 1) {
+              fireArguments = Array.prototype.splice.call(arguments, 1);
+            }
+            for (var i = 0; i < callbacks.length; ++i) {
+              var callbackInfo = callbacks[i];
+              callbackInfo.callback.apply(callbackInfo.ctx, fireArguments);
+            }
+            return subject;
+          }
+        };
+      }
+      function validateSubject(subject) {
+        if (!subject) {
+          throw new Error("Eventify cannot use falsy object as events subject");
+        }
+        var reservedWords = ["on", "fire", "off"];
+        for (var i = 0; i < reservedWords.length; ++i) {
+          if (subject.hasOwnProperty(reservedWords[i])) {
+            throw new Error("Subject cannot be eventified, since it already has property '" + reservedWords[i] + "'");
+          }
+        }
+      }
+    }
+  });
+
+  // node_modules/panzoom/lib/kinetic.js
+  var require_kinetic = __commonJS({
+    "node_modules/panzoom/lib/kinetic.js"(exports, module) {
+      module.exports = kinetic;
+      function kinetic(getPoint, scroll, settings) {
+        if (typeof settings !== "object") {
+          settings = {};
+        }
+        var minVelocity = typeof settings.minVelocity === "number" ? settings.minVelocity : 5;
+        var amplitude = typeof settings.amplitude === "number" ? settings.amplitude : 0.25;
+        var cancelAnimationFrame2 = typeof settings.cancelAnimationFrame === "function" ? settings.cancelAnimationFrame : getCancelAnimationFrame();
+        var requestAnimationFrame2 = typeof settings.requestAnimationFrame === "function" ? settings.requestAnimationFrame : getRequestAnimationFrame();
+        var lastPoint;
+        var timestamp;
+        var timeConstant = 342;
+        var ticker;
+        var vx, targetX, ax;
+        var vy, targetY, ay;
+        var raf;
+        return {
+          start,
+          stop,
+          cancel: dispose
+        };
+        function dispose() {
+          cancelAnimationFrame2(ticker);
+          cancelAnimationFrame2(raf);
+        }
+        function start() {
+          lastPoint = getPoint();
+          ax = ay = vx = vy = 0;
+          timestamp = /* @__PURE__ */ new Date();
+          cancelAnimationFrame2(ticker);
+          cancelAnimationFrame2(raf);
+          ticker = requestAnimationFrame2(track);
+        }
+        function track() {
+          var now = Date.now();
+          var elapsed = now - timestamp;
+          timestamp = now;
+          var currentPoint = getPoint();
+          var dx = currentPoint.x - lastPoint.x;
+          var dy = currentPoint.y - lastPoint.y;
+          lastPoint = currentPoint;
+          var dt = 1e3 / (1 + elapsed);
+          vx = 0.8 * dx * dt + 0.2 * vx;
+          vy = 0.8 * dy * dt + 0.2 * vy;
+          ticker = requestAnimationFrame2(track);
+        }
+        function stop() {
+          cancelAnimationFrame2(ticker);
+          cancelAnimationFrame2(raf);
+          var currentPoint = getPoint();
+          targetX = currentPoint.x;
+          targetY = currentPoint.y;
+          timestamp = Date.now();
+          if (vx < -minVelocity || vx > minVelocity) {
+            ax = amplitude * vx;
+            targetX += ax;
+          }
+          if (vy < -minVelocity || vy > minVelocity) {
+            ay = amplitude * vy;
+            targetY += ay;
+          }
+          raf = requestAnimationFrame2(autoScroll);
+        }
+        function autoScroll() {
+          var elapsed = Date.now() - timestamp;
+          var moving = false;
+          var dx = 0;
+          var dy = 0;
+          if (ax) {
+            dx = -ax * Math.exp(-elapsed / timeConstant);
+            if (dx > 0.5 || dx < -0.5) moving = true;
+            else dx = ax = 0;
+          }
+          if (ay) {
+            dy = -ay * Math.exp(-elapsed / timeConstant);
+            if (dy > 0.5 || dy < -0.5) moving = true;
+            else dy = ay = 0;
+          }
+          if (moving) {
+            scroll(targetX + dx, targetY + dy);
+            raf = requestAnimationFrame2(autoScroll);
+          }
+        }
+      }
+      function getCancelAnimationFrame() {
+        if (typeof cancelAnimationFrame === "function") return cancelAnimationFrame;
+        return clearTimeout;
+      }
+      function getRequestAnimationFrame() {
+        if (typeof requestAnimationFrame === "function") return requestAnimationFrame;
+        return function(handler) {
+          return setTimeout(handler, 16);
+        };
+      }
+    }
+  });
+
+  // node_modules/panzoom/lib/createTextSelectionInterceptor.js
+  var require_createTextSelectionInterceptor = __commonJS({
+    "node_modules/panzoom/lib/createTextSelectionInterceptor.js"(exports, module) {
+      module.exports = createTextSelectionInterceptor;
+      function createTextSelectionInterceptor(useFake) {
+        if (useFake) {
+          return {
+            capture: noop2,
+            release: noop2
+          };
+        }
+        var dragObject;
+        var prevSelectStart;
+        var prevDragStart;
+        var wasCaptured = false;
+        return {
+          capture,
+          release
+        };
+        function capture(domObject) {
+          wasCaptured = true;
+          prevSelectStart = window.document.onselectstart;
+          prevDragStart = window.document.ondragstart;
+          window.document.onselectstart = disabled;
+          dragObject = domObject;
+          dragObject.ondragstart = disabled;
+        }
+        function release() {
+          if (!wasCaptured) return;
+          wasCaptured = false;
+          window.document.onselectstart = prevSelectStart;
+          if (dragObject) dragObject.ondragstart = prevDragStart;
+        }
+      }
+      function disabled(e) {
+        e.stopPropagation();
+        return false;
+      }
+      function noop2() {
+      }
+    }
+  });
+
+  // node_modules/panzoom/lib/transform.js
+  var require_transform = __commonJS({
+    "node_modules/panzoom/lib/transform.js"(exports, module) {
+      module.exports = Transform;
+      function Transform() {
+        this.x = 0;
+        this.y = 0;
+        this.scale = 1;
+      }
+    }
+  });
+
+  // node_modules/panzoom/lib/svgController.js
+  var require_svgController = __commonJS({
+    "node_modules/panzoom/lib/svgController.js"(exports, module) {
+      module.exports = makeSvgController;
+      module.exports.canAttach = isSVGElement;
+      function makeSvgController(svgElement, options) {
+        if (!isSVGElement(svgElement)) {
+          throw new Error("svg element is required for svg.panzoom to work");
+        }
+        var owner = svgElement.ownerSVGElement;
+        if (!owner) {
+          throw new Error(
+            "Do not apply panzoom to the root <svg> element. Use its child instead (e.g. <g></g>). As of March 2016 only FireFox supported transform on the root element"
+          );
+        }
+        if (!options.disableKeyboardInteraction) {
+          owner.setAttribute("tabindex", 0);
+        }
+        var api = {
+          getBBox,
+          getScreenCTM,
+          getOwner,
+          applyTransform,
+          initTransform
+        };
+        return api;
+        function getOwner() {
+          return owner;
+        }
+        function getBBox() {
+          var bbox = svgElement.getBBox();
+          return {
+            left: bbox.x,
+            top: bbox.y,
+            width: bbox.width,
+            height: bbox.height
+          };
+        }
+        function getScreenCTM() {
+          var ctm = owner.getCTM();
+          if (!ctm) {
+            return owner.getScreenCTM();
+          }
+          return ctm;
+        }
+        function initTransform(transform) {
+          var screenCTM = svgElement.getCTM();
+          if (screenCTM === null) {
+            screenCTM = document.createElementNS("http://www.w3.org/2000/svg", "svg").createSVGMatrix();
+          }
+          transform.x = screenCTM.e;
+          transform.y = screenCTM.f;
+          transform.scale = screenCTM.a;
+          owner.removeAttributeNS(null, "viewBox");
+        }
+        function applyTransform(transform) {
+          svgElement.setAttribute("transform", "matrix(" + transform.scale + " 0 0 " + transform.scale + " " + transform.x + " " + transform.y + ")");
+        }
+      }
+      function isSVGElement(element) {
+        return element && element.ownerSVGElement && element.getCTM;
+      }
+    }
+  });
+
+  // node_modules/panzoom/lib/domController.js
+  var require_domController = __commonJS({
+    "node_modules/panzoom/lib/domController.js"(exports, module) {
+      module.exports = makeDomController;
+      module.exports.canAttach = isDomElement;
+      function makeDomController(domElement, options) {
+        var elementValid = isDomElement(domElement);
+        if (!elementValid) {
+          throw new Error("panzoom requires DOM element to be attached to the DOM tree");
+        }
+        var owner = domElement.parentElement;
+        domElement.scrollTop = 0;
+        if (!options.disableKeyboardInteraction) {
+          owner.setAttribute("tabindex", 0);
+        }
+        var api = {
+          getBBox,
+          getOwner,
+          applyTransform
+        };
+        return api;
+        function getOwner() {
+          return owner;
+        }
+        function getBBox() {
+          return {
+            left: 0,
+            top: 0,
+            width: domElement.clientWidth,
+            height: domElement.clientHeight
+          };
+        }
+        function applyTransform(transform) {
+          domElement.style.transformOrigin = "0 0 0";
+          domElement.style.transform = "matrix(" + transform.scale + ", 0, 0, " + transform.scale + ", " + transform.x + ", " + transform.y + ")";
+        }
+      }
+      function isDomElement(element) {
+        return element && element.parentElement && element.style;
+      }
+    }
+  });
+
+  // node_modules/panzoom/index.js
+  var require_panzoom = __commonJS({
+    "node_modules/panzoom/index.js"(exports, module) {
+      "use strict";
+      var wheel = require_wheel();
+      var animate = require_amator();
+      var eventify = require_ngraph();
+      var kinetic = require_kinetic();
+      var createTextSelectionInterceptor = require_createTextSelectionInterceptor();
+      var domTextSelectionInterceptor = createTextSelectionInterceptor();
+      var fakeTextSelectorInterceptor = createTextSelectionInterceptor(true);
+      var Transform = require_transform();
+      var makeSvgController = require_svgController();
+      var makeDomController = require_domController();
+      var defaultZoomSpeed = 1;
+      var defaultDoubleTapZoomSpeed = 1.75;
+      var doubleTapSpeedInMS = 300;
+      var clickEventTimeInMS = 200;
+      module.exports = createPanZoom;
+      function createPanZoom(domElement, options) {
+        options = options || {};
+        var panController = options.controller;
+        if (!panController) {
+          if (makeSvgController.canAttach(domElement)) {
+            panController = makeSvgController(domElement, options);
+          } else if (makeDomController.canAttach(domElement)) {
+            panController = makeDomController(domElement, options);
+          }
+        }
+        if (!panController) {
+          throw new Error(
+            "Cannot create panzoom for the current type of dom element"
+          );
+        }
+        var owner = panController.getOwner();
+        var storedCTMResult = { x: 0, y: 0 };
+        var isDirty = false;
+        var transform = new Transform();
+        if (panController.initTransform) {
+          panController.initTransform(transform);
+        }
+        var filterKey = typeof options.filterKey === "function" ? options.filterKey : noop2;
+        var pinchSpeed = typeof options.pinchSpeed === "number" ? options.pinchSpeed : 1;
+        var bounds = options.bounds;
+        var maxZoom = typeof options.maxZoom === "number" ? options.maxZoom : Number.POSITIVE_INFINITY;
+        var minZoom = typeof options.minZoom === "number" ? options.minZoom : 0;
+        var boundsPadding = typeof options.boundsPadding === "number" ? options.boundsPadding : 0.05;
+        var zoomDoubleClickSpeed = typeof options.zoomDoubleClickSpeed === "number" ? options.zoomDoubleClickSpeed : defaultDoubleTapZoomSpeed;
+        var beforeWheel = options.beforeWheel || noop2;
+        var beforeMouseDown = options.beforeMouseDown || noop2;
+        var speed = typeof options.zoomSpeed === "number" ? options.zoomSpeed : defaultZoomSpeed;
+        var transformOrigin = parseTransformOrigin(options.transformOrigin);
+        var textSelection = options.enableTextSelection ? fakeTextSelectorInterceptor : domTextSelectionInterceptor;
+        validateBounds(bounds);
+        if (options.autocenter) {
+          autocenter();
+        }
+        var frameAnimation;
+        var lastTouchEndTime = 0;
+        var lastTouchStartTime = 0;
+        var pendingClickEventTimeout = 0;
+        var lastMouseDownedEvent = null;
+        var lastMouseDownTime = /* @__PURE__ */ new Date();
+        var lastSingleFingerOffset;
+        var touchInProgress = false;
+        var panstartFired = false;
+        var mouseX;
+        var mouseY;
+        var clickX;
+        var clickY;
+        var pinchZoomLength;
+        var smoothScroll;
+        if ("smoothScroll" in options && !options.smoothScroll) {
+          smoothScroll = rigidScroll();
+        } else {
+          smoothScroll = kinetic(getPoint, scroll, options.smoothScroll);
+        }
+        var moveByAnimation;
+        var zoomToAnimation;
+        var multiTouch;
+        var paused = false;
+        listenForEvents();
+        var api = {
+          dispose,
+          moveBy: internalMoveBy,
+          moveTo,
+          smoothMoveTo,
+          centerOn,
+          zoomTo: publicZoomTo,
+          zoomAbs,
+          smoothZoom,
+          smoothZoomAbs,
+          showRectangle,
+          pause,
+          resume,
+          isPaused,
+          getTransform: getTransformModel,
+          getMinZoom,
+          setMinZoom,
+          getMaxZoom,
+          setMaxZoom,
+          getTransformOrigin,
+          setTransformOrigin,
+          getZoomSpeed,
+          setZoomSpeed
+        };
+        eventify(api);
+        var initialX = typeof options.initialX === "number" ? options.initialX : transform.x;
+        var initialY = typeof options.initialY === "number" ? options.initialY : transform.y;
+        var initialZoom = typeof options.initialZoom === "number" ? options.initialZoom : transform.scale;
+        if (initialX != transform.x || initialY != transform.y || initialZoom != transform.scale) {
+          zoomAbs(initialX, initialY, initialZoom);
+        }
+        return api;
+        function pause() {
+          releaseEvents();
+          paused = true;
+        }
+        function resume() {
+          if (paused) {
+            listenForEvents();
+            paused = false;
+          }
+        }
+        function isPaused() {
+          return paused;
+        }
+        function showRectangle(rect) {
+          var clientRect = owner.getBoundingClientRect();
+          var size = transformToScreen(clientRect.width, clientRect.height);
+          var rectWidth = rect.right - rect.left;
+          var rectHeight = rect.bottom - rect.top;
+          if (!Number.isFinite(rectWidth) || !Number.isFinite(rectHeight)) {
+            throw new Error("Invalid rectangle");
+          }
+          var dw = size.x / rectWidth;
+          var dh = size.y / rectHeight;
+          var scale = Math.min(dw, dh);
+          transform.x = -(rect.left + rectWidth / 2) * scale + size.x / 2;
+          transform.y = -(rect.top + rectHeight / 2) * scale + size.y / 2;
+          transform.scale = scale;
+        }
+        function transformToScreen(x, y) {
+          if (panController.getScreenCTM) {
+            var parentCTM = panController.getScreenCTM();
+            var parentScaleX = parentCTM.a;
+            var parentScaleY = parentCTM.d;
+            var parentOffsetX = parentCTM.e;
+            var parentOffsetY = parentCTM.f;
+            storedCTMResult.x = x * parentScaleX - parentOffsetX;
+            storedCTMResult.y = y * parentScaleY - parentOffsetY;
+          } else {
+            storedCTMResult.x = x;
+            storedCTMResult.y = y;
+          }
+          return storedCTMResult;
+        }
+        function autocenter() {
+          var w;
+          var h;
+          var left = 0;
+          var top = 0;
+          var sceneBoundingBox = getBoundingBox();
+          if (sceneBoundingBox) {
+            left = sceneBoundingBox.left;
+            top = sceneBoundingBox.top;
+            w = sceneBoundingBox.right - sceneBoundingBox.left;
+            h = sceneBoundingBox.bottom - sceneBoundingBox.top;
+          } else {
+            var ownerRect = owner.getBoundingClientRect();
+            w = ownerRect.width;
+            h = ownerRect.height;
+          }
+          var bbox = panController.getBBox();
+          if (bbox.width === 0 || bbox.height === 0) {
+            return;
+          }
+          var dh = h / bbox.height;
+          var dw = w / bbox.width;
+          var scale = Math.min(dw, dh);
+          transform.x = -(bbox.left + bbox.width / 2) * scale + w / 2 + left;
+          transform.y = -(bbox.top + bbox.height / 2) * scale + h / 2 + top;
+          transform.scale = scale;
+        }
+        function getTransformModel() {
+          return transform;
+        }
+        function getMinZoom() {
+          return minZoom;
+        }
+        function setMinZoom(newMinZoom) {
+          minZoom = newMinZoom;
+        }
+        function getMaxZoom() {
+          return maxZoom;
+        }
+        function setMaxZoom(newMaxZoom) {
+          maxZoom = newMaxZoom;
+        }
+        function getTransformOrigin() {
+          return transformOrigin;
+        }
+        function setTransformOrigin(newTransformOrigin) {
+          transformOrigin = parseTransformOrigin(newTransformOrigin);
+        }
+        function getZoomSpeed() {
+          return speed;
+        }
+        function setZoomSpeed(newSpeed) {
+          if (!Number.isFinite(newSpeed)) {
+            throw new Error("Zoom speed should be a number");
+          }
+          speed = newSpeed;
+        }
+        function getPoint() {
+          return {
+            x: transform.x,
+            y: transform.y
+          };
+        }
+        function moveTo(x, y) {
+          transform.x = x;
+          transform.y = y;
+          keepTransformInsideBounds();
+          triggerEvent("pan");
+          makeDirty();
+        }
+        function moveBy(dx, dy) {
+          moveTo(transform.x + dx, transform.y + dy);
+        }
+        function keepTransformInsideBounds() {
+          var boundingBox = getBoundingBox();
+          if (!boundingBox) return;
+          var adjusted = false;
+          var clientRect = getClientRect();
+          var diff = boundingBox.left - clientRect.right;
+          if (diff > 0) {
+            transform.x += diff;
+            adjusted = true;
+          }
+          diff = boundingBox.right - clientRect.left;
+          if (diff < 0) {
+            transform.x += diff;
+            adjusted = true;
+          }
+          diff = boundingBox.top - clientRect.bottom;
+          if (diff > 0) {
+            transform.y += diff;
+            adjusted = true;
+          }
+          diff = boundingBox.bottom - clientRect.top;
+          if (diff < 0) {
+            transform.y += diff;
+            adjusted = true;
+          }
+          return adjusted;
+        }
+        function getBoundingBox() {
+          if (!bounds) return;
+          if (typeof bounds === "boolean") {
+            var ownerRect = owner.getBoundingClientRect();
+            var sceneWidth = ownerRect.width;
+            var sceneHeight = ownerRect.height;
+            return {
+              left: sceneWidth * boundsPadding,
+              top: sceneHeight * boundsPadding,
+              right: sceneWidth * (1 - boundsPadding),
+              bottom: sceneHeight * (1 - boundsPadding)
+            };
+          }
+          return bounds;
+        }
+        function getClientRect() {
+          var bbox = panController.getBBox();
+          var leftTop = client(bbox.left, bbox.top);
+          return {
+            left: leftTop.x,
+            top: leftTop.y,
+            right: bbox.width * transform.scale + leftTop.x,
+            bottom: bbox.height * transform.scale + leftTop.y
+          };
+        }
+        function client(x, y) {
+          return {
+            x: x * transform.scale + transform.x,
+            y: y * transform.scale + transform.y
+          };
+        }
+        function makeDirty() {
+          isDirty = true;
+          frameAnimation = window.requestAnimationFrame(frame);
+        }
+        function zoomByRatio(clientX, clientY, ratio) {
+          if (isNaN2(clientX) || isNaN2(clientY) || isNaN2(ratio)) {
+            throw new Error("zoom requires valid numbers");
+          }
+          var newScale = transform.scale * ratio;
+          if (newScale < minZoom) {
+            if (transform.scale === minZoom) return;
+            ratio = minZoom / transform.scale;
+          }
+          if (newScale > maxZoom) {
+            if (transform.scale === maxZoom) return;
+            ratio = maxZoom / transform.scale;
+          }
+          var size = transformToScreen(clientX, clientY);
+          transform.x = size.x - ratio * (size.x - transform.x);
+          transform.y = size.y - ratio * (size.y - transform.y);
+          if (bounds && boundsPadding === 1 && minZoom === 1) {
+            transform.scale *= ratio;
+            keepTransformInsideBounds();
+          } else {
+            var transformAdjusted = keepTransformInsideBounds();
+            if (!transformAdjusted) transform.scale *= ratio;
+          }
+          triggerEvent("zoom");
+          makeDirty();
+        }
+        function zoomAbs(clientX, clientY, zoomLevel) {
+          var ratio = zoomLevel / transform.scale;
+          zoomByRatio(clientX, clientY, ratio);
+        }
+        function centerOn(ui) {
+          var parent = ui.ownerSVGElement;
+          if (!parent)
+            throw new Error("ui element is required to be within the scene");
+          var clientRect = ui.getBoundingClientRect();
+          var cx = clientRect.left + clientRect.width / 2;
+          var cy = clientRect.top + clientRect.height / 2;
+          var container = parent.getBoundingClientRect();
+          var dx = container.width / 2 - cx;
+          var dy = container.height / 2 - cy;
+          internalMoveBy(dx, dy, true);
+        }
+        function smoothMoveTo(x, y) {
+          internalMoveBy(x - transform.x, y - transform.y, true);
+        }
+        function internalMoveBy(dx, dy, smooth) {
+          if (!smooth) {
+            return moveBy(dx, dy);
+          }
+          if (moveByAnimation) moveByAnimation.cancel();
+          var from2 = { x: 0, y: 0 };
+          var to = { x: dx, y: dy };
+          var lastX = 0;
+          var lastY = 0;
+          moveByAnimation = animate(from2, to, {
+            step: function(v) {
+              moveBy(v.x - lastX, v.y - lastY);
+              lastX = v.x;
+              lastY = v.y;
+            }
+          });
+        }
+        function scroll(x, y) {
+          cancelZoomAnimation();
+          moveTo(x, y);
+        }
+        function dispose() {
+          releaseEvents();
+        }
+        function listenForEvents() {
+          owner.addEventListener("mousedown", onMouseDown, { passive: false });
+          owner.addEventListener("dblclick", onDoubleClick, { passive: false });
+          owner.addEventListener("touchstart", onTouch, { passive: false });
+          owner.addEventListener("keydown", onKeyDown, { passive: false });
+          wheel.addWheelListener(owner, onMouseWheel, { passive: false });
+          makeDirty();
+        }
+        function releaseEvents() {
+          wheel.removeWheelListener(owner, onMouseWheel);
+          owner.removeEventListener("mousedown", onMouseDown);
+          owner.removeEventListener("keydown", onKeyDown);
+          owner.removeEventListener("dblclick", onDoubleClick);
+          owner.removeEventListener("touchstart", onTouch);
+          if (frameAnimation) {
+            window.cancelAnimationFrame(frameAnimation);
+            frameAnimation = 0;
+          }
+          smoothScroll.cancel();
+          releaseDocumentMouse();
+          releaseTouches();
+          textSelection.release();
+          triggerPanEnd();
+        }
+        function frame() {
+          if (isDirty) applyTransform();
+        }
+        function applyTransform() {
+          isDirty = false;
+          panController.applyTransform(transform);
+          triggerEvent("transform");
+          frameAnimation = 0;
+        }
+        function onKeyDown(e) {
+          var x = 0, y = 0, z = 0;
+          if (e.keyCode === 38) {
+            y = 1;
+          } else if (e.keyCode === 40) {
+            y = -1;
+          } else if (e.keyCode === 37) {
+            x = 1;
+          } else if (e.keyCode === 39) {
+            x = -1;
+          } else if (e.keyCode === 189 || e.keyCode === 109) {
+            z = 1;
+          } else if (e.keyCode === 187 || e.keyCode === 107) {
+            z = -1;
+          }
+          if (filterKey(e, x, y, z)) {
+            return;
+          }
+          if (x || y) {
+            e.preventDefault();
+            e.stopPropagation();
+            var clientRect = owner.getBoundingClientRect();
+            var offset = Math.min(clientRect.width, clientRect.height);
+            var moveSpeedRatio = 0.05;
+            var dx = offset * moveSpeedRatio * x;
+            var dy = offset * moveSpeedRatio * y;
+            internalMoveBy(dx, dy);
+          }
+          if (z) {
+            var scaleMultiplier = getScaleMultiplier(z * 100);
+            var offset = transformOrigin ? getTransformOriginOffset() : midPoint();
+            publicZoomTo(offset.x, offset.y, scaleMultiplier);
+          }
+        }
+        function midPoint() {
+          var ownerRect = owner.getBoundingClientRect();
+          return {
+            x: ownerRect.width / 2,
+            y: ownerRect.height / 2
+          };
+        }
+        function onTouch(e) {
+          beforeTouch(e);
+          clearPendingClickEventTimeout();
+          if (e.touches.length === 1) {
+            return handleSingleFingerTouch(e, e.touches[0]);
+          } else if (e.touches.length === 2) {
+            pinchZoomLength = getPinchZoomLength(e.touches[0], e.touches[1]);
+            multiTouch = true;
+            startTouchListenerIfNeeded();
+          }
+        }
+        function beforeTouch(e) {
+          if (options.onTouch && !options.onTouch(e)) {
+            return;
+          }
+          e.stopPropagation();
+          e.preventDefault();
+        }
+        function beforeDoubleClick(e) {
+          clearPendingClickEventTimeout();
+          if (options.onDoubleClick && !options.onDoubleClick(e)) {
+            return;
+          }
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        function handleSingleFingerTouch(e) {
+          lastTouchStartTime = /* @__PURE__ */ new Date();
+          var touch = e.touches[0];
+          var offset = getOffsetXY(touch);
+          lastSingleFingerOffset = offset;
+          var point = transformToScreen(offset.x, offset.y);
+          mouseX = point.x;
+          mouseY = point.y;
+          clickX = mouseX;
+          clickY = mouseY;
+          smoothScroll.cancel();
+          startTouchListenerIfNeeded();
+        }
+        function startTouchListenerIfNeeded() {
+          if (touchInProgress) {
+            return;
+          }
+          touchInProgress = true;
+          document.addEventListener("touchmove", handleTouchMove);
+          document.addEventListener("touchend", handleTouchEnd);
+          document.addEventListener("touchcancel", handleTouchEnd);
+        }
+        function handleTouchMove(e) {
+          if (e.touches.length === 1) {
+            e.stopPropagation();
+            var touch = e.touches[0];
+            var offset = getOffsetXY(touch);
+            var point = transformToScreen(offset.x, offset.y);
+            var dx = point.x - mouseX;
+            var dy = point.y - mouseY;
+            if (dx !== 0 && dy !== 0) {
+              triggerPanStart();
+            }
+            mouseX = point.x;
+            mouseY = point.y;
+            internalMoveBy(dx, dy);
+          } else if (e.touches.length === 2) {
+            multiTouch = true;
+            var t1 = e.touches[0];
+            var t2 = e.touches[1];
+            var currentPinchLength = getPinchZoomLength(t1, t2);
+            var scaleMultiplier = 1 + (currentPinchLength / pinchZoomLength - 1) * pinchSpeed;
+            var firstTouchPoint = getOffsetXY(t1);
+            var secondTouchPoint = getOffsetXY(t2);
+            mouseX = (firstTouchPoint.x + secondTouchPoint.x) / 2;
+            mouseY = (firstTouchPoint.y + secondTouchPoint.y) / 2;
+            if (transformOrigin) {
+              var offset = getTransformOriginOffset();
+              mouseX = offset.x;
+              mouseY = offset.y;
+            }
+            publicZoomTo(mouseX, mouseY, scaleMultiplier);
+            pinchZoomLength = currentPinchLength;
+            e.stopPropagation();
+            e.preventDefault();
+          }
+        }
+        function clearPendingClickEventTimeout() {
+          if (pendingClickEventTimeout) {
+            clearTimeout(pendingClickEventTimeout);
+            pendingClickEventTimeout = 0;
+          }
+        }
+        function handlePotentialClickEvent(e) {
+          if (!options.onClick) return;
+          clearPendingClickEventTimeout();
+          var dx = mouseX - clickX;
+          var dy = mouseY - clickY;
+          var l = Math.sqrt(dx * dx + dy * dy);
+          if (l > 5) return;
+          pendingClickEventTimeout = setTimeout(function() {
+            pendingClickEventTimeout = 0;
+            options.onClick(e);
+          }, doubleTapSpeedInMS);
+        }
+        function handleTouchEnd(e) {
+          clearPendingClickEventTimeout();
+          if (e.touches.length > 0) {
+            var offset = getOffsetXY(e.touches[0]);
+            var point = transformToScreen(offset.x, offset.y);
+            mouseX = point.x;
+            mouseY = point.y;
+          } else {
+            var now = /* @__PURE__ */ new Date();
+            if (now - lastTouchEndTime < doubleTapSpeedInMS) {
+              if (transformOrigin) {
+                var offset = getTransformOriginOffset();
+                smoothZoom(offset.x, offset.y, zoomDoubleClickSpeed);
+              } else {
+                smoothZoom(lastSingleFingerOffset.x, lastSingleFingerOffset.y, zoomDoubleClickSpeed);
+              }
+            } else if (now - lastTouchStartTime < clickEventTimeInMS) {
+              handlePotentialClickEvent(e);
+            }
+            lastTouchEndTime = now;
+            triggerPanEnd();
+            releaseTouches();
+          }
+        }
+        function getPinchZoomLength(finger1, finger2) {
+          var dx = finger1.clientX - finger2.clientX;
+          var dy = finger1.clientY - finger2.clientY;
+          return Math.sqrt(dx * dx + dy * dy);
+        }
+        function onDoubleClick(e) {
+          beforeDoubleClick(e);
+          var offset = getOffsetXY(e);
+          if (transformOrigin) {
+            offset = getTransformOriginOffset();
+          }
+          smoothZoom(offset.x, offset.y, zoomDoubleClickSpeed);
+        }
+        function onMouseDown(e) {
+          clearPendingClickEventTimeout();
+          if (beforeMouseDown(e)) return;
+          lastMouseDownedEvent = e;
+          lastMouseDownTime = /* @__PURE__ */ new Date();
+          if (touchInProgress) {
+            e.stopPropagation();
+            return false;
+          }
+          var isLeftButton = e.button === 1 && window.event !== null || e.button === 0;
+          if (!isLeftButton) return;
+          smoothScroll.cancel();
+          var offset = getOffsetXY(e);
+          var point = transformToScreen(offset.x, offset.y);
+          clickX = mouseX = point.x;
+          clickY = mouseY = point.y;
+          document.addEventListener("mousemove", onMouseMove);
+          document.addEventListener("mouseup", onMouseUp);
+          textSelection.capture(e.target || e.srcElement);
+          return false;
+        }
+        function onMouseMove(e) {
+          if (touchInProgress) return;
+          triggerPanStart();
+          var offset = getOffsetXY(e);
+          var point = transformToScreen(offset.x, offset.y);
+          var dx = point.x - mouseX;
+          var dy = point.y - mouseY;
+          mouseX = point.x;
+          mouseY = point.y;
+          internalMoveBy(dx, dy);
+        }
+        function onMouseUp() {
+          var now = /* @__PURE__ */ new Date();
+          if (now - lastMouseDownTime < clickEventTimeInMS) handlePotentialClickEvent(lastMouseDownedEvent);
+          textSelection.release();
+          triggerPanEnd();
+          releaseDocumentMouse();
+        }
+        function releaseDocumentMouse() {
+          document.removeEventListener("mousemove", onMouseMove);
+          document.removeEventListener("mouseup", onMouseUp);
+          panstartFired = false;
+        }
+        function releaseTouches() {
+          document.removeEventListener("touchmove", handleTouchMove);
+          document.removeEventListener("touchend", handleTouchEnd);
+          document.removeEventListener("touchcancel", handleTouchEnd);
+          panstartFired = false;
+          multiTouch = false;
+          touchInProgress = false;
+        }
+        function onMouseWheel(e) {
+          if (beforeWheel(e)) return;
+          smoothScroll.cancel();
+          var delta = e.deltaY;
+          if (e.deltaMode > 0) delta *= 100;
+          var scaleMultiplier = getScaleMultiplier(delta);
+          if (scaleMultiplier !== 1) {
+            var offset = transformOrigin ? getTransformOriginOffset() : getOffsetXY(e);
+            publicZoomTo(offset.x, offset.y, scaleMultiplier);
+            e.preventDefault();
+          }
+        }
+        function getOffsetXY(e) {
+          var offsetX, offsetY;
+          var ownerRect = owner.getBoundingClientRect();
+          offsetX = e.clientX - ownerRect.left;
+          offsetY = e.clientY - ownerRect.top;
+          return { x: offsetX, y: offsetY };
+        }
+        function smoothZoom(clientX, clientY, scaleMultiplier) {
+          var fromValue = transform.scale;
+          var from2 = { scale: fromValue };
+          var to = { scale: scaleMultiplier * fromValue };
+          smoothScroll.cancel();
+          cancelZoomAnimation();
+          zoomToAnimation = animate(from2, to, {
+            step: function(v) {
+              zoomAbs(clientX, clientY, v.scale);
+            },
+            done: triggerZoomEnd
+          });
+        }
+        function smoothZoomAbs(clientX, clientY, toScaleValue) {
+          var fromValue = transform.scale;
+          var from2 = { scale: fromValue };
+          var to = { scale: toScaleValue };
+          smoothScroll.cancel();
+          cancelZoomAnimation();
+          zoomToAnimation = animate(from2, to, {
+            step: function(v) {
+              zoomAbs(clientX, clientY, v.scale);
+            }
+          });
+        }
+        function getTransformOriginOffset() {
+          var ownerRect = owner.getBoundingClientRect();
+          return {
+            x: ownerRect.width * transformOrigin.x,
+            y: ownerRect.height * transformOrigin.y
+          };
+        }
+        function publicZoomTo(clientX, clientY, scaleMultiplier) {
+          smoothScroll.cancel();
+          cancelZoomAnimation();
+          return zoomByRatio(clientX, clientY, scaleMultiplier);
+        }
+        function cancelZoomAnimation() {
+          if (zoomToAnimation) {
+            zoomToAnimation.cancel();
+            zoomToAnimation = null;
+          }
+        }
+        function getScaleMultiplier(delta) {
+          var sign = Math.sign(delta);
+          var deltaAdjustedSpeed = Math.min(0.25, Math.abs(speed * delta / 128));
+          return 1 - sign * deltaAdjustedSpeed;
+        }
+        function triggerPanStart() {
+          if (!panstartFired) {
+            triggerEvent("panstart");
+            panstartFired = true;
+            smoothScroll.start();
+          }
+        }
+        function triggerPanEnd() {
+          if (panstartFired) {
+            if (!multiTouch) smoothScroll.stop();
+            triggerEvent("panend");
+          }
+        }
+        function triggerZoomEnd() {
+          triggerEvent("zoomend");
+        }
+        function triggerEvent(name) {
+          api.fire(name, api);
+        }
+      }
+      function parseTransformOrigin(options) {
+        if (!options) return;
+        if (typeof options === "object") {
+          if (!isNumber(options.x) || !isNumber(options.y))
+            failTransformOrigin(options);
+          return options;
+        }
+        failTransformOrigin();
+      }
+      function failTransformOrigin(options) {
+        console.error(options);
+        throw new Error(
+          [
+            "Cannot parse transform origin.",
+            "Some good examples:",
+            '  "center center" can be achieved with {x: 0.5, y: 0.5}',
+            '  "top center" can be achieved with {x: 0.5, y: 0}',
+            '  "bottom right" can be achieved with {x: 1, y: 1}'
+          ].join("\n")
+        );
+      }
+      function noop2() {
+      }
+      function validateBounds(bounds) {
+        var boundsType = typeof bounds;
+        if (boundsType === "undefined" || boundsType === "boolean") return;
+        var validBounds = isNumber(bounds.left) && isNumber(bounds.top) && isNumber(bounds.bottom) && isNumber(bounds.right);
+        if (!validBounds)
+          throw new Error(
+            "Bounds object is not valid. It can be: undefined, boolean (true|false) or an object {left, top, right, bottom}"
+          );
+      }
+      function isNumber(x) {
+        return Number.isFinite(x);
+      }
+      function isNaN2(value) {
+        if (Number.isNaN) {
+          return Number.isNaN(value);
+        }
+        return value !== value;
+      }
+      function rigidScroll() {
+        return {
+          start: noop2,
+          stop: noop2,
+          cancel: noop2
+        };
+      }
+      function autoRun() {
+        if (typeof document === "undefined") return;
+        var scripts = document.getElementsByTagName("script");
+        if (!scripts) return;
+        var panzoomScript;
+        for (var i = 0; i < scripts.length; ++i) {
+          var x = scripts[i];
+          if (x.src && x.src.match(/\bpanzoom(\.min)?\.js/)) {
+            panzoomScript = x;
+            break;
+          }
+        }
+        if (!panzoomScript) return;
+        var query = panzoomScript.getAttribute("query");
+        if (!query) return;
+        var globalName = panzoomScript.getAttribute("name") || "pz";
+        var started = Date.now();
+        tryAttach();
+        function tryAttach() {
+          var el = document.querySelector(query);
+          if (!el) {
+            var now = Date.now();
+            var elapsed = now - started;
+            if (elapsed < 2e3) {
+              setTimeout(tryAttach, 100);
+              return;
+            }
+            console.error("Cannot find the panzoom element", globalName);
+            return;
+          }
+          var options = collectOptions(panzoomScript);
+          console.log(options);
+          window[globalName] = createPanZoom(el, options);
+        }
+        function collectOptions(script) {
+          var attrs = script.attributes;
+          var options = {};
+          for (var j = 0; j < attrs.length; ++j) {
+            var attr = attrs[j];
+            var nameValue = getPanzoomAttributeNameValue(attr);
+            if (nameValue) {
+              options[nameValue.name] = nameValue.value;
+            }
+          }
+          return options;
+        }
+        function getPanzoomAttributeNameValue(attr) {
+          if (!attr.name) return;
+          var isPanZoomAttribute = attr.name[0] === "p" && attr.name[1] === "z" && attr.name[2] === "-";
+          if (!isPanZoomAttribute) return;
+          var name = attr.name.substr(3);
+          var value = JSON.parse(attr.value);
+          return { name, value };
+        }
+      }
+      autoRun();
+    }
+  });
+
   // node_modules/react/cjs/react-jsx-runtime.production.min.js
   var require_react_jsx_runtime_production_min = __commonJS({
     "node_modules/react/cjs/react-jsx-runtime.production.min.js"(exports) {
@@ -7623,7 +9023,7 @@
   });
 
   // src/index.tsx
-  var import_react13 = __toESM(require_react());
+  var import_react14 = __toESM(require_react());
   var import_client = __toESM(require_client());
 
   // node_modules/react-redux/dist/react-redux.mjs
@@ -8015,1513 +9415,11 @@
   initializeUseSelector(import_with_selector.useSyncExternalStoreWithSelector);
   initializeConnect(React2.useSyncExternalStore);
 
-  // node_modules/@uidotdev/usehooks/index.js
-  var React3 = __toESM(require_react(), 1);
-  function useWindowSize() {
-    const [size, setSize] = React3.useState({
-      width: null,
-      height: null
-    });
-    React3.useLayoutEffect(() => {
-      const handleResize = () => {
-        setSize({
-          width: window.innerWidth,
-          height: window.innerHeight
-        });
-      };
-      handleResize();
-      window.addEventListener("resize", handleResize);
-      return () => {
-        window.removeEventListener("resize", handleResize);
-      };
-    }, []);
-    return size;
-  }
-
   // src/components/App.tsx
-  var import_react12 = __toESM(require_react());
-
-  // node_modules/react-hexgrid/lib/models/Hex.js
-  var Hex = class {
-    q;
-    r;
-    s;
-    blocked;
-    text;
-    image;
-    props;
-    state;
-    pattern;
-    constructor(q, r, s) {
-      this.q = q;
-      this.r = r;
-      this.s = s;
-    }
-  };
-
-  // node_modules/react-hexgrid/lib/models/Point.js
-  var Point = class {
-    x;
-    y;
-    constructor(x, y) {
-      this.x = x;
-      this.y = y;
-    }
-  };
-  var Point_default = Point;
-
-  // node_modules/react-hexgrid/lib/HexUtils.js
-  var HexUtils = class _HexUtils {
-    static DIRECTIONS = [
-      new Hex(1, 0, -1),
-      new Hex(1, -1, 0),
-      new Hex(0, -1, 1),
-      new Hex(-1, 0, 1),
-      new Hex(-1, 1, 0),
-      new Hex(0, 1, -1)
-    ];
-    static equals(a, b) {
-      return a.q == b.q && a.r == b.r && a.s == b.s;
-    }
-    static add(a, b) {
-      return new Hex(a.q + b.q, a.r + b.r, a.s + b.s);
-    }
-    static subtract(a, b) {
-      return new Hex(a.q - b.q, a.r - b.r, a.s - b.s);
-    }
-    static multiply(a, k) {
-      return new Hex(a.q * k, a.r * k, a.s * k);
-    }
-    static lengths(hex2) {
-      return (Math.abs(hex2.q) + Math.abs(hex2.r) + Math.abs(hex2.s)) / 2;
-    }
-    static distance(a, b) {
-      return _HexUtils.lengths(_HexUtils.subtract(a, b));
-    }
-    static direction(direction) {
-      return _HexUtils.DIRECTIONS[(6 + direction % 6) % 6];
-    }
-    static neighbour(hex2, direction) {
-      return _HexUtils.add(hex2, _HexUtils.direction(direction));
-    }
-    static neighbours(hex2) {
-      const array = [];
-      for (let i = 0; i < _HexUtils.DIRECTIONS.length; i += 1) {
-        array.push(_HexUtils.neighbour(hex2, i));
-      }
-      return array;
-    }
-    static round(hex2) {
-      let rq = Math.round(hex2.q);
-      let rr = Math.round(hex2.r);
-      let rs = Math.round(hex2.s);
-      const qDiff = Math.abs(rq - hex2.q);
-      const rDiff = Math.abs(rr - hex2.r);
-      const sDiff = Math.abs(rs - hex2.s);
-      if (qDiff > rDiff && qDiff > sDiff)
-        rq = -rr - rs;
-      else if (rDiff > sDiff)
-        rr = -rq - rs;
-      else
-        rs = -rq - rr;
-      return new Hex(rq, rr, rs);
-    }
-    static hexToPixel(hex2, layout) {
-      const s = layout.spacing;
-      const M = layout.orientation;
-      let x = (M.f0 * hex2.q + M.f1 * hex2.r) * layout.size.x;
-      let y = (M.f2 * hex2.q + M.f3 * hex2.r) * layout.size.y;
-      x = x * s;
-      y = y * s;
-      return new Point(x + layout.origin.x, y + layout.origin.y);
-    }
-    static pixelToHex(point, layout) {
-      const M = layout.orientation;
-      const pt = new Point((point.x - layout.origin.x) / layout.size.x, (point.y - layout.origin.y) / layout.size.y);
-      const q = M.b0 * pt.x + M.b1 * pt.y;
-      const r = M.b2 * pt.x + M.b3 * pt.y;
-      const hex2 = new Hex(q, r, -q - r);
-      return _HexUtils.round(hex2);
-    }
-    static lerp(a, b, t) {
-      return a + (b - a) * t;
-    }
-    static hexLerp(a, b, t) {
-      return new Hex(_HexUtils.lerp(a.q, b.q, t), _HexUtils.lerp(a.r, b.r, t), _HexUtils.lerp(a.s, b.s, t));
-    }
-    static getID(hex2) {
-      return `${hex2.q},${hex2.r},${hex2.s}`;
-    }
-  };
-
-  // node_modules/@emotion/react/jsx-runtime/dist/emotion-react-jsx-runtime.browser.esm.js
-  var ReactJSXRuntime = __toESM(require_jsx_runtime());
-
-  // node_modules/@emotion/react/dist/emotion-element-5486c51c.browser.esm.js
-  var React5 = __toESM(require_react());
-  var import_react = __toESM(require_react());
-
-  // node_modules/@emotion/sheet/dist/emotion-sheet.esm.js
-  var isDevelopment = false;
-  function sheetForTag(tag) {
-    if (tag.sheet) {
-      return tag.sheet;
-    }
-    for (var i = 0; i < document.styleSheets.length; i++) {
-      if (document.styleSheets[i].ownerNode === tag) {
-        return document.styleSheets[i];
-      }
-    }
-    return void 0;
-  }
-  function createStyleElement(options) {
-    var tag = document.createElement("style");
-    tag.setAttribute("data-emotion", options.key);
-    if (options.nonce !== void 0) {
-      tag.setAttribute("nonce", options.nonce);
-    }
-    tag.appendChild(document.createTextNode(""));
-    tag.setAttribute("data-s", "");
-    return tag;
-  }
-  var StyleSheet = /* @__PURE__ */ function() {
-    function StyleSheet2(options) {
-      var _this = this;
-      this._insertTag = function(tag) {
-        var before;
-        if (_this.tags.length === 0) {
-          if (_this.insertionPoint) {
-            before = _this.insertionPoint.nextSibling;
-          } else if (_this.prepend) {
-            before = _this.container.firstChild;
-          } else {
-            before = _this.before;
-          }
-        } else {
-          before = _this.tags[_this.tags.length - 1].nextSibling;
-        }
-        _this.container.insertBefore(tag, before);
-        _this.tags.push(tag);
-      };
-      this.isSpeedy = options.speedy === void 0 ? !isDevelopment : options.speedy;
-      this.tags = [];
-      this.ctr = 0;
-      this.nonce = options.nonce;
-      this.key = options.key;
-      this.container = options.container;
-      this.prepend = options.prepend;
-      this.insertionPoint = options.insertionPoint;
-      this.before = null;
-    }
-    var _proto = StyleSheet2.prototype;
-    _proto.hydrate = function hydrate(nodes) {
-      nodes.forEach(this._insertTag);
-    };
-    _proto.insert = function insert2(rule) {
-      if (this.ctr % (this.isSpeedy ? 65e3 : 1) === 0) {
-        this._insertTag(createStyleElement(this));
-      }
-      var tag = this.tags[this.tags.length - 1];
-      if (this.isSpeedy) {
-        var sheet = sheetForTag(tag);
-        try {
-          sheet.insertRule(rule, sheet.cssRules.length);
-        } catch (e) {
-        }
-      } else {
-        tag.appendChild(document.createTextNode(rule));
-      }
-      this.ctr++;
-    };
-    _proto.flush = function flush() {
-      this.tags.forEach(function(tag) {
-        var _tag$parentNode;
-        return (_tag$parentNode = tag.parentNode) == null ? void 0 : _tag$parentNode.removeChild(tag);
-      });
-      this.tags = [];
-      this.ctr = 0;
-    };
-    return StyleSheet2;
-  }();
-
-  // node_modules/stylis/src/Enum.js
-  var MS = "-ms-";
-  var MOZ = "-moz-";
-  var WEBKIT = "-webkit-";
-  var COMMENT = "comm";
-  var RULESET = "rule";
-  var DECLARATION = "decl";
-  var IMPORT = "@import";
-  var KEYFRAMES = "@keyframes";
-  var LAYER = "@layer";
-
-  // node_modules/stylis/src/Utility.js
-  var abs = Math.abs;
-  var from = String.fromCharCode;
-  var assign = Object.assign;
-  function hash(value, length2) {
-    return charat(value, 0) ^ 45 ? (((length2 << 2 ^ charat(value, 0)) << 2 ^ charat(value, 1)) << 2 ^ charat(value, 2)) << 2 ^ charat(value, 3) : 0;
-  }
-  function trim(value) {
-    return value.trim();
-  }
-  function match(value, pattern) {
-    return (value = pattern.exec(value)) ? value[0] : value;
-  }
-  function replace(value, pattern, replacement) {
-    return value.replace(pattern, replacement);
-  }
-  function indexof(value, search) {
-    return value.indexOf(search);
-  }
-  function charat(value, index) {
-    return value.charCodeAt(index) | 0;
-  }
-  function substr(value, begin, end) {
-    return value.slice(begin, end);
-  }
-  function strlen(value) {
-    return value.length;
-  }
-  function sizeof(value) {
-    return value.length;
-  }
-  function append(value, array) {
-    return array.push(value), value;
-  }
-  function combine(array, callback) {
-    return array.map(callback).join("");
-  }
-
-  // node_modules/stylis/src/Tokenizer.js
-  var line = 1;
-  var column = 1;
-  var length = 0;
-  var position = 0;
-  var character = 0;
-  var characters = "";
-  function node(value, root2, parent, type, props, children, length2) {
-    return { value, root: root2, parent, type, props, children, line, column, length: length2, return: "" };
-  }
-  function copy(root2, props) {
-    return assign(node("", null, null, "", null, null, 0), root2, { length: -root2.length }, props);
-  }
-  function char() {
-    return character;
-  }
-  function prev() {
-    character = position > 0 ? charat(characters, --position) : 0;
-    if (column--, character === 10)
-      column = 1, line--;
-    return character;
-  }
-  function next() {
-    character = position < length ? charat(characters, position++) : 0;
-    if (column++, character === 10)
-      column = 1, line++;
-    return character;
-  }
-  function peek() {
-    return charat(characters, position);
-  }
-  function caret() {
-    return position;
-  }
-  function slice(begin, end) {
-    return substr(characters, begin, end);
-  }
-  function token(type) {
-    switch (type) {
-      // \0 \t \n \r \s whitespace token
-      case 0:
-      case 9:
-      case 10:
-      case 13:
-      case 32:
-        return 5;
-      // ! + , / > @ ~ isolate token
-      case 33:
-      case 43:
-      case 44:
-      case 47:
-      case 62:
-      case 64:
-      case 126:
-      // ; { } breakpoint token
-      case 59:
-      case 123:
-      case 125:
-        return 4;
-      // : accompanied token
-      case 58:
-        return 3;
-      // " ' ( [ opening delimit token
-      case 34:
-      case 39:
-      case 40:
-      case 91:
-        return 2;
-      // ) ] closing delimit token
-      case 41:
-      case 93:
-        return 1;
-    }
-    return 0;
-  }
-  function alloc(value) {
-    return line = column = 1, length = strlen(characters = value), position = 0, [];
-  }
-  function dealloc(value) {
-    return characters = "", value;
-  }
-  function delimit(type) {
-    return trim(slice(position - 1, delimiter(type === 91 ? type + 2 : type === 40 ? type + 1 : type)));
-  }
-  function whitespace(type) {
-    while (character = peek())
-      if (character < 33)
-        next();
-      else
-        break;
-    return token(type) > 2 || token(character) > 3 ? "" : " ";
-  }
-  function escaping(index, count) {
-    while (--count && next())
-      if (character < 48 || character > 102 || character > 57 && character < 65 || character > 70 && character < 97)
-        break;
-    return slice(index, caret() + (count < 6 && peek() == 32 && next() == 32));
-  }
-  function delimiter(type) {
-    while (next())
-      switch (character) {
-        // ] ) " '
-        case type:
-          return position;
-        // " '
-        case 34:
-        case 39:
-          if (type !== 34 && type !== 39)
-            delimiter(character);
-          break;
-        // (
-        case 40:
-          if (type === 41)
-            delimiter(type);
-          break;
-        // \
-        case 92:
-          next();
-          break;
-      }
-    return position;
-  }
-  function commenter(type, index) {
-    while (next())
-      if (type + character === 47 + 10)
-        break;
-      else if (type + character === 42 + 42 && peek() === 47)
-        break;
-    return "/*" + slice(index, position - 1) + "*" + from(type === 47 ? type : next());
-  }
-  function identifier(index) {
-    while (!token(peek()))
-      next();
-    return slice(index, position);
-  }
-
-  // node_modules/stylis/src/Parser.js
-  function compile(value) {
-    return dealloc(parse("", null, null, null, [""], value = alloc(value), 0, [0], value));
-  }
-  function parse(value, root2, parent, rule, rules, rulesets, pseudo, points, declarations) {
-    var index = 0;
-    var offset = 0;
-    var length2 = pseudo;
-    var atrule = 0;
-    var property = 0;
-    var previous = 0;
-    var variable = 1;
-    var scanning = 1;
-    var ampersand = 1;
-    var character2 = 0;
-    var type = "";
-    var props = rules;
-    var children = rulesets;
-    var reference = rule;
-    var characters2 = type;
-    while (scanning)
-      switch (previous = character2, character2 = next()) {
-        // (
-        case 40:
-          if (previous != 108 && charat(characters2, length2 - 1) == 58) {
-            if (indexof(characters2 += replace(delimit(character2), "&", "&\f"), "&\f") != -1)
-              ampersand = -1;
-            break;
-          }
-        // " ' [
-        case 34:
-        case 39:
-        case 91:
-          characters2 += delimit(character2);
-          break;
-        // \t \n \r \s
-        case 9:
-        case 10:
-        case 13:
-        case 32:
-          characters2 += whitespace(previous);
-          break;
-        // \
-        case 92:
-          characters2 += escaping(caret() - 1, 7);
-          continue;
-        // /
-        case 47:
-          switch (peek()) {
-            case 42:
-            case 47:
-              append(comment(commenter(next(), caret()), root2, parent), declarations);
-              break;
-            default:
-              characters2 += "/";
-          }
-          break;
-        // {
-        case 123 * variable:
-          points[index++] = strlen(characters2) * ampersand;
-        // } ; \0
-        case 125 * variable:
-        case 59:
-        case 0:
-          switch (character2) {
-            // \0 }
-            case 0:
-            case 125:
-              scanning = 0;
-            // ;
-            case 59 + offset:
-              if (ampersand == -1) characters2 = replace(characters2, /\f/g, "");
-              if (property > 0 && strlen(characters2) - length2)
-                append(property > 32 ? declaration(characters2 + ";", rule, parent, length2 - 1) : declaration(replace(characters2, " ", "") + ";", rule, parent, length2 - 2), declarations);
-              break;
-            // @ ;
-            case 59:
-              characters2 += ";";
-            // { rule/at-rule
-            default:
-              append(reference = ruleset(characters2, root2, parent, index, offset, rules, points, type, props = [], children = [], length2), rulesets);
-              if (character2 === 123)
-                if (offset === 0)
-                  parse(characters2, root2, reference, reference, props, rulesets, length2, points, children);
-                else
-                  switch (atrule === 99 && charat(characters2, 3) === 110 ? 100 : atrule) {
-                    // d l m s
-                    case 100:
-                    case 108:
-                    case 109:
-                    case 115:
-                      parse(value, reference, reference, rule && append(ruleset(value, reference, reference, 0, 0, rules, points, type, rules, props = [], length2), children), rules, children, length2, points, rule ? props : children);
-                      break;
-                    default:
-                      parse(characters2, reference, reference, reference, [""], children, 0, points, children);
-                  }
-          }
-          index = offset = property = 0, variable = ampersand = 1, type = characters2 = "", length2 = pseudo;
-          break;
-        // :
-        case 58:
-          length2 = 1 + strlen(characters2), property = previous;
-        default:
-          if (variable < 1) {
-            if (character2 == 123)
-              --variable;
-            else if (character2 == 125 && variable++ == 0 && prev() == 125)
-              continue;
-          }
-          switch (characters2 += from(character2), character2 * variable) {
-            // &
-            case 38:
-              ampersand = offset > 0 ? 1 : (characters2 += "\f", -1);
-              break;
-            // ,
-            case 44:
-              points[index++] = (strlen(characters2) - 1) * ampersand, ampersand = 1;
-              break;
-            // @
-            case 64:
-              if (peek() === 45)
-                characters2 += delimit(next());
-              atrule = peek(), offset = length2 = strlen(type = characters2 += identifier(caret())), character2++;
-              break;
-            // -
-            case 45:
-              if (previous === 45 && strlen(characters2) == 2)
-                variable = 0;
-          }
-      }
-    return rulesets;
-  }
-  function ruleset(value, root2, parent, index, offset, rules, points, type, props, children, length2) {
-    var post = offset - 1;
-    var rule = offset === 0 ? rules : [""];
-    var size = sizeof(rule);
-    for (var i = 0, j = 0, k = 0; i < index; ++i)
-      for (var x = 0, y = substr(value, post + 1, post = abs(j = points[i])), z = value; x < size; ++x)
-        if (z = trim(j > 0 ? rule[x] + " " + y : replace(y, /&\f/g, rule[x])))
-          props[k++] = z;
-    return node(value, root2, parent, offset === 0 ? RULESET : type, props, children, length2);
-  }
-  function comment(value, root2, parent) {
-    return node(value, root2, parent, COMMENT, from(char()), substr(value, 2, -2), 0);
-  }
-  function declaration(value, root2, parent, length2) {
-    return node(value, root2, parent, DECLARATION, substr(value, 0, length2), substr(value, length2 + 1, -1), length2);
-  }
-
-  // node_modules/stylis/src/Serializer.js
-  function serialize(children, callback) {
-    var output = "";
-    var length2 = sizeof(children);
-    for (var i = 0; i < length2; i++)
-      output += callback(children[i], i, children, callback) || "";
-    return output;
-  }
-  function stringify(element, index, children, callback) {
-    switch (element.type) {
-      case LAYER:
-        if (element.children.length) break;
-      case IMPORT:
-      case DECLARATION:
-        return element.return = element.return || element.value;
-      case COMMENT:
-        return "";
-      case KEYFRAMES:
-        return element.return = element.value + "{" + serialize(element.children, callback) + "}";
-      case RULESET:
-        element.value = element.props.join(",");
-    }
-    return strlen(children = serialize(element.children, callback)) ? element.return = element.value + "{" + children + "}" : "";
-  }
-
-  // node_modules/stylis/src/Middleware.js
-  function middleware(collection) {
-    var length2 = sizeof(collection);
-    return function(element, index, children, callback) {
-      var output = "";
-      for (var i = 0; i < length2; i++)
-        output += collection[i](element, index, children, callback) || "";
-      return output;
-    };
-  }
-  function rulesheet(callback) {
-    return function(element) {
-      if (!element.root) {
-        if (element = element.return)
-          callback(element);
-      }
-    };
-  }
-
-  // node_modules/@emotion/memoize/dist/emotion-memoize.esm.js
-  function memoize(fn) {
-    var cache = /* @__PURE__ */ Object.create(null);
-    return function(arg) {
-      if (cache[arg] === void 0) cache[arg] = fn(arg);
-      return cache[arg];
-    };
-  }
-
-  // node_modules/@emotion/cache/dist/emotion-cache.browser.esm.js
-  var identifierWithPointTracking = function identifierWithPointTracking2(begin, points, index) {
-    var previous = 0;
-    var character2 = 0;
-    while (true) {
-      previous = character2;
-      character2 = peek();
-      if (previous === 38 && character2 === 12) {
-        points[index] = 1;
-      }
-      if (token(character2)) {
-        break;
-      }
-      next();
-    }
-    return slice(begin, position);
-  };
-  var toRules = function toRules2(parsed, points) {
-    var index = -1;
-    var character2 = 44;
-    do {
-      switch (token(character2)) {
-        case 0:
-          if (character2 === 38 && peek() === 12) {
-            points[index] = 1;
-          }
-          parsed[index] += identifierWithPointTracking(position - 1, points, index);
-          break;
-        case 2:
-          parsed[index] += delimit(character2);
-          break;
-        case 4:
-          if (character2 === 44) {
-            parsed[++index] = peek() === 58 ? "&\f" : "";
-            points[index] = parsed[index].length;
-            break;
-          }
-        // fallthrough
-        default:
-          parsed[index] += from(character2);
-      }
-    } while (character2 = next());
-    return parsed;
-  };
-  var getRules = function getRules2(value, points) {
-    return dealloc(toRules(alloc(value), points));
-  };
-  var fixedElements = /* @__PURE__ */ new WeakMap();
-  var compat = function compat2(element) {
-    if (element.type !== "rule" || !element.parent || // positive .length indicates that this rule contains pseudo
-    // negative .length indicates that this rule has been already prefixed
-    element.length < 1) {
-      return;
-    }
-    var value = element.value, parent = element.parent;
-    var isImplicitRule = element.column === parent.column && element.line === parent.line;
-    while (parent.type !== "rule") {
-      parent = parent.parent;
-      if (!parent) return;
-    }
-    if (element.props.length === 1 && value.charCodeAt(0) !== 58 && !fixedElements.get(parent)) {
-      return;
-    }
-    if (isImplicitRule) {
-      return;
-    }
-    fixedElements.set(element, true);
-    var points = [];
-    var rules = getRules(value, points);
-    var parentRules = parent.props;
-    for (var i = 0, k = 0; i < rules.length; i++) {
-      for (var j = 0; j < parentRules.length; j++, k++) {
-        element.props[k] = points[i] ? rules[i].replace(/&\f/g, parentRules[j]) : parentRules[j] + " " + rules[i];
-      }
-    }
-  };
-  var removeLabel = function removeLabel2(element) {
-    if (element.type === "decl") {
-      var value = element.value;
-      if (
-        // charcode for l
-        value.charCodeAt(0) === 108 && // charcode for b
-        value.charCodeAt(2) === 98
-      ) {
-        element["return"] = "";
-        element.value = "";
-      }
-    }
-  };
-  function prefix(value, length2) {
-    switch (hash(value, length2)) {
-      // color-adjust
-      case 5103:
-        return WEBKIT + "print-" + value + value;
-      // animation, animation-(delay|direction|duration|fill-mode|iteration-count|name|play-state|timing-function)
-      case 5737:
-      case 4201:
-      case 3177:
-      case 3433:
-      case 1641:
-      case 4457:
-      case 2921:
-      // text-decoration, filter, clip-path, backface-visibility, column, box-decoration-break
-      case 5572:
-      case 6356:
-      case 5844:
-      case 3191:
-      case 6645:
-      case 3005:
-      // mask, mask-image, mask-(mode|clip|size), mask-(repeat|origin), mask-position, mask-composite,
-      case 6391:
-      case 5879:
-      case 5623:
-      case 6135:
-      case 4599:
-      case 4855:
-      // background-clip, columns, column-(count|fill|gap|rule|rule-color|rule-style|rule-width|span|width)
-      case 4215:
-      case 6389:
-      case 5109:
-      case 5365:
-      case 5621:
-      case 3829:
-        return WEBKIT + value + value;
-      // appearance, user-select, transform, hyphens, text-size-adjust
-      case 5349:
-      case 4246:
-      case 4810:
-      case 6968:
-      case 2756:
-        return WEBKIT + value + MOZ + value + MS + value + value;
-      // flex, flex-direction
-      case 6828:
-      case 4268:
-        return WEBKIT + value + MS + value + value;
-      // order
-      case 6165:
-        return WEBKIT + value + MS + "flex-" + value + value;
-      // align-items
-      case 5187:
-        return WEBKIT + value + replace(value, /(\w+).+(:[^]+)/, WEBKIT + "box-$1$2" + MS + "flex-$1$2") + value;
-      // align-self
-      case 5443:
-        return WEBKIT + value + MS + "flex-item-" + replace(value, /flex-|-self/, "") + value;
-      // align-content
-      case 4675:
-        return WEBKIT + value + MS + "flex-line-pack" + replace(value, /align-content|flex-|-self/, "") + value;
-      // flex-shrink
-      case 5548:
-        return WEBKIT + value + MS + replace(value, "shrink", "negative") + value;
-      // flex-basis
-      case 5292:
-        return WEBKIT + value + MS + replace(value, "basis", "preferred-size") + value;
-      // flex-grow
-      case 6060:
-        return WEBKIT + "box-" + replace(value, "-grow", "") + WEBKIT + value + MS + replace(value, "grow", "positive") + value;
-      // transition
-      case 4554:
-        return WEBKIT + replace(value, /([^-])(transform)/g, "$1" + WEBKIT + "$2") + value;
-      // cursor
-      case 6187:
-        return replace(replace(replace(value, /(zoom-|grab)/, WEBKIT + "$1"), /(image-set)/, WEBKIT + "$1"), value, "") + value;
-      // background, background-image
-      case 5495:
-      case 3959:
-        return replace(value, /(image-set\([^]*)/, WEBKIT + "$1$`$1");
-      // justify-content
-      case 4968:
-        return replace(replace(value, /(.+:)(flex-)?(.*)/, WEBKIT + "box-pack:$3" + MS + "flex-pack:$3"), /s.+-b[^;]+/, "justify") + WEBKIT + value + value;
-      // (margin|padding)-inline-(start|end)
-      case 4095:
-      case 3583:
-      case 4068:
-      case 2532:
-        return replace(value, /(.+)-inline(.+)/, WEBKIT + "$1$2") + value;
-      // (min|max)?(width|height|inline-size|block-size)
-      case 8116:
-      case 7059:
-      case 5753:
-      case 5535:
-      case 5445:
-      case 5701:
-      case 4933:
-      case 4677:
-      case 5533:
-      case 5789:
-      case 5021:
-      case 4765:
-        if (strlen(value) - 1 - length2 > 6) switch (charat(value, length2 + 1)) {
-          // (m)ax-content, (m)in-content
-          case 109:
-            if (charat(value, length2 + 4) !== 45) break;
-          // (f)ill-available, (f)it-content
-          case 102:
-            return replace(value, /(.+:)(.+)-([^]+)/, "$1" + WEBKIT + "$2-$3$1" + MOZ + (charat(value, length2 + 3) == 108 ? "$3" : "$2-$3")) + value;
-          // (s)tretch
-          case 115:
-            return ~indexof(value, "stretch") ? prefix(replace(value, "stretch", "fill-available"), length2) + value : value;
-        }
-        break;
-      // position: sticky
-      case 4949:
-        if (charat(value, length2 + 1) !== 115) break;
-      // display: (flex|inline-flex)
-      case 6444:
-        switch (charat(value, strlen(value) - 3 - (~indexof(value, "!important") && 10))) {
-          // stic(k)y
-          case 107:
-            return replace(value, ":", ":" + WEBKIT) + value;
-          // (inline-)?fl(e)x
-          case 101:
-            return replace(value, /(.+:)([^;!]+)(;|!.+)?/, "$1" + WEBKIT + (charat(value, 14) === 45 ? "inline-" : "") + "box$3$1" + WEBKIT + "$2$3$1" + MS + "$2box$3") + value;
-        }
-        break;
-      // writing-mode
-      case 5936:
-        switch (charat(value, length2 + 11)) {
-          // vertical-l(r)
-          case 114:
-            return WEBKIT + value + MS + replace(value, /[svh]\w+-[tblr]{2}/, "tb") + value;
-          // vertical-r(l)
-          case 108:
-            return WEBKIT + value + MS + replace(value, /[svh]\w+-[tblr]{2}/, "tb-rl") + value;
-          // horizontal(-)tb
-          case 45:
-            return WEBKIT + value + MS + replace(value, /[svh]\w+-[tblr]{2}/, "lr") + value;
-        }
-        return WEBKIT + value + MS + value + value;
-    }
-    return value;
-  }
-  var prefixer = function prefixer2(element, index, children, callback) {
-    if (element.length > -1) {
-      if (!element["return"]) switch (element.type) {
-        case DECLARATION:
-          element["return"] = prefix(element.value, element.length);
-          break;
-        case KEYFRAMES:
-          return serialize([copy(element, {
-            value: replace(element.value, "@", "@" + WEBKIT)
-          })], callback);
-        case RULESET:
-          if (element.length) return combine(element.props, function(value) {
-            switch (match(value, /(::plac\w+|:read-\w+)/)) {
-              // :read-(only|write)
-              case ":read-only":
-              case ":read-write":
-                return serialize([copy(element, {
-                  props: [replace(value, /:(read-\w+)/, ":" + MOZ + "$1")]
-                })], callback);
-              // :placeholder
-              case "::placeholder":
-                return serialize([copy(element, {
-                  props: [replace(value, /:(plac\w+)/, ":" + WEBKIT + "input-$1")]
-                }), copy(element, {
-                  props: [replace(value, /:(plac\w+)/, ":" + MOZ + "$1")]
-                }), copy(element, {
-                  props: [replace(value, /:(plac\w+)/, MS + "input-$1")]
-                })], callback);
-            }
-            return "";
-          });
-      }
-    }
-  };
-  var defaultStylisPlugins = [prefixer];
-  var createCache = function createCache2(options) {
-    var key = options.key;
-    if (key === "css") {
-      var ssrStyles = document.querySelectorAll("style[data-emotion]:not([data-s])");
-      Array.prototype.forEach.call(ssrStyles, function(node2) {
-        var dataEmotionAttribute = node2.getAttribute("data-emotion");
-        if (dataEmotionAttribute.indexOf(" ") === -1) {
-          return;
-        }
-        document.head.appendChild(node2);
-        node2.setAttribute("data-s", "");
-      });
-    }
-    var stylisPlugins = options.stylisPlugins || defaultStylisPlugins;
-    var inserted = {};
-    var container;
-    var nodesToHydrate = [];
-    {
-      container = options.container || document.head;
-      Array.prototype.forEach.call(
-        // this means we will ignore elements which don't have a space in them which
-        // means that the style elements we're looking at are only Emotion 11 server-rendered style elements
-        document.querySelectorAll('style[data-emotion^="' + key + ' "]'),
-        function(node2) {
-          var attrib = node2.getAttribute("data-emotion").split(" ");
-          for (var i = 1; i < attrib.length; i++) {
-            inserted[attrib[i]] = true;
-          }
-          nodesToHydrate.push(node2);
-        }
-      );
-    }
-    var _insert;
-    var omnipresentPlugins = [compat, removeLabel];
-    {
-      var currentSheet;
-      var finalizingPlugins = [stringify, rulesheet(function(rule) {
-        currentSheet.insert(rule);
-      })];
-      var serializer = middleware(omnipresentPlugins.concat(stylisPlugins, finalizingPlugins));
-      var stylis = function stylis2(styles) {
-        return serialize(compile(styles), serializer);
-      };
-      _insert = function insert2(selector, serialized, sheet, shouldCache) {
-        currentSheet = sheet;
-        stylis(selector ? selector + "{" + serialized.styles + "}" : serialized.styles);
-        if (shouldCache) {
-          cache.inserted[serialized.name] = true;
-        }
-      };
-    }
-    var cache = {
-      key,
-      sheet: new StyleSheet({
-        key,
-        container,
-        nonce: options.nonce,
-        speedy: options.speedy,
-        prepend: options.prepend,
-        insertionPoint: options.insertionPoint
-      }),
-      nonce: options.nonce,
-      inserted,
-      registered: {},
-      insert: _insert
-    };
-    cache.sheet.hydrate(nodesToHydrate);
-    return cache;
-  };
-
-  // node_modules/@emotion/utils/dist/emotion-utils.browser.esm.js
-  var isBrowser = true;
-  function getRegisteredStyles(registered, registeredStyles, classNames5) {
-    var rawClassName = "";
-    classNames5.split(" ").forEach(function(className) {
-      if (registered[className] !== void 0) {
-        registeredStyles.push(registered[className] + ";");
-      } else {
-        rawClassName += className + " ";
-      }
-    });
-    return rawClassName;
-  }
-  var registerStyles = function registerStyles2(cache, serialized, isStringTag) {
-    var className = cache.key + "-" + serialized.name;
-    if (
-      // we only need to add the styles to the registered cache if the
-      // class name could be used further down
-      // the tree but if it's a string tag, we know it won't
-      // so we don't have to add it to registered cache.
-      // this improves memory usage since we can avoid storing the whole style string
-      (isStringTag === false || // we need to always store it if we're in compat mode and
-      // in node since emotion-server relies on whether a style is in
-      // the registered cache to know whether a style is global or not
-      // also, note that this check will be dead code eliminated in the browser
-      isBrowser === false) && cache.registered[className] === void 0
-    ) {
-      cache.registered[className] = serialized.styles;
-    }
-  };
-  var insertStyles = function insertStyles2(cache, serialized, isStringTag) {
-    registerStyles(cache, serialized, isStringTag);
-    var className = cache.key + "-" + serialized.name;
-    if (cache.inserted[serialized.name] === void 0) {
-      var current2 = serialized;
-      do {
-        cache.insert(serialized === current2 ? "." + className : "", current2, cache.sheet, true);
-        current2 = current2.next;
-      } while (current2 !== void 0);
-    }
-  };
-
-  // node_modules/@emotion/hash/dist/emotion-hash.esm.js
-  function murmur2(str) {
-    var h = 0;
-    var k, i = 0, len = str.length;
-    for (; len >= 4; ++i, len -= 4) {
-      k = str.charCodeAt(i) & 255 | (str.charCodeAt(++i) & 255) << 8 | (str.charCodeAt(++i) & 255) << 16 | (str.charCodeAt(++i) & 255) << 24;
-      k = /* Math.imul(k, m): */
-      (k & 65535) * 1540483477 + ((k >>> 16) * 59797 << 16);
-      k ^= /* k >>> r: */
-      k >>> 24;
-      h = /* Math.imul(k, m): */
-      (k & 65535) * 1540483477 + ((k >>> 16) * 59797 << 16) ^ /* Math.imul(h, m): */
-      (h & 65535) * 1540483477 + ((h >>> 16) * 59797 << 16);
-    }
-    switch (len) {
-      case 3:
-        h ^= (str.charCodeAt(i + 2) & 255) << 16;
-      case 2:
-        h ^= (str.charCodeAt(i + 1) & 255) << 8;
-      case 1:
-        h ^= str.charCodeAt(i) & 255;
-        h = /* Math.imul(h, m): */
-        (h & 65535) * 1540483477 + ((h >>> 16) * 59797 << 16);
-    }
-    h ^= h >>> 13;
-    h = /* Math.imul(h, m): */
-    (h & 65535) * 1540483477 + ((h >>> 16) * 59797 << 16);
-    return ((h ^ h >>> 15) >>> 0).toString(36);
-  }
-
-  // node_modules/@emotion/unitless/dist/emotion-unitless.esm.js
-  var unitlessKeys = {
-    animationIterationCount: 1,
-    aspectRatio: 1,
-    borderImageOutset: 1,
-    borderImageSlice: 1,
-    borderImageWidth: 1,
-    boxFlex: 1,
-    boxFlexGroup: 1,
-    boxOrdinalGroup: 1,
-    columnCount: 1,
-    columns: 1,
-    flex: 1,
-    flexGrow: 1,
-    flexPositive: 1,
-    flexShrink: 1,
-    flexNegative: 1,
-    flexOrder: 1,
-    gridRow: 1,
-    gridRowEnd: 1,
-    gridRowSpan: 1,
-    gridRowStart: 1,
-    gridColumn: 1,
-    gridColumnEnd: 1,
-    gridColumnSpan: 1,
-    gridColumnStart: 1,
-    msGridRow: 1,
-    msGridRowSpan: 1,
-    msGridColumn: 1,
-    msGridColumnSpan: 1,
-    fontWeight: 1,
-    lineHeight: 1,
-    opacity: 1,
-    order: 1,
-    orphans: 1,
-    scale: 1,
-    tabSize: 1,
-    widows: 1,
-    zIndex: 1,
-    zoom: 1,
-    WebkitLineClamp: 1,
-    // SVG-related properties
-    fillOpacity: 1,
-    floodOpacity: 1,
-    stopOpacity: 1,
-    strokeDasharray: 1,
-    strokeDashoffset: 1,
-    strokeMiterlimit: 1,
-    strokeOpacity: 1,
-    strokeWidth: 1
-  };
-
-  // node_modules/@emotion/serialize/dist/emotion-serialize.esm.js
-  var isDevelopment2 = false;
-  var hyphenateRegex = /[A-Z]|^ms/g;
-  var animationRegex = /_EMO_([^_]+?)_([^]*?)_EMO_/g;
-  var isCustomProperty = function isCustomProperty2(property) {
-    return property.charCodeAt(1) === 45;
-  };
-  var isProcessableValue = function isProcessableValue2(value) {
-    return value != null && typeof value !== "boolean";
-  };
-  var processStyleName = /* @__PURE__ */ memoize(function(styleName) {
-    return isCustomProperty(styleName) ? styleName : styleName.replace(hyphenateRegex, "-$&").toLowerCase();
-  });
-  var processStyleValue = function processStyleValue2(key, value) {
-    switch (key) {
-      case "animation":
-      case "animationName": {
-        if (typeof value === "string") {
-          return value.replace(animationRegex, function(match2, p1, p2) {
-            cursor = {
-              name: p1,
-              styles: p2,
-              next: cursor
-            };
-            return p1;
-          });
-        }
-      }
-    }
-    if (unitlessKeys[key] !== 1 && !isCustomProperty(key) && typeof value === "number" && value !== 0) {
-      return value + "px";
-    }
-    return value;
-  };
-  var noComponentSelectorMessage = "Component selectors can only be used in conjunction with @emotion/babel-plugin, the swc Emotion plugin, or another Emotion-aware compiler transform.";
-  function handleInterpolation(mergedProps, registered, interpolation) {
-    if (interpolation == null) {
-      return "";
-    }
-    var componentSelector = interpolation;
-    if (componentSelector.__emotion_styles !== void 0) {
-      return componentSelector;
-    }
-    switch (typeof interpolation) {
-      case "boolean": {
-        return "";
-      }
-      case "object": {
-        var keyframes = interpolation;
-        if (keyframes.anim === 1) {
-          cursor = {
-            name: keyframes.name,
-            styles: keyframes.styles,
-            next: cursor
-          };
-          return keyframes.name;
-        }
-        var serializedStyles = interpolation;
-        if (serializedStyles.styles !== void 0) {
-          var next2 = serializedStyles.next;
-          if (next2 !== void 0) {
-            while (next2 !== void 0) {
-              cursor = {
-                name: next2.name,
-                styles: next2.styles,
-                next: cursor
-              };
-              next2 = next2.next;
-            }
-          }
-          var styles = serializedStyles.styles + ";";
-          return styles;
-        }
-        return createStringFromObject(mergedProps, registered, interpolation);
-      }
-      case "function": {
-        if (mergedProps !== void 0) {
-          var previousCursor = cursor;
-          var result = interpolation(mergedProps);
-          cursor = previousCursor;
-          return handleInterpolation(mergedProps, registered, result);
-        }
-        break;
-      }
-    }
-    var asString = interpolation;
-    if (registered == null) {
-      return asString;
-    }
-    var cached = registered[asString];
-    return cached !== void 0 ? cached : asString;
-  }
-  function createStringFromObject(mergedProps, registered, obj) {
-    var string = "";
-    if (Array.isArray(obj)) {
-      for (var i = 0; i < obj.length; i++) {
-        string += handleInterpolation(mergedProps, registered, obj[i]) + ";";
-      }
-    } else {
-      for (var key in obj) {
-        var value = obj[key];
-        if (typeof value !== "object") {
-          var asString = value;
-          if (registered != null && registered[asString] !== void 0) {
-            string += key + "{" + registered[asString] + "}";
-          } else if (isProcessableValue(asString)) {
-            string += processStyleName(key) + ":" + processStyleValue(key, asString) + ";";
-          }
-        } else {
-          if (key === "NO_COMPONENT_SELECTOR" && isDevelopment2) {
-            throw new Error(noComponentSelectorMessage);
-          }
-          if (Array.isArray(value) && typeof value[0] === "string" && (registered == null || registered[value[0]] === void 0)) {
-            for (var _i = 0; _i < value.length; _i++) {
-              if (isProcessableValue(value[_i])) {
-                string += processStyleName(key) + ":" + processStyleValue(key, value[_i]) + ";";
-              }
-            }
-          } else {
-            var interpolated = handleInterpolation(mergedProps, registered, value);
-            switch (key) {
-              case "animation":
-              case "animationName": {
-                string += processStyleName(key) + ":" + interpolated + ";";
-                break;
-              }
-              default: {
-                string += key + "{" + interpolated + "}";
-              }
-            }
-          }
-        }
-      }
-    }
-    return string;
-  }
-  var labelPattern = /label:\s*([^\s;\n{]+)\s*(;|$)/g;
-  var cursor;
-  function serializeStyles(args, registered, mergedProps) {
-    if (args.length === 1 && typeof args[0] === "object" && args[0] !== null && args[0].styles !== void 0) {
-      return args[0];
-    }
-    var stringMode = true;
-    var styles = "";
-    cursor = void 0;
-    var strings = args[0];
-    if (strings == null || strings.raw === void 0) {
-      stringMode = false;
-      styles += handleInterpolation(mergedProps, registered, strings);
-    } else {
-      var asTemplateStringsArr = strings;
-      styles += asTemplateStringsArr[0];
-    }
-    for (var i = 1; i < args.length; i++) {
-      styles += handleInterpolation(mergedProps, registered, args[i]);
-      if (stringMode) {
-        var templateStringsArr = strings;
-        styles += templateStringsArr[i];
-      }
-    }
-    labelPattern.lastIndex = 0;
-    var identifierName = "";
-    var match2;
-    while ((match2 = labelPattern.exec(styles)) !== null) {
-      identifierName += "-" + match2[1];
-    }
-    var name = murmur2(styles) + identifierName;
-    return {
-      name,
-      styles,
-      next: cursor
-    };
-  }
-
-  // node_modules/@emotion/use-insertion-effect-with-fallbacks/dist/emotion-use-insertion-effect-with-fallbacks.browser.esm.js
-  var React4 = __toESM(require_react());
-  var syncFallback = function syncFallback2(create) {
-    return create();
-  };
-  var useInsertionEffect2 = React4["useInsertionEffect"] ? React4["useInsertionEffect"] : false;
-  var useInsertionEffectAlwaysWithSyncFallback = useInsertionEffect2 || syncFallback;
-
-  // node_modules/@emotion/react/dist/emotion-element-5486c51c.browser.esm.js
-  var isDevelopment3 = false;
-  var EmotionCacheContext = /* @__PURE__ */ React5.createContext(
-    // we're doing this to avoid preconstruct's dead code elimination in this one case
-    // because this module is primarily intended for the browser and node
-    // but it's also required in react native and similar environments sometimes
-    // and we could have a special build just for that
-    // but this is much easier and the native packages
-    // might use a different theme context in the future anyway
-    typeof HTMLElement !== "undefined" ? /* @__PURE__ */ createCache({
-      key: "css"
-    }) : null
-  );
-  var CacheProvider = EmotionCacheContext.Provider;
-  var withEmotionCache = function withEmotionCache2(func) {
-    return /* @__PURE__ */ (0, import_react.forwardRef)(function(props, ref) {
-      var cache = (0, import_react.useContext)(EmotionCacheContext);
-      return func(props, cache, ref);
-    });
-  };
-  var ThemeContext = /* @__PURE__ */ React5.createContext({});
-  var hasOwn = {}.hasOwnProperty;
-  var typePropName = "__EMOTION_TYPE_PLEASE_DO_NOT_USE__";
-  var createEmotionProps = function createEmotionProps2(type, props) {
-    var newProps = {};
-    for (var key in props) {
-      if (hasOwn.call(props, key)) {
-        newProps[key] = props[key];
-      }
-    }
-    newProps[typePropName] = type;
-    return newProps;
-  };
-  var Insertion = function Insertion2(_ref) {
-    var cache = _ref.cache, serialized = _ref.serialized, isStringTag = _ref.isStringTag;
-    registerStyles(cache, serialized, isStringTag);
-    useInsertionEffectAlwaysWithSyncFallback(function() {
-      return insertStyles(cache, serialized, isStringTag);
-    });
-    return null;
-  };
-  var Emotion = /* @__PURE__ */ withEmotionCache(
-    /* <any, any> */
-    function(props, cache, ref) {
-      var cssProp = props.css;
-      if (typeof cssProp === "string" && cache.registered[cssProp] !== void 0) {
-        cssProp = cache.registered[cssProp];
-      }
-      var WrappedComponent = props[typePropName];
-      var registeredStyles = [cssProp];
-      var className = "";
-      if (typeof props.className === "string") {
-        className = getRegisteredStyles(cache.registered, registeredStyles, props.className);
-      } else if (props.className != null) {
-        className = props.className + " ";
-      }
-      var serialized = serializeStyles(registeredStyles, void 0, React5.useContext(ThemeContext));
-      className += cache.key + "-" + serialized.name;
-      var newProps = {};
-      for (var key in props) {
-        if (hasOwn.call(props, key) && key !== "css" && key !== typePropName && !isDevelopment3) {
-          newProps[key] = props[key];
-        }
-      }
-      newProps.className = className;
-      if (ref) {
-        newProps.ref = ref;
-      }
-      return /* @__PURE__ */ React5.createElement(React5.Fragment, null, /* @__PURE__ */ React5.createElement(Insertion, {
-        cache,
-        serialized,
-        isStringTag: typeof WrappedComponent === "string"
-      }), /* @__PURE__ */ React5.createElement(WrappedComponent, newProps));
-    }
-  );
-  var Emotion$1 = Emotion;
-
-  // node_modules/@emotion/react/jsx-runtime/dist/emotion-react-jsx-runtime.browser.esm.js
-  var import_react2 = __toESM(require_react());
-  var import_hoist_non_react_statics = __toESM(require_hoist_non_react_statics_cjs());
-  function jsx2(type, props, key) {
-    if (!hasOwn.call(props, "css")) {
-      return ReactJSXRuntime.jsx(type, props, key);
-    }
-    return ReactJSXRuntime.jsx(Emotion$1, createEmotionProps(type, props), key);
-  }
-  function jsxs2(type, props, key) {
-    if (!hasOwn.call(props, "css")) {
-      return ReactJSXRuntime.jsxs(type, props, key);
-    }
-    return ReactJSXRuntime.jsxs(Emotion$1, createEmotionProps(type, props), key);
-  }
-
-  // node_modules/react-hexgrid/lib/HexGrid.js
-  function HexGrid({ width = 800, height = 600, viewBox = "-50 -50 100 100", ...props }) {
-    return jsx2("svg", { className: "grid", width, height, viewBox, version: "1.1", xmlns: "http://www.w3.org/2000/svg", ...props });
-  }
-
-  // node_modules/react-hexgrid/lib/Layout.js
-  var React6 = __toESM(require_react());
-
-  // node_modules/react-hexgrid/lib/models/Orientation.js
-  var Orientation = class {
-    f0;
-    f1;
-    f2;
-    f3;
-    b0;
-    b1;
-    b2;
-    b3;
-    startAngle;
-    constructor(f0, f1, f2, f3, b0, b1, b2, b3, startAngle) {
-      this.f0 = f0;
-      this.f1 = f1;
-      this.f2 = f2;
-      this.f3 = f3;
-      this.b0 = b0;
-      this.b1 = b1;
-      this.b2 = b2;
-      this.b3 = b3;
-      this.startAngle = startAngle;
-    }
-  };
-
-  // node_modules/react-hexgrid/lib/Layout.js
-  var LAYOUT_FLAT = new Orientation(3 / 2, 0, Math.sqrt(3) / 2, Math.sqrt(3), 2 / 3, 0, -1 / 3, Math.sqrt(3) / 3, 0);
-  var LAYOUT_POINTY = new Orientation(Math.sqrt(3), Math.sqrt(3) / 2, 0, 3 / 2, Math.sqrt(3) / 3, -1 / 3, 0, 2 / 3, 0.5);
-  var defaultSize = new Point(10, 10);
-  var defaultOrigin = new Point(0, 0);
-  var defaultSpacing = 1;
-  var Context = React6.createContext({
-    layout: {
-      size: defaultSize,
-      orientation: LAYOUT_FLAT,
-      origin: defaultOrigin,
-      spacing: defaultSpacing
-    },
-    points: ""
-  });
-  function useLayoutContext() {
-    const ctx = React6.useContext(Context);
-    return ctx;
-  }
-  function getPointOffset(corner, orientation, size) {
-    let angle = 2 * Math.PI * (corner + orientation.startAngle) / 6;
-    return new Point(size.x * Math.cos(angle), size.y * Math.sin(angle));
-  }
-  function calculateCoordinates(orientation, size) {
-    const corners = [];
-    const center = new Point(0, 0);
-    Array.from(new Array(6), (x, i) => {
-      const offset = getPointOffset(i, orientation, size);
-      const point = new Point(center.x + offset.x, center.y + offset.y);
-      corners.push(point);
-    });
-    return corners;
-  }
-  function Layout({ size = defaultSize, flat = true, spacing = defaultSpacing, origin = defaultOrigin, children, className, ...rest }) {
-    const orientation = flat ? LAYOUT_FLAT : LAYOUT_POINTY;
-    const cornerCoords = calculateCoordinates(orientation, size);
-    const points = cornerCoords.map((point) => `${point.x},${point.y}`).join(" ");
-    const childLayout = Object.assign({}, rest, {
-      orientation,
-      size,
-      origin,
-      spacing
-    });
-    return jsx2(Context.Provider, { value: {
-      layout: childLayout,
-      points
-    }, children: jsx2("g", { className, children }) });
-  }
-
-  // node_modules/react-hexgrid/lib/Pattern.js
-  var defaultSize2 = new Point_default(10, 10);
-
-  // node_modules/react-hexgrid/lib/Hexagon/Hexagon.js
-  var React7 = __toESM(require_react());
-  var import_classnames = __toESM(require_classnames());
-  function Hexagon(props) {
-    const { q, r, s, fill, cellStyle, className, children, onDragStart, onDragEnd, onDrop, onDragOver, onMouseEnter, onMouseLeave, onMouseOver, onClick, data, fillOpacity, ...rest } = props;
-    const { layout, points } = useLayoutContext();
-    const { hex: hex2, pixel } = React7.useMemo(() => {
-      const hex3 = new Hex(q, r, s);
-      const pixel2 = HexUtils.hexToPixel(hex3, layout);
-      return {
-        hex: hex3,
-        pixel: pixel2
-      };
-    }, [q, r, s, layout]);
-    const state = { hex: hex2 };
-    const fillId = fill ? `url(#${fill})` : void 0;
-    const draggable = { draggable: true };
-    return jsx2("g", { className: (0, import_classnames.default)("hexagon-group", className), transform: `translate(${pixel.x}, ${pixel.y})`, ...rest, ...draggable, onDragStart: (e) => {
-      if (onDragStart) {
-        const targetProps = {
-          hex: hex2,
-          pixel,
-          data,
-          fill,
-          className
-        };
-        e.dataTransfer.setData("hexagon", JSON.stringify(targetProps));
-        onDragStart(e, { data, state, props });
-      }
-    }, onDragEnd: (e) => {
-      if (onDragEnd) {
-        e.preventDefault();
-        const success = e.dataTransfer.dropEffect !== "none";
-        onDragEnd(e, { state, props }, success);
-      }
-    }, onDrop: (e) => {
-      if (onDrop) {
-        e.preventDefault();
-        const target = JSON.parse(e.dataTransfer.getData("hexagon"));
-        onDrop(e, { data, state, props }, target);
-      }
-    }, onDragOver: (e) => {
-      if (onDragOver) {
-        onDragOver(e, { data, state, props });
-      }
-    }, onMouseEnter: (e) => {
-      if (onMouseEnter) {
-        onMouseEnter(e, { data, state, props });
-      }
-    }, onClick: (e) => {
-      if (onClick) {
-        onClick(e, { data, state, props });
-      }
-    }, onMouseOver: (e) => {
-      if (onMouseOver) {
-        onMouseOver(e, { data, state, props });
-      }
-    }, onMouseLeave: (e) => {
-      if (onMouseLeave) {
-        onMouseLeave(e, { data, state, props });
-      }
-    }, children: jsxs2("g", { className: "hexagon", children: [jsx2("polygon", { points, fill: fillId, style: cellStyle }), children] }) });
-  }
-
-  // node_modules/react-hexgrid/lib/Hexagon/Text.js
-  function Text(props) {
-    const { children, x, y, className } = props;
-    return jsx2("text", { x: x || 0, y: y ? y : "0.3em", className, textAnchor: "middle", children });
-  }
+  var import_react13 = __toESM(require_react());
 
   // src/coord-tools.ts
-  function oddq_to_cube({ x, y }) {
+  function oddQToCube({ x, y }) {
     const q = x;
     const r = y - (x - (x & 1)) / 2;
     const s = -q - r;
@@ -10182,11 +10080,11 @@
     }
   ];
 
-  // src/hooks.ts
-  var import_react3 = __toESM(require_react());
+  // src/hooks/useClearableState.ts
+  var import_react = __toESM(require_react());
   function useClearableState(initialValue) {
-    const [value, setValue] = (0, import_react3.useState)(initialValue);
-    const clearValue = (0, import_react3.useCallback)(() => setValue(void 0), []);
+    const [value, setValue] = (0, import_react.useState)(initialValue);
+    const clearValue = (0, import_react.useCallback)(() => setValue(void 0), []);
     return [value, setValue, clearValue];
   }
 
@@ -10788,7 +10686,7 @@
       if (state.finalized_ || !isDraftable(value)) {
         return value;
       }
-      if (value === peek2(state.base_, prop)) {
+      if (value === peek(state.base_, prop)) {
         prepareCopy(state);
         return state.copy_[prop] = createProxy(value, state);
       }
@@ -10807,7 +10705,7 @@
         return true;
       }
       if (!state.modified_) {
-        const current2 = peek2(latest(state), prop);
+        const current2 = peek(latest(state), prop);
         const currentState = current2?.[DRAFT_STATE];
         if (currentState && currentState.base_ === value) {
           state.copy_[prop] = value;
@@ -10828,7 +10726,7 @@
       return true;
     },
     deleteProperty(state, prop) {
-      if (peek2(state.base_, prop) !== void 0 || prop in state.base_) {
+      if (peek(state.base_, prop) !== void 0 || prop in state.base_) {
         state.assigned_[prop] = false;
         prepareCopy(state);
         markChanged(state);
@@ -10881,7 +10779,7 @@
       die(14);
     return objectTraps.set.call(this, state[0], prop, value, state[0]);
   };
-  function peek2(draft, prop) {
+  function peek(draft, prop) {
     const state = draft[DRAFT_STATE];
     const source = state ? latest(state) : draft;
     return source[prop];
@@ -12608,14 +12506,14 @@
   var listenerCancelled = `${listener}-${cancelled}`;
   var listenerCompleted = `${listener}-${completed}`;
   var {
-    assign: assign2
+    assign
   } = Object;
   var alm = "listenerMiddleware";
-  var addListener = /* @__PURE__ */ assign2(/* @__PURE__ */ createAction(`${alm}/add`), {
+  var addListener = /* @__PURE__ */ assign(/* @__PURE__ */ createAction(`${alm}/add`), {
     withTypes: () => addListener
   });
   var clearAllListeners = /* @__PURE__ */ createAction(`${alm}/removeAll`);
-  var removeListener = /* @__PURE__ */ assign2(/* @__PURE__ */ createAction(`${alm}/remove`), {
+  var removeListener = /* @__PURE__ */ assign(/* @__PURE__ */ createAction(`${alm}/remove`), {
     withTypes: () => removeListener
   });
   var ORIGINAL_STATE = Symbol.for("rtk-state-proxy-original");
@@ -12675,14 +12573,1492 @@
   var units_default = unitsSlice.reducer;
   var { selectAll: selectAllUnits } = unitsAdapter.getSelectors((s) => s.units);
 
+  // src/components/StrategyView.tsx
+  var import_panzoom = __toESM(require_panzoom());
+  var import_react12 = __toESM(require_react());
+
+  // node_modules/react-hexgrid/lib/models/Hex.js
+  var Hex = class {
+    q;
+    r;
+    s;
+    blocked;
+    text;
+    image;
+    props;
+    state;
+    pattern;
+    constructor(q, r, s) {
+      this.q = q;
+      this.r = r;
+      this.s = s;
+    }
+  };
+
+  // node_modules/react-hexgrid/lib/models/Point.js
+  var Point = class {
+    x;
+    y;
+    constructor(x, y) {
+      this.x = x;
+      this.y = y;
+    }
+  };
+  var Point_default = Point;
+
+  // node_modules/react-hexgrid/lib/HexUtils.js
+  var HexUtils = class _HexUtils {
+    static DIRECTIONS = [
+      new Hex(1, 0, -1),
+      new Hex(1, -1, 0),
+      new Hex(0, -1, 1),
+      new Hex(-1, 0, 1),
+      new Hex(-1, 1, 0),
+      new Hex(0, 1, -1)
+    ];
+    static equals(a, b) {
+      return a.q == b.q && a.r == b.r && a.s == b.s;
+    }
+    static add(a, b) {
+      return new Hex(a.q + b.q, a.r + b.r, a.s + b.s);
+    }
+    static subtract(a, b) {
+      return new Hex(a.q - b.q, a.r - b.r, a.s - b.s);
+    }
+    static multiply(a, k) {
+      return new Hex(a.q * k, a.r * k, a.s * k);
+    }
+    static lengths(hex2) {
+      return (Math.abs(hex2.q) + Math.abs(hex2.r) + Math.abs(hex2.s)) / 2;
+    }
+    static distance(a, b) {
+      return _HexUtils.lengths(_HexUtils.subtract(a, b));
+    }
+    static direction(direction) {
+      return _HexUtils.DIRECTIONS[(6 + direction % 6) % 6];
+    }
+    static neighbour(hex2, direction) {
+      return _HexUtils.add(hex2, _HexUtils.direction(direction));
+    }
+    static neighbours(hex2) {
+      const array = [];
+      for (let i = 0; i < _HexUtils.DIRECTIONS.length; i += 1) {
+        array.push(_HexUtils.neighbour(hex2, i));
+      }
+      return array;
+    }
+    static round(hex2) {
+      let rq = Math.round(hex2.q);
+      let rr = Math.round(hex2.r);
+      let rs = Math.round(hex2.s);
+      const qDiff = Math.abs(rq - hex2.q);
+      const rDiff = Math.abs(rr - hex2.r);
+      const sDiff = Math.abs(rs - hex2.s);
+      if (qDiff > rDiff && qDiff > sDiff)
+        rq = -rr - rs;
+      else if (rDiff > sDiff)
+        rr = -rq - rs;
+      else
+        rs = -rq - rr;
+      return new Hex(rq, rr, rs);
+    }
+    static hexToPixel(hex2, layout) {
+      const s = layout.spacing;
+      const M = layout.orientation;
+      let x = (M.f0 * hex2.q + M.f1 * hex2.r) * layout.size.x;
+      let y = (M.f2 * hex2.q + M.f3 * hex2.r) * layout.size.y;
+      x = x * s;
+      y = y * s;
+      return new Point(x + layout.origin.x, y + layout.origin.y);
+    }
+    static pixelToHex(point, layout) {
+      const M = layout.orientation;
+      const pt = new Point((point.x - layout.origin.x) / layout.size.x, (point.y - layout.origin.y) / layout.size.y);
+      const q = M.b0 * pt.x + M.b1 * pt.y;
+      const r = M.b2 * pt.x + M.b3 * pt.y;
+      const hex2 = new Hex(q, r, -q - r);
+      return _HexUtils.round(hex2);
+    }
+    static lerp(a, b, t) {
+      return a + (b - a) * t;
+    }
+    static hexLerp(a, b, t) {
+      return new Hex(_HexUtils.lerp(a.q, b.q, t), _HexUtils.lerp(a.r, b.r, t), _HexUtils.lerp(a.s, b.s, t));
+    }
+    static getID(hex2) {
+      return `${hex2.q},${hex2.r},${hex2.s}`;
+    }
+  };
+
+  // node_modules/@emotion/react/jsx-runtime/dist/emotion-react-jsx-runtime.browser.esm.js
+  var ReactJSXRuntime = __toESM(require_jsx_runtime());
+
+  // node_modules/@emotion/react/dist/emotion-element-5486c51c.browser.esm.js
+  var React4 = __toESM(require_react());
+  var import_react2 = __toESM(require_react());
+
+  // node_modules/@emotion/sheet/dist/emotion-sheet.esm.js
+  var isDevelopment = false;
+  function sheetForTag(tag) {
+    if (tag.sheet) {
+      return tag.sheet;
+    }
+    for (var i = 0; i < document.styleSheets.length; i++) {
+      if (document.styleSheets[i].ownerNode === tag) {
+        return document.styleSheets[i];
+      }
+    }
+    return void 0;
+  }
+  function createStyleElement(options) {
+    var tag = document.createElement("style");
+    tag.setAttribute("data-emotion", options.key);
+    if (options.nonce !== void 0) {
+      tag.setAttribute("nonce", options.nonce);
+    }
+    tag.appendChild(document.createTextNode(""));
+    tag.setAttribute("data-s", "");
+    return tag;
+  }
+  var StyleSheet = /* @__PURE__ */ function() {
+    function StyleSheet2(options) {
+      var _this = this;
+      this._insertTag = function(tag) {
+        var before;
+        if (_this.tags.length === 0) {
+          if (_this.insertionPoint) {
+            before = _this.insertionPoint.nextSibling;
+          } else if (_this.prepend) {
+            before = _this.container.firstChild;
+          } else {
+            before = _this.before;
+          }
+        } else {
+          before = _this.tags[_this.tags.length - 1].nextSibling;
+        }
+        _this.container.insertBefore(tag, before);
+        _this.tags.push(tag);
+      };
+      this.isSpeedy = options.speedy === void 0 ? !isDevelopment : options.speedy;
+      this.tags = [];
+      this.ctr = 0;
+      this.nonce = options.nonce;
+      this.key = options.key;
+      this.container = options.container;
+      this.prepend = options.prepend;
+      this.insertionPoint = options.insertionPoint;
+      this.before = null;
+    }
+    var _proto = StyleSheet2.prototype;
+    _proto.hydrate = function hydrate(nodes) {
+      nodes.forEach(this._insertTag);
+    };
+    _proto.insert = function insert2(rule) {
+      if (this.ctr % (this.isSpeedy ? 65e3 : 1) === 0) {
+        this._insertTag(createStyleElement(this));
+      }
+      var tag = this.tags[this.tags.length - 1];
+      if (this.isSpeedy) {
+        var sheet = sheetForTag(tag);
+        try {
+          sheet.insertRule(rule, sheet.cssRules.length);
+        } catch (e) {
+        }
+      } else {
+        tag.appendChild(document.createTextNode(rule));
+      }
+      this.ctr++;
+    };
+    _proto.flush = function flush() {
+      this.tags.forEach(function(tag) {
+        var _tag$parentNode;
+        return (_tag$parentNode = tag.parentNode) == null ? void 0 : _tag$parentNode.removeChild(tag);
+      });
+      this.tags = [];
+      this.ctr = 0;
+    };
+    return StyleSheet2;
+  }();
+
+  // node_modules/stylis/src/Enum.js
+  var MS = "-ms-";
+  var MOZ = "-moz-";
+  var WEBKIT = "-webkit-";
+  var COMMENT = "comm";
+  var RULESET = "rule";
+  var DECLARATION = "decl";
+  var IMPORT = "@import";
+  var KEYFRAMES = "@keyframes";
+  var LAYER = "@layer";
+
+  // node_modules/stylis/src/Utility.js
+  var abs = Math.abs;
+  var from = String.fromCharCode;
+  var assign2 = Object.assign;
+  function hash(value, length2) {
+    return charat(value, 0) ^ 45 ? (((length2 << 2 ^ charat(value, 0)) << 2 ^ charat(value, 1)) << 2 ^ charat(value, 2)) << 2 ^ charat(value, 3) : 0;
+  }
+  function trim(value) {
+    return value.trim();
+  }
+  function match(value, pattern) {
+    return (value = pattern.exec(value)) ? value[0] : value;
+  }
+  function replace(value, pattern, replacement) {
+    return value.replace(pattern, replacement);
+  }
+  function indexof(value, search) {
+    return value.indexOf(search);
+  }
+  function charat(value, index) {
+    return value.charCodeAt(index) | 0;
+  }
+  function substr(value, begin, end) {
+    return value.slice(begin, end);
+  }
+  function strlen(value) {
+    return value.length;
+  }
+  function sizeof(value) {
+    return value.length;
+  }
+  function append(value, array) {
+    return array.push(value), value;
+  }
+  function combine(array, callback) {
+    return array.map(callback).join("");
+  }
+
+  // node_modules/stylis/src/Tokenizer.js
+  var line = 1;
+  var column = 1;
+  var length = 0;
+  var position = 0;
+  var character = 0;
+  var characters = "";
+  function node(value, root2, parent, type, props, children, length2) {
+    return { value, root: root2, parent, type, props, children, line, column, length: length2, return: "" };
+  }
+  function copy(root2, props) {
+    return assign2(node("", null, null, "", null, null, 0), root2, { length: -root2.length }, props);
+  }
+  function char() {
+    return character;
+  }
+  function prev() {
+    character = position > 0 ? charat(characters, --position) : 0;
+    if (column--, character === 10)
+      column = 1, line--;
+    return character;
+  }
+  function next() {
+    character = position < length ? charat(characters, position++) : 0;
+    if (column++, character === 10)
+      column = 1, line++;
+    return character;
+  }
+  function peek2() {
+    return charat(characters, position);
+  }
+  function caret() {
+    return position;
+  }
+  function slice(begin, end) {
+    return substr(characters, begin, end);
+  }
+  function token(type) {
+    switch (type) {
+      // \0 \t \n \r \s whitespace token
+      case 0:
+      case 9:
+      case 10:
+      case 13:
+      case 32:
+        return 5;
+      // ! + , / > @ ~ isolate token
+      case 33:
+      case 43:
+      case 44:
+      case 47:
+      case 62:
+      case 64:
+      case 126:
+      // ; { } breakpoint token
+      case 59:
+      case 123:
+      case 125:
+        return 4;
+      // : accompanied token
+      case 58:
+        return 3;
+      // " ' ( [ opening delimit token
+      case 34:
+      case 39:
+      case 40:
+      case 91:
+        return 2;
+      // ) ] closing delimit token
+      case 41:
+      case 93:
+        return 1;
+    }
+    return 0;
+  }
+  function alloc(value) {
+    return line = column = 1, length = strlen(characters = value), position = 0, [];
+  }
+  function dealloc(value) {
+    return characters = "", value;
+  }
+  function delimit(type) {
+    return trim(slice(position - 1, delimiter(type === 91 ? type + 2 : type === 40 ? type + 1 : type)));
+  }
+  function whitespace(type) {
+    while (character = peek2())
+      if (character < 33)
+        next();
+      else
+        break;
+    return token(type) > 2 || token(character) > 3 ? "" : " ";
+  }
+  function escaping(index, count) {
+    while (--count && next())
+      if (character < 48 || character > 102 || character > 57 && character < 65 || character > 70 && character < 97)
+        break;
+    return slice(index, caret() + (count < 6 && peek2() == 32 && next() == 32));
+  }
+  function delimiter(type) {
+    while (next())
+      switch (character) {
+        // ] ) " '
+        case type:
+          return position;
+        // " '
+        case 34:
+        case 39:
+          if (type !== 34 && type !== 39)
+            delimiter(character);
+          break;
+        // (
+        case 40:
+          if (type === 41)
+            delimiter(type);
+          break;
+        // \
+        case 92:
+          next();
+          break;
+      }
+    return position;
+  }
+  function commenter(type, index) {
+    while (next())
+      if (type + character === 47 + 10)
+        break;
+      else if (type + character === 42 + 42 && peek2() === 47)
+        break;
+    return "/*" + slice(index, position - 1) + "*" + from(type === 47 ? type : next());
+  }
+  function identifier(index) {
+    while (!token(peek2()))
+      next();
+    return slice(index, position);
+  }
+
+  // node_modules/stylis/src/Parser.js
+  function compile(value) {
+    return dealloc(parse("", null, null, null, [""], value = alloc(value), 0, [0], value));
+  }
+  function parse(value, root2, parent, rule, rules, rulesets, pseudo, points, declarations) {
+    var index = 0;
+    var offset = 0;
+    var length2 = pseudo;
+    var atrule = 0;
+    var property = 0;
+    var previous = 0;
+    var variable = 1;
+    var scanning = 1;
+    var ampersand = 1;
+    var character2 = 0;
+    var type = "";
+    var props = rules;
+    var children = rulesets;
+    var reference = rule;
+    var characters2 = type;
+    while (scanning)
+      switch (previous = character2, character2 = next()) {
+        // (
+        case 40:
+          if (previous != 108 && charat(characters2, length2 - 1) == 58) {
+            if (indexof(characters2 += replace(delimit(character2), "&", "&\f"), "&\f") != -1)
+              ampersand = -1;
+            break;
+          }
+        // " ' [
+        case 34:
+        case 39:
+        case 91:
+          characters2 += delimit(character2);
+          break;
+        // \t \n \r \s
+        case 9:
+        case 10:
+        case 13:
+        case 32:
+          characters2 += whitespace(previous);
+          break;
+        // \
+        case 92:
+          characters2 += escaping(caret() - 1, 7);
+          continue;
+        // /
+        case 47:
+          switch (peek2()) {
+            case 42:
+            case 47:
+              append(comment(commenter(next(), caret()), root2, parent), declarations);
+              break;
+            default:
+              characters2 += "/";
+          }
+          break;
+        // {
+        case 123 * variable:
+          points[index++] = strlen(characters2) * ampersand;
+        // } ; \0
+        case 125 * variable:
+        case 59:
+        case 0:
+          switch (character2) {
+            // \0 }
+            case 0:
+            case 125:
+              scanning = 0;
+            // ;
+            case 59 + offset:
+              if (ampersand == -1) characters2 = replace(characters2, /\f/g, "");
+              if (property > 0 && strlen(characters2) - length2)
+                append(property > 32 ? declaration(characters2 + ";", rule, parent, length2 - 1) : declaration(replace(characters2, " ", "") + ";", rule, parent, length2 - 2), declarations);
+              break;
+            // @ ;
+            case 59:
+              characters2 += ";";
+            // { rule/at-rule
+            default:
+              append(reference = ruleset(characters2, root2, parent, index, offset, rules, points, type, props = [], children = [], length2), rulesets);
+              if (character2 === 123)
+                if (offset === 0)
+                  parse(characters2, root2, reference, reference, props, rulesets, length2, points, children);
+                else
+                  switch (atrule === 99 && charat(characters2, 3) === 110 ? 100 : atrule) {
+                    // d l m s
+                    case 100:
+                    case 108:
+                    case 109:
+                    case 115:
+                      parse(value, reference, reference, rule && append(ruleset(value, reference, reference, 0, 0, rules, points, type, rules, props = [], length2), children), rules, children, length2, points, rule ? props : children);
+                      break;
+                    default:
+                      parse(characters2, reference, reference, reference, [""], children, 0, points, children);
+                  }
+          }
+          index = offset = property = 0, variable = ampersand = 1, type = characters2 = "", length2 = pseudo;
+          break;
+        // :
+        case 58:
+          length2 = 1 + strlen(characters2), property = previous;
+        default:
+          if (variable < 1) {
+            if (character2 == 123)
+              --variable;
+            else if (character2 == 125 && variable++ == 0 && prev() == 125)
+              continue;
+          }
+          switch (characters2 += from(character2), character2 * variable) {
+            // &
+            case 38:
+              ampersand = offset > 0 ? 1 : (characters2 += "\f", -1);
+              break;
+            // ,
+            case 44:
+              points[index++] = (strlen(characters2) - 1) * ampersand, ampersand = 1;
+              break;
+            // @
+            case 64:
+              if (peek2() === 45)
+                characters2 += delimit(next());
+              atrule = peek2(), offset = length2 = strlen(type = characters2 += identifier(caret())), character2++;
+              break;
+            // -
+            case 45:
+              if (previous === 45 && strlen(characters2) == 2)
+                variable = 0;
+          }
+      }
+    return rulesets;
+  }
+  function ruleset(value, root2, parent, index, offset, rules, points, type, props, children, length2) {
+    var post = offset - 1;
+    var rule = offset === 0 ? rules : [""];
+    var size = sizeof(rule);
+    for (var i = 0, j = 0, k = 0; i < index; ++i)
+      for (var x = 0, y = substr(value, post + 1, post = abs(j = points[i])), z = value; x < size; ++x)
+        if (z = trim(j > 0 ? rule[x] + " " + y : replace(y, /&\f/g, rule[x])))
+          props[k++] = z;
+    return node(value, root2, parent, offset === 0 ? RULESET : type, props, children, length2);
+  }
+  function comment(value, root2, parent) {
+    return node(value, root2, parent, COMMENT, from(char()), substr(value, 2, -2), 0);
+  }
+  function declaration(value, root2, parent, length2) {
+    return node(value, root2, parent, DECLARATION, substr(value, 0, length2), substr(value, length2 + 1, -1), length2);
+  }
+
+  // node_modules/stylis/src/Serializer.js
+  function serialize(children, callback) {
+    var output = "";
+    var length2 = sizeof(children);
+    for (var i = 0; i < length2; i++)
+      output += callback(children[i], i, children, callback) || "";
+    return output;
+  }
+  function stringify(element, index, children, callback) {
+    switch (element.type) {
+      case LAYER:
+        if (element.children.length) break;
+      case IMPORT:
+      case DECLARATION:
+        return element.return = element.return || element.value;
+      case COMMENT:
+        return "";
+      case KEYFRAMES:
+        return element.return = element.value + "{" + serialize(element.children, callback) + "}";
+      case RULESET:
+        element.value = element.props.join(",");
+    }
+    return strlen(children = serialize(element.children, callback)) ? element.return = element.value + "{" + children + "}" : "";
+  }
+
+  // node_modules/stylis/src/Middleware.js
+  function middleware(collection) {
+    var length2 = sizeof(collection);
+    return function(element, index, children, callback) {
+      var output = "";
+      for (var i = 0; i < length2; i++)
+        output += collection[i](element, index, children, callback) || "";
+      return output;
+    };
+  }
+  function rulesheet(callback) {
+    return function(element) {
+      if (!element.root) {
+        if (element = element.return)
+          callback(element);
+      }
+    };
+  }
+
+  // node_modules/@emotion/memoize/dist/emotion-memoize.esm.js
+  function memoize(fn) {
+    var cache = /* @__PURE__ */ Object.create(null);
+    return function(arg) {
+      if (cache[arg] === void 0) cache[arg] = fn(arg);
+      return cache[arg];
+    };
+  }
+
+  // node_modules/@emotion/cache/dist/emotion-cache.browser.esm.js
+  var identifierWithPointTracking = function identifierWithPointTracking2(begin, points, index) {
+    var previous = 0;
+    var character2 = 0;
+    while (true) {
+      previous = character2;
+      character2 = peek2();
+      if (previous === 38 && character2 === 12) {
+        points[index] = 1;
+      }
+      if (token(character2)) {
+        break;
+      }
+      next();
+    }
+    return slice(begin, position);
+  };
+  var toRules = function toRules2(parsed, points) {
+    var index = -1;
+    var character2 = 44;
+    do {
+      switch (token(character2)) {
+        case 0:
+          if (character2 === 38 && peek2() === 12) {
+            points[index] = 1;
+          }
+          parsed[index] += identifierWithPointTracking(position - 1, points, index);
+          break;
+        case 2:
+          parsed[index] += delimit(character2);
+          break;
+        case 4:
+          if (character2 === 44) {
+            parsed[++index] = peek2() === 58 ? "&\f" : "";
+            points[index] = parsed[index].length;
+            break;
+          }
+        // fallthrough
+        default:
+          parsed[index] += from(character2);
+      }
+    } while (character2 = next());
+    return parsed;
+  };
+  var getRules = function getRules2(value, points) {
+    return dealloc(toRules(alloc(value), points));
+  };
+  var fixedElements = /* @__PURE__ */ new WeakMap();
+  var compat = function compat2(element) {
+    if (element.type !== "rule" || !element.parent || // positive .length indicates that this rule contains pseudo
+    // negative .length indicates that this rule has been already prefixed
+    element.length < 1) {
+      return;
+    }
+    var value = element.value, parent = element.parent;
+    var isImplicitRule = element.column === parent.column && element.line === parent.line;
+    while (parent.type !== "rule") {
+      parent = parent.parent;
+      if (!parent) return;
+    }
+    if (element.props.length === 1 && value.charCodeAt(0) !== 58 && !fixedElements.get(parent)) {
+      return;
+    }
+    if (isImplicitRule) {
+      return;
+    }
+    fixedElements.set(element, true);
+    var points = [];
+    var rules = getRules(value, points);
+    var parentRules = parent.props;
+    for (var i = 0, k = 0; i < rules.length; i++) {
+      for (var j = 0; j < parentRules.length; j++, k++) {
+        element.props[k] = points[i] ? rules[i].replace(/&\f/g, parentRules[j]) : parentRules[j] + " " + rules[i];
+      }
+    }
+  };
+  var removeLabel = function removeLabel2(element) {
+    if (element.type === "decl") {
+      var value = element.value;
+      if (
+        // charcode for l
+        value.charCodeAt(0) === 108 && // charcode for b
+        value.charCodeAt(2) === 98
+      ) {
+        element["return"] = "";
+        element.value = "";
+      }
+    }
+  };
+  function prefix(value, length2) {
+    switch (hash(value, length2)) {
+      // color-adjust
+      case 5103:
+        return WEBKIT + "print-" + value + value;
+      // animation, animation-(delay|direction|duration|fill-mode|iteration-count|name|play-state|timing-function)
+      case 5737:
+      case 4201:
+      case 3177:
+      case 3433:
+      case 1641:
+      case 4457:
+      case 2921:
+      // text-decoration, filter, clip-path, backface-visibility, column, box-decoration-break
+      case 5572:
+      case 6356:
+      case 5844:
+      case 3191:
+      case 6645:
+      case 3005:
+      // mask, mask-image, mask-(mode|clip|size), mask-(repeat|origin), mask-position, mask-composite,
+      case 6391:
+      case 5879:
+      case 5623:
+      case 6135:
+      case 4599:
+      case 4855:
+      // background-clip, columns, column-(count|fill|gap|rule|rule-color|rule-style|rule-width|span|width)
+      case 4215:
+      case 6389:
+      case 5109:
+      case 5365:
+      case 5621:
+      case 3829:
+        return WEBKIT + value + value;
+      // appearance, user-select, transform, hyphens, text-size-adjust
+      case 5349:
+      case 4246:
+      case 4810:
+      case 6968:
+      case 2756:
+        return WEBKIT + value + MOZ + value + MS + value + value;
+      // flex, flex-direction
+      case 6828:
+      case 4268:
+        return WEBKIT + value + MS + value + value;
+      // order
+      case 6165:
+        return WEBKIT + value + MS + "flex-" + value + value;
+      // align-items
+      case 5187:
+        return WEBKIT + value + replace(value, /(\w+).+(:[^]+)/, WEBKIT + "box-$1$2" + MS + "flex-$1$2") + value;
+      // align-self
+      case 5443:
+        return WEBKIT + value + MS + "flex-item-" + replace(value, /flex-|-self/, "") + value;
+      // align-content
+      case 4675:
+        return WEBKIT + value + MS + "flex-line-pack" + replace(value, /align-content|flex-|-self/, "") + value;
+      // flex-shrink
+      case 5548:
+        return WEBKIT + value + MS + replace(value, "shrink", "negative") + value;
+      // flex-basis
+      case 5292:
+        return WEBKIT + value + MS + replace(value, "basis", "preferred-size") + value;
+      // flex-grow
+      case 6060:
+        return WEBKIT + "box-" + replace(value, "-grow", "") + WEBKIT + value + MS + replace(value, "grow", "positive") + value;
+      // transition
+      case 4554:
+        return WEBKIT + replace(value, /([^-])(transform)/g, "$1" + WEBKIT + "$2") + value;
+      // cursor
+      case 6187:
+        return replace(replace(replace(value, /(zoom-|grab)/, WEBKIT + "$1"), /(image-set)/, WEBKIT + "$1"), value, "") + value;
+      // background, background-image
+      case 5495:
+      case 3959:
+        return replace(value, /(image-set\([^]*)/, WEBKIT + "$1$`$1");
+      // justify-content
+      case 4968:
+        return replace(replace(value, /(.+:)(flex-)?(.*)/, WEBKIT + "box-pack:$3" + MS + "flex-pack:$3"), /s.+-b[^;]+/, "justify") + WEBKIT + value + value;
+      // (margin|padding)-inline-(start|end)
+      case 4095:
+      case 3583:
+      case 4068:
+      case 2532:
+        return replace(value, /(.+)-inline(.+)/, WEBKIT + "$1$2") + value;
+      // (min|max)?(width|height|inline-size|block-size)
+      case 8116:
+      case 7059:
+      case 5753:
+      case 5535:
+      case 5445:
+      case 5701:
+      case 4933:
+      case 4677:
+      case 5533:
+      case 5789:
+      case 5021:
+      case 4765:
+        if (strlen(value) - 1 - length2 > 6) switch (charat(value, length2 + 1)) {
+          // (m)ax-content, (m)in-content
+          case 109:
+            if (charat(value, length2 + 4) !== 45) break;
+          // (f)ill-available, (f)it-content
+          case 102:
+            return replace(value, /(.+:)(.+)-([^]+)/, "$1" + WEBKIT + "$2-$3$1" + MOZ + (charat(value, length2 + 3) == 108 ? "$3" : "$2-$3")) + value;
+          // (s)tretch
+          case 115:
+            return ~indexof(value, "stretch") ? prefix(replace(value, "stretch", "fill-available"), length2) + value : value;
+        }
+        break;
+      // position: sticky
+      case 4949:
+        if (charat(value, length2 + 1) !== 115) break;
+      // display: (flex|inline-flex)
+      case 6444:
+        switch (charat(value, strlen(value) - 3 - (~indexof(value, "!important") && 10))) {
+          // stic(k)y
+          case 107:
+            return replace(value, ":", ":" + WEBKIT) + value;
+          // (inline-)?fl(e)x
+          case 101:
+            return replace(value, /(.+:)([^;!]+)(;|!.+)?/, "$1" + WEBKIT + (charat(value, 14) === 45 ? "inline-" : "") + "box$3$1" + WEBKIT + "$2$3$1" + MS + "$2box$3") + value;
+        }
+        break;
+      // writing-mode
+      case 5936:
+        switch (charat(value, length2 + 11)) {
+          // vertical-l(r)
+          case 114:
+            return WEBKIT + value + MS + replace(value, /[svh]\w+-[tblr]{2}/, "tb") + value;
+          // vertical-r(l)
+          case 108:
+            return WEBKIT + value + MS + replace(value, /[svh]\w+-[tblr]{2}/, "tb-rl") + value;
+          // horizontal(-)tb
+          case 45:
+            return WEBKIT + value + MS + replace(value, /[svh]\w+-[tblr]{2}/, "lr") + value;
+        }
+        return WEBKIT + value + MS + value + value;
+    }
+    return value;
+  }
+  var prefixer = function prefixer2(element, index, children, callback) {
+    if (element.length > -1) {
+      if (!element["return"]) switch (element.type) {
+        case DECLARATION:
+          element["return"] = prefix(element.value, element.length);
+          break;
+        case KEYFRAMES:
+          return serialize([copy(element, {
+            value: replace(element.value, "@", "@" + WEBKIT)
+          })], callback);
+        case RULESET:
+          if (element.length) return combine(element.props, function(value) {
+            switch (match(value, /(::plac\w+|:read-\w+)/)) {
+              // :read-(only|write)
+              case ":read-only":
+              case ":read-write":
+                return serialize([copy(element, {
+                  props: [replace(value, /:(read-\w+)/, ":" + MOZ + "$1")]
+                })], callback);
+              // :placeholder
+              case "::placeholder":
+                return serialize([copy(element, {
+                  props: [replace(value, /:(plac\w+)/, ":" + WEBKIT + "input-$1")]
+                }), copy(element, {
+                  props: [replace(value, /:(plac\w+)/, ":" + MOZ + "$1")]
+                }), copy(element, {
+                  props: [replace(value, /:(plac\w+)/, MS + "input-$1")]
+                })], callback);
+            }
+            return "";
+          });
+      }
+    }
+  };
+  var defaultStylisPlugins = [prefixer];
+  var createCache = function createCache2(options) {
+    var key = options.key;
+    if (key === "css") {
+      var ssrStyles = document.querySelectorAll("style[data-emotion]:not([data-s])");
+      Array.prototype.forEach.call(ssrStyles, function(node2) {
+        var dataEmotionAttribute = node2.getAttribute("data-emotion");
+        if (dataEmotionAttribute.indexOf(" ") === -1) {
+          return;
+        }
+        document.head.appendChild(node2);
+        node2.setAttribute("data-s", "");
+      });
+    }
+    var stylisPlugins = options.stylisPlugins || defaultStylisPlugins;
+    var inserted = {};
+    var container;
+    var nodesToHydrate = [];
+    {
+      container = options.container || document.head;
+      Array.prototype.forEach.call(
+        // this means we will ignore elements which don't have a space in them which
+        // means that the style elements we're looking at are only Emotion 11 server-rendered style elements
+        document.querySelectorAll('style[data-emotion^="' + key + ' "]'),
+        function(node2) {
+          var attrib = node2.getAttribute("data-emotion").split(" ");
+          for (var i = 1; i < attrib.length; i++) {
+            inserted[attrib[i]] = true;
+          }
+          nodesToHydrate.push(node2);
+        }
+      );
+    }
+    var _insert;
+    var omnipresentPlugins = [compat, removeLabel];
+    {
+      var currentSheet;
+      var finalizingPlugins = [stringify, rulesheet(function(rule) {
+        currentSheet.insert(rule);
+      })];
+      var serializer = middleware(omnipresentPlugins.concat(stylisPlugins, finalizingPlugins));
+      var stylis = function stylis2(styles) {
+        return serialize(compile(styles), serializer);
+      };
+      _insert = function insert2(selector, serialized, sheet, shouldCache) {
+        currentSheet = sheet;
+        stylis(selector ? selector + "{" + serialized.styles + "}" : serialized.styles);
+        if (shouldCache) {
+          cache.inserted[serialized.name] = true;
+        }
+      };
+    }
+    var cache = {
+      key,
+      sheet: new StyleSheet({
+        key,
+        container,
+        nonce: options.nonce,
+        speedy: options.speedy,
+        prepend: options.prepend,
+        insertionPoint: options.insertionPoint
+      }),
+      nonce: options.nonce,
+      inserted,
+      registered: {},
+      insert: _insert
+    };
+    cache.sheet.hydrate(nodesToHydrate);
+    return cache;
+  };
+
+  // node_modules/@emotion/utils/dist/emotion-utils.browser.esm.js
+  var isBrowser = true;
+  function getRegisteredStyles(registered, registeredStyles, classNames5) {
+    var rawClassName = "";
+    classNames5.split(" ").forEach(function(className) {
+      if (registered[className] !== void 0) {
+        registeredStyles.push(registered[className] + ";");
+      } else {
+        rawClassName += className + " ";
+      }
+    });
+    return rawClassName;
+  }
+  var registerStyles = function registerStyles2(cache, serialized, isStringTag) {
+    var className = cache.key + "-" + serialized.name;
+    if (
+      // we only need to add the styles to the registered cache if the
+      // class name could be used further down
+      // the tree but if it's a string tag, we know it won't
+      // so we don't have to add it to registered cache.
+      // this improves memory usage since we can avoid storing the whole style string
+      (isStringTag === false || // we need to always store it if we're in compat mode and
+      // in node since emotion-server relies on whether a style is in
+      // the registered cache to know whether a style is global or not
+      // also, note that this check will be dead code eliminated in the browser
+      isBrowser === false) && cache.registered[className] === void 0
+    ) {
+      cache.registered[className] = serialized.styles;
+    }
+  };
+  var insertStyles = function insertStyles2(cache, serialized, isStringTag) {
+    registerStyles(cache, serialized, isStringTag);
+    var className = cache.key + "-" + serialized.name;
+    if (cache.inserted[serialized.name] === void 0) {
+      var current2 = serialized;
+      do {
+        cache.insert(serialized === current2 ? "." + className : "", current2, cache.sheet, true);
+        current2 = current2.next;
+      } while (current2 !== void 0);
+    }
+  };
+
+  // node_modules/@emotion/hash/dist/emotion-hash.esm.js
+  function murmur2(str) {
+    var h = 0;
+    var k, i = 0, len = str.length;
+    for (; len >= 4; ++i, len -= 4) {
+      k = str.charCodeAt(i) & 255 | (str.charCodeAt(++i) & 255) << 8 | (str.charCodeAt(++i) & 255) << 16 | (str.charCodeAt(++i) & 255) << 24;
+      k = /* Math.imul(k, m): */
+      (k & 65535) * 1540483477 + ((k >>> 16) * 59797 << 16);
+      k ^= /* k >>> r: */
+      k >>> 24;
+      h = /* Math.imul(k, m): */
+      (k & 65535) * 1540483477 + ((k >>> 16) * 59797 << 16) ^ /* Math.imul(h, m): */
+      (h & 65535) * 1540483477 + ((h >>> 16) * 59797 << 16);
+    }
+    switch (len) {
+      case 3:
+        h ^= (str.charCodeAt(i + 2) & 255) << 16;
+      case 2:
+        h ^= (str.charCodeAt(i + 1) & 255) << 8;
+      case 1:
+        h ^= str.charCodeAt(i) & 255;
+        h = /* Math.imul(h, m): */
+        (h & 65535) * 1540483477 + ((h >>> 16) * 59797 << 16);
+    }
+    h ^= h >>> 13;
+    h = /* Math.imul(h, m): */
+    (h & 65535) * 1540483477 + ((h >>> 16) * 59797 << 16);
+    return ((h ^ h >>> 15) >>> 0).toString(36);
+  }
+
+  // node_modules/@emotion/unitless/dist/emotion-unitless.esm.js
+  var unitlessKeys = {
+    animationIterationCount: 1,
+    aspectRatio: 1,
+    borderImageOutset: 1,
+    borderImageSlice: 1,
+    borderImageWidth: 1,
+    boxFlex: 1,
+    boxFlexGroup: 1,
+    boxOrdinalGroup: 1,
+    columnCount: 1,
+    columns: 1,
+    flex: 1,
+    flexGrow: 1,
+    flexPositive: 1,
+    flexShrink: 1,
+    flexNegative: 1,
+    flexOrder: 1,
+    gridRow: 1,
+    gridRowEnd: 1,
+    gridRowSpan: 1,
+    gridRowStart: 1,
+    gridColumn: 1,
+    gridColumnEnd: 1,
+    gridColumnSpan: 1,
+    gridColumnStart: 1,
+    msGridRow: 1,
+    msGridRowSpan: 1,
+    msGridColumn: 1,
+    msGridColumnSpan: 1,
+    fontWeight: 1,
+    lineHeight: 1,
+    opacity: 1,
+    order: 1,
+    orphans: 1,
+    scale: 1,
+    tabSize: 1,
+    widows: 1,
+    zIndex: 1,
+    zoom: 1,
+    WebkitLineClamp: 1,
+    // SVG-related properties
+    fillOpacity: 1,
+    floodOpacity: 1,
+    stopOpacity: 1,
+    strokeDasharray: 1,
+    strokeDashoffset: 1,
+    strokeMiterlimit: 1,
+    strokeOpacity: 1,
+    strokeWidth: 1
+  };
+
+  // node_modules/@emotion/serialize/dist/emotion-serialize.esm.js
+  var isDevelopment2 = false;
+  var hyphenateRegex = /[A-Z]|^ms/g;
+  var animationRegex = /_EMO_([^_]+?)_([^]*?)_EMO_/g;
+  var isCustomProperty = function isCustomProperty2(property) {
+    return property.charCodeAt(1) === 45;
+  };
+  var isProcessableValue = function isProcessableValue2(value) {
+    return value != null && typeof value !== "boolean";
+  };
+  var processStyleName = /* @__PURE__ */ memoize(function(styleName) {
+    return isCustomProperty(styleName) ? styleName : styleName.replace(hyphenateRegex, "-$&").toLowerCase();
+  });
+  var processStyleValue = function processStyleValue2(key, value) {
+    switch (key) {
+      case "animation":
+      case "animationName": {
+        if (typeof value === "string") {
+          return value.replace(animationRegex, function(match2, p1, p2) {
+            cursor = {
+              name: p1,
+              styles: p2,
+              next: cursor
+            };
+            return p1;
+          });
+        }
+      }
+    }
+    if (unitlessKeys[key] !== 1 && !isCustomProperty(key) && typeof value === "number" && value !== 0) {
+      return value + "px";
+    }
+    return value;
+  };
+  var noComponentSelectorMessage = "Component selectors can only be used in conjunction with @emotion/babel-plugin, the swc Emotion plugin, or another Emotion-aware compiler transform.";
+  function handleInterpolation(mergedProps, registered, interpolation) {
+    if (interpolation == null) {
+      return "";
+    }
+    var componentSelector = interpolation;
+    if (componentSelector.__emotion_styles !== void 0) {
+      return componentSelector;
+    }
+    switch (typeof interpolation) {
+      case "boolean": {
+        return "";
+      }
+      case "object": {
+        var keyframes = interpolation;
+        if (keyframes.anim === 1) {
+          cursor = {
+            name: keyframes.name,
+            styles: keyframes.styles,
+            next: cursor
+          };
+          return keyframes.name;
+        }
+        var serializedStyles = interpolation;
+        if (serializedStyles.styles !== void 0) {
+          var next2 = serializedStyles.next;
+          if (next2 !== void 0) {
+            while (next2 !== void 0) {
+              cursor = {
+                name: next2.name,
+                styles: next2.styles,
+                next: cursor
+              };
+              next2 = next2.next;
+            }
+          }
+          var styles = serializedStyles.styles + ";";
+          return styles;
+        }
+        return createStringFromObject(mergedProps, registered, interpolation);
+      }
+      case "function": {
+        if (mergedProps !== void 0) {
+          var previousCursor = cursor;
+          var result = interpolation(mergedProps);
+          cursor = previousCursor;
+          return handleInterpolation(mergedProps, registered, result);
+        }
+        break;
+      }
+    }
+    var asString = interpolation;
+    if (registered == null) {
+      return asString;
+    }
+    var cached = registered[asString];
+    return cached !== void 0 ? cached : asString;
+  }
+  function createStringFromObject(mergedProps, registered, obj) {
+    var string = "";
+    if (Array.isArray(obj)) {
+      for (var i = 0; i < obj.length; i++) {
+        string += handleInterpolation(mergedProps, registered, obj[i]) + ";";
+      }
+    } else {
+      for (var key in obj) {
+        var value = obj[key];
+        if (typeof value !== "object") {
+          var asString = value;
+          if (registered != null && registered[asString] !== void 0) {
+            string += key + "{" + registered[asString] + "}";
+          } else if (isProcessableValue(asString)) {
+            string += processStyleName(key) + ":" + processStyleValue(key, asString) + ";";
+          }
+        } else {
+          if (key === "NO_COMPONENT_SELECTOR" && isDevelopment2) {
+            throw new Error(noComponentSelectorMessage);
+          }
+          if (Array.isArray(value) && typeof value[0] === "string" && (registered == null || registered[value[0]] === void 0)) {
+            for (var _i = 0; _i < value.length; _i++) {
+              if (isProcessableValue(value[_i])) {
+                string += processStyleName(key) + ":" + processStyleValue(key, value[_i]) + ";";
+              }
+            }
+          } else {
+            var interpolated = handleInterpolation(mergedProps, registered, value);
+            switch (key) {
+              case "animation":
+              case "animationName": {
+                string += processStyleName(key) + ":" + interpolated + ";";
+                break;
+              }
+              default: {
+                string += key + "{" + interpolated + "}";
+              }
+            }
+          }
+        }
+      }
+    }
+    return string;
+  }
+  var labelPattern = /label:\s*([^\s;\n{]+)\s*(;|$)/g;
+  var cursor;
+  function serializeStyles(args, registered, mergedProps) {
+    if (args.length === 1 && typeof args[0] === "object" && args[0] !== null && args[0].styles !== void 0) {
+      return args[0];
+    }
+    var stringMode = true;
+    var styles = "";
+    cursor = void 0;
+    var strings = args[0];
+    if (strings == null || strings.raw === void 0) {
+      stringMode = false;
+      styles += handleInterpolation(mergedProps, registered, strings);
+    } else {
+      var asTemplateStringsArr = strings;
+      styles += asTemplateStringsArr[0];
+    }
+    for (var i = 1; i < args.length; i++) {
+      styles += handleInterpolation(mergedProps, registered, args[i]);
+      if (stringMode) {
+        var templateStringsArr = strings;
+        styles += templateStringsArr[i];
+      }
+    }
+    labelPattern.lastIndex = 0;
+    var identifierName = "";
+    var match2;
+    while ((match2 = labelPattern.exec(styles)) !== null) {
+      identifierName += "-" + match2[1];
+    }
+    var name = murmur2(styles) + identifierName;
+    return {
+      name,
+      styles,
+      next: cursor
+    };
+  }
+
+  // node_modules/@emotion/use-insertion-effect-with-fallbacks/dist/emotion-use-insertion-effect-with-fallbacks.browser.esm.js
+  var React3 = __toESM(require_react());
+  var syncFallback = function syncFallback2(create) {
+    return create();
+  };
+  var useInsertionEffect2 = React3["useInsertionEffect"] ? React3["useInsertionEffect"] : false;
+  var useInsertionEffectAlwaysWithSyncFallback = useInsertionEffect2 || syncFallback;
+
+  // node_modules/@emotion/react/dist/emotion-element-5486c51c.browser.esm.js
+  var isDevelopment3 = false;
+  var EmotionCacheContext = /* @__PURE__ */ React4.createContext(
+    // we're doing this to avoid preconstruct's dead code elimination in this one case
+    // because this module is primarily intended for the browser and node
+    // but it's also required in react native and similar environments sometimes
+    // and we could have a special build just for that
+    // but this is much easier and the native packages
+    // might use a different theme context in the future anyway
+    typeof HTMLElement !== "undefined" ? /* @__PURE__ */ createCache({
+      key: "css"
+    }) : null
+  );
+  var CacheProvider = EmotionCacheContext.Provider;
+  var withEmotionCache = function withEmotionCache2(func) {
+    return /* @__PURE__ */ (0, import_react2.forwardRef)(function(props, ref) {
+      var cache = (0, import_react2.useContext)(EmotionCacheContext);
+      return func(props, cache, ref);
+    });
+  };
+  var ThemeContext = /* @__PURE__ */ React4.createContext({});
+  var hasOwn = {}.hasOwnProperty;
+  var typePropName = "__EMOTION_TYPE_PLEASE_DO_NOT_USE__";
+  var createEmotionProps = function createEmotionProps2(type, props) {
+    var newProps = {};
+    for (var key in props) {
+      if (hasOwn.call(props, key)) {
+        newProps[key] = props[key];
+      }
+    }
+    newProps[typePropName] = type;
+    return newProps;
+  };
+  var Insertion = function Insertion2(_ref) {
+    var cache = _ref.cache, serialized = _ref.serialized, isStringTag = _ref.isStringTag;
+    registerStyles(cache, serialized, isStringTag);
+    useInsertionEffectAlwaysWithSyncFallback(function() {
+      return insertStyles(cache, serialized, isStringTag);
+    });
+    return null;
+  };
+  var Emotion = /* @__PURE__ */ withEmotionCache(
+    /* <any, any> */
+    function(props, cache, ref) {
+      var cssProp = props.css;
+      if (typeof cssProp === "string" && cache.registered[cssProp] !== void 0) {
+        cssProp = cache.registered[cssProp];
+      }
+      var WrappedComponent = props[typePropName];
+      var registeredStyles = [cssProp];
+      var className = "";
+      if (typeof props.className === "string") {
+        className = getRegisteredStyles(cache.registered, registeredStyles, props.className);
+      } else if (props.className != null) {
+        className = props.className + " ";
+      }
+      var serialized = serializeStyles(registeredStyles, void 0, React4.useContext(ThemeContext));
+      className += cache.key + "-" + serialized.name;
+      var newProps = {};
+      for (var key in props) {
+        if (hasOwn.call(props, key) && key !== "css" && key !== typePropName && !isDevelopment3) {
+          newProps[key] = props[key];
+        }
+      }
+      newProps.className = className;
+      if (ref) {
+        newProps.ref = ref;
+      }
+      return /* @__PURE__ */ React4.createElement(React4.Fragment, null, /* @__PURE__ */ React4.createElement(Insertion, {
+        cache,
+        serialized,
+        isStringTag: typeof WrappedComponent === "string"
+      }), /* @__PURE__ */ React4.createElement(WrappedComponent, newProps));
+    }
+  );
+  var Emotion$1 = Emotion;
+
+  // node_modules/@emotion/react/jsx-runtime/dist/emotion-react-jsx-runtime.browser.esm.js
+  var import_react3 = __toESM(require_react());
+  var import_hoist_non_react_statics = __toESM(require_hoist_non_react_statics_cjs());
+  function jsx2(type, props, key) {
+    if (!hasOwn.call(props, "css")) {
+      return ReactJSXRuntime.jsx(type, props, key);
+    }
+    return ReactJSXRuntime.jsx(Emotion$1, createEmotionProps(type, props), key);
+  }
+  function jsxs2(type, props, key) {
+    if (!hasOwn.call(props, "css")) {
+      return ReactJSXRuntime.jsxs(type, props, key);
+    }
+    return ReactJSXRuntime.jsxs(Emotion$1, createEmotionProps(type, props), key);
+  }
+
+  // node_modules/react-hexgrid/lib/Layout.js
+  var React5 = __toESM(require_react());
+
+  // node_modules/react-hexgrid/lib/models/Orientation.js
+  var Orientation = class {
+    f0;
+    f1;
+    f2;
+    f3;
+    b0;
+    b1;
+    b2;
+    b3;
+    startAngle;
+    constructor(f0, f1, f2, f3, b0, b1, b2, b3, startAngle) {
+      this.f0 = f0;
+      this.f1 = f1;
+      this.f2 = f2;
+      this.f3 = f3;
+      this.b0 = b0;
+      this.b1 = b1;
+      this.b2 = b2;
+      this.b3 = b3;
+      this.startAngle = startAngle;
+    }
+  };
+
+  // node_modules/react-hexgrid/lib/Layout.js
+  var LAYOUT_FLAT = new Orientation(3 / 2, 0, Math.sqrt(3) / 2, Math.sqrt(3), 2 / 3, 0, -1 / 3, Math.sqrt(3) / 3, 0);
+  var LAYOUT_POINTY = new Orientation(Math.sqrt(3), Math.sqrt(3) / 2, 0, 3 / 2, Math.sqrt(3) / 3, -1 / 3, 0, 2 / 3, 0.5);
+  var defaultSize = new Point(10, 10);
+  var defaultOrigin = new Point(0, 0);
+  var defaultSpacing = 1;
+  var Context = React5.createContext({
+    layout: {
+      size: defaultSize,
+      orientation: LAYOUT_FLAT,
+      origin: defaultOrigin,
+      spacing: defaultSpacing
+    },
+    points: ""
+  });
+  function useLayoutContext() {
+    const ctx = React5.useContext(Context);
+    return ctx;
+  }
+  function getPointOffset(corner, orientation, size) {
+    let angle = 2 * Math.PI * (corner + orientation.startAngle) / 6;
+    return new Point(size.x * Math.cos(angle), size.y * Math.sin(angle));
+  }
+  function calculateCoordinates(orientation, size) {
+    const corners = [];
+    const center = new Point(0, 0);
+    Array.from(new Array(6), (x, i) => {
+      const offset = getPointOffset(i, orientation, size);
+      const point = new Point(center.x + offset.x, center.y + offset.y);
+      corners.push(point);
+    });
+    return corners;
+  }
+  function Layout({ size = defaultSize, flat = true, spacing = defaultSpacing, origin = defaultOrigin, children, className, ...rest }) {
+    const orientation = flat ? LAYOUT_FLAT : LAYOUT_POINTY;
+    const cornerCoords = calculateCoordinates(orientation, size);
+    const points = cornerCoords.map((point) => `${point.x},${point.y}`).join(" ");
+    const childLayout = Object.assign({}, rest, {
+      orientation,
+      size,
+      origin,
+      spacing
+    });
+    return jsx2(Context.Provider, { value: {
+      layout: childLayout,
+      points
+    }, children: jsx2("g", { className, children }) });
+  }
+
+  // node_modules/react-hexgrid/lib/Pattern.js
+  var defaultSize2 = new Point_default(10, 10);
+
+  // node_modules/react-hexgrid/lib/Hexagon/Hexagon.js
+  var React6 = __toESM(require_react());
+  var import_classnames = __toESM(require_classnames());
+  function Hexagon(props) {
+    const { q, r, s, fill, cellStyle, className, children, onDragStart, onDragEnd, onDrop, onDragOver, onMouseEnter, onMouseLeave, onMouseOver, onClick, data, fillOpacity, ...rest } = props;
+    const { layout, points } = useLayoutContext();
+    const { hex: hex2, pixel } = React6.useMemo(() => {
+      const hex3 = new Hex(q, r, s);
+      const pixel2 = HexUtils.hexToPixel(hex3, layout);
+      return {
+        hex: hex3,
+        pixel: pixel2
+      };
+    }, [q, r, s, layout]);
+    const state = { hex: hex2 };
+    const fillId = fill ? `url(#${fill})` : void 0;
+    const draggable = { draggable: true };
+    return jsx2("g", { className: (0, import_classnames.default)("hexagon-group", className), transform: `translate(${pixel.x}, ${pixel.y})`, ...rest, ...draggable, onDragStart: (e) => {
+      if (onDragStart) {
+        const targetProps = {
+          hex: hex2,
+          pixel,
+          data,
+          fill,
+          className
+        };
+        e.dataTransfer.setData("hexagon", JSON.stringify(targetProps));
+        onDragStart(e, { data, state, props });
+      }
+    }, onDragEnd: (e) => {
+      if (onDragEnd) {
+        e.preventDefault();
+        const success = e.dataTransfer.dropEffect !== "none";
+        onDragEnd(e, { state, props }, success);
+      }
+    }, onDrop: (e) => {
+      if (onDrop) {
+        e.preventDefault();
+        const target = JSON.parse(e.dataTransfer.getData("hexagon"));
+        onDrop(e, { data, state, props }, target);
+      }
+    }, onDragOver: (e) => {
+      if (onDragOver) {
+        onDragOver(e, { data, state, props });
+      }
+    }, onMouseEnter: (e) => {
+      if (onMouseEnter) {
+        onMouseEnter(e, { data, state, props });
+      }
+    }, onClick: (e) => {
+      if (onClick) {
+        onClick(e, { data, state, props });
+      }
+    }, onMouseOver: (e) => {
+      if (onMouseOver) {
+        onMouseOver(e, { data, state, props });
+      }
+    }, onMouseLeave: (e) => {
+      if (onMouseLeave) {
+        onMouseLeave(e, { data, state, props });
+      }
+    }, children: jsxs2("g", { className: "hexagon", children: [jsx2("polygon", { points, fill: fillId, style: cellStyle }), children] }) });
+  }
+
+  // node_modules/react-hexgrid/lib/Hexagon/Text.js
+  function Text(props) {
+    const { children, x, y, className } = props;
+    return jsx2("text", { x: x || 0, y: y ? y : "0.3em", className, textAnchor: "middle", children });
+  }
+
   // src/components/BorderLayer.tsx
   var import_react5 = __toESM(require_react());
 
   // src/components/BorderXY.tsx
   var import_react4 = __toESM(require_react());
-  var import_jsx_runtime5 = __toESM(require_jsx_runtime());
+  var import_jsx_runtime4 = __toESM(require_jsx_runtime());
   function BorderXY({ x, y, thickness, start, end }) {
-    const { q, r, s } = (0, import_react4.useMemo)(() => oddq_to_cube({ x, y }), [x, y]);
+    const { q, r, s } = (0, import_react4.useMemo)(() => oddQToCube({ x, y }), [x, y]);
     const { layout, points } = useLayoutContext();
     const linePoints = (0, import_react4.useMemo)(() => {
       const positionPoints = points.split(" ").map((p) => p.split(",")).map(([px, py]) => ({ x: Number(px), y: Number(py) }));
@@ -12697,18 +14073,18 @@
       () => HexUtils.hexToPixel({ q, r, s }, layout),
       [q, r, s, layout]
     );
-    return /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("g", { className: "border", transform: `translate(${pixel.x},${pixel.y})`, children: /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("polyline", { points: linePoints, strokeWidth: thickness }) });
+    return /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("g", { className: "border", transform: `translate(${pixel.x},${pixel.y})`, children: /* @__PURE__ */ (0, import_jsx_runtime4.jsx)("polyline", { points: linePoints, strokeWidth: thickness }) });
   }
 
   // src/components/BorderLayer.tsx
-  var import_jsx_runtime6 = __toESM(require_jsx_runtime());
+  var import_jsx_runtime5 = __toESM(require_jsx_runtime());
   function BorderLayer() {
     const borders2 = useAppSelector(selectAllBorders);
     const borderElements = (0, import_react5.useMemo)(
-      () => borders2.map((border2, i) => /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(BorderXY, { ...border2 }, i)),
+      () => borders2.map((border2, i) => /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(BorderXY, { ...border2 }, i)),
       [borders2]
     );
-    return /* @__PURE__ */ (0, import_jsx_runtime6.jsx)("g", { id: "borders", children: borderElements });
+    return /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("g", { id: "borders", children: borderElements });
   }
 
   // src/components/HexLayer.tsx
@@ -12716,8 +14092,8 @@
 
   // src/components/HexagonXY.tsx
   var import_react6 = __toESM(require_react());
-  var import_jsx_runtime7 = __toESM(require_jsx_runtime());
-  function HexagonXY({
+  var import_jsx_runtime6 = __toESM(require_jsx_runtime());
+  var HexagonXY = (0, import_react6.memo)(function HexagonXY2({
     x,
     y,
     children,
@@ -12727,17 +14103,18 @@
   }) {
     const click = (0, import_react6.useCallback)(() => onClick?.({ x, y }), [onClick, x, y]);
     const hover = (0, import_react6.useCallback)(() => onHover?.({ x, y }), [onHover, x, y]);
-    const { q, r, s } = (0, import_react6.useMemo)(() => oddq_to_cube({ x, y }), [x, y]);
-    return /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(Hexagon, { q, r, s, onClick: click, onMouseOver: hover, ...props, children });
-  }
+    const { q, r, s } = (0, import_react6.useMemo)(() => oddQToCube({ x, y }), [x, y]);
+    return /* @__PURE__ */ (0, import_jsx_runtime6.jsx)(Hexagon, { q, r, s, onClick: click, onMouseOver: hover, ...props, children });
+  });
+  var HexagonXY_default = HexagonXY;
 
   // src/components/HexLayer.tsx
-  var import_jsx_runtime8 = __toESM(require_jsx_runtime());
+  var import_jsx_runtime7 = __toESM(require_jsx_runtime());
   function HexLayer({ onClick, onHover }) {
     const hexes = useAppSelector(selectAllTerrain);
     const hexElements = (0, import_react7.useMemo)(
-      () => hexes.map(({ x, y, terrain }, i) => /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(
-        HexagonXY,
+      () => hexes.map(({ x, y, terrain }, i) => /* @__PURE__ */ (0, import_jsx_runtime7.jsx)(
+        HexagonXY_default,
         {
           x,
           y,
@@ -12749,7 +14126,7 @@
       )),
       [hexes, onClick, onHover]
     );
-    return /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("g", { id: "hexes", children: hexElements });
+    return /* @__PURE__ */ (0, import_jsx_runtime7.jsx)("g", { id: "hexes", children: hexElements });
   }
 
   // src/components/LocationLayer.tsx
@@ -12758,36 +14135,36 @@
   // src/components/LocationXY.tsx
   var import_classnames2 = __toESM(require_classnames());
   var import_react8 = __toESM(require_react());
-  var import_jsx_runtime9 = __toESM(require_jsx_runtime());
+  var import_jsx_runtime8 = __toESM(require_jsx_runtime());
   function LocationXY({ x, y, type, name, defence }) {
-    const { q, r, s } = (0, import_react8.useMemo)(() => oddq_to_cube({ x, y }), [x, y]);
+    const { q, r, s } = (0, import_react8.useMemo)(() => oddQToCube({ x, y }), [x, y]);
     const { layout, points } = useLayoutContext();
     const pixel = (0, import_react8.useMemo)(
       () => HexUtils.hexToPixel({ q, r, s }, layout),
       [q, r, s, layout]
     );
-    return /* @__PURE__ */ (0, import_jsx_runtime9.jsxs)(
+    return /* @__PURE__ */ (0, import_jsx_runtime8.jsxs)(
       "g",
       {
         className: (0, import_classnames2.default)("location", type, defence),
         transform: `translate(${pixel.x},${pixel.y})`,
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("polygon", { points }),
-          /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(Text, { children: name })
+          /* @__PURE__ */ (0, import_jsx_runtime8.jsx)("polygon", { points }),
+          /* @__PURE__ */ (0, import_jsx_runtime8.jsx)(Text, { children: name })
         ]
       }
     );
   }
 
   // src/components/LocationLayer.tsx
-  var import_jsx_runtime10 = __toESM(require_jsx_runtime());
+  var import_jsx_runtime9 = __toESM(require_jsx_runtime());
   function LocationLayer() {
     const locations2 = useAppSelector(selectAllLocations);
     const locationElements = (0, import_react9.useMemo)(
-      () => locations2.map((loc, i) => /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(LocationXY, { ...loc }, i)),
+      () => locations2.map((loc, i) => /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(LocationXY, { ...loc }, i)),
       [locations2]
     );
-    return /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("g", { id: "locations", children: locationElements });
+    return /* @__PURE__ */ (0, import_jsx_runtime9.jsx)("g", { id: "locations", children: locationElements });
   }
 
   // src/components/UnitLayer.tsx
@@ -12796,9 +14173,16 @@
   // src/components/UnitXY.tsx
   var import_classnames3 = __toESM(require_classnames());
   var import_react10 = __toESM(require_react());
-  var import_jsx_runtime11 = __toESM(require_jsx_runtime());
+
+  // src/tools/clamp.ts
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  // src/components/UnitXY.tsx
+  var import_jsx_runtime10 = __toESM(require_jsx_runtime());
   function getUnitRadius(troops) {
-    return Math.min(10, Math.max(troops / 50, 4));
+    return clamp(troops / 50, 4, 10);
   }
   function UnitXY({
     selected,
@@ -12811,7 +14195,7 @@
     const click = (0, import_react10.useCallback)(() => onClick?.(unit), [onClick, unit]);
     const mouseEnter = (0, import_react10.useCallback)(() => onHover?.(unit), [onHover, unit]);
     const mouseLeave = (0, import_react10.useCallback)(() => onHoverEnd?.(unit), [onHoverEnd, unit]);
-    const { q, r, s } = (0, import_react10.useMemo)(() => oddq_to_cube(unit), [unit]);
+    const { q, r, s } = (0, import_react10.useMemo)(() => oddQToCube(unit), [unit]);
     const { layout } = useLayoutContext();
     const pixel = (0, import_react10.useMemo)(
       () => HexUtils.hexToPixel({ q, r, s }, layout),
@@ -12820,7 +14204,7 @@
     const tag = xyTag(unit);
     const inHex = useAppSelector((state) => getHexById(state, tag));
     const inTerritoryOfLiege = liegeTag && inHex.tags.includes(liegeTag);
-    return /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)(
+    return /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(
       "g",
       {
         className: (0, import_classnames3.default)("unit", `side-${side}`, {
@@ -12832,19 +14216,19 @@
         onMouseEnter: mouseEnter,
         onMouseLeave: mouseLeave,
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("circle", { r: getUnitRadius(force.numberOfTroops) }),
-          /* @__PURE__ */ (0, import_jsx_runtime11.jsxs)(Text, { y: "1.25em", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime10.jsx)("circle", { r: getUnitRadius(force.numberOfTroops) }),
+          /* @__PURE__ */ (0, import_jsx_runtime10.jsxs)(Text, { y: "1.25em", children: [
             force.name,
             " "
           ] }),
-          inTerritoryOfLiege && /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(Text, { children: "\u{1F451}" })
+          inTerritoryOfLiege && /* @__PURE__ */ (0, import_jsx_runtime10.jsx)(Text, { children: "\u{1F451}" })
         ]
       }
     );
   }
 
   // src/components/UnitLayer.tsx
-  var import_jsx_runtime12 = __toESM(require_jsx_runtime());
+  var import_jsx_runtime11 = __toESM(require_jsx_runtime());
   function UnitLayer({
     selected,
     onClick,
@@ -12853,7 +14237,7 @@
   }) {
     const units = useAppSelector(selectAllUnits);
     const unitElements = (0, import_react11.useMemo)(
-      () => units.map((u) => /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+      () => units.map((u) => /* @__PURE__ */ (0, import_jsx_runtime11.jsx)(
         UnitXY,
         {
           unit: u,
@@ -12866,7 +14250,52 @@
       )),
       [selected, units, onClick, onHover, onHoverEnd]
     );
-    return /* @__PURE__ */ (0, import_jsx_runtime12.jsx)("g", { id: "units", children: unitElements });
+    return /* @__PURE__ */ (0, import_jsx_runtime11.jsx)("g", { id: "units", children: unitElements });
+  }
+
+  // src/components/StrategyView.tsx
+  var import_jsx_runtime12 = __toESM(require_jsx_runtime());
+  function StrategyView({
+    selectedUnit,
+    onClickUnit,
+    onHoverUnit,
+    onHoverEndUnit,
+    onClickHex,
+    onHoverHex
+  }) {
+    const ref = (0, import_react12.useRef)(null);
+    (0, import_react12.useEffect)(() => {
+      if (ref.current) {
+        const instance = (0, import_panzoom.default)(ref.current, {
+          smoothScroll: false,
+          initialZoom: 2
+        });
+        return () => instance.dispose();
+      }
+    }, []);
+    return /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+      "svg",
+      {
+        ref,
+        className: "grid",
+        version: "1.1",
+        xmlns: "http://www.w3.org/2000/svg",
+        children: /* @__PURE__ */ (0, import_jsx_runtime12.jsxs)(Layout, { size: { x: 10, y: 10 }, origin: { x: 0, y: 15 }, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(HexLayer, { onClick: onClickHex, onHover: onHoverHex }),
+          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(BorderLayer, {}),
+          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(LocationLayer, {}),
+          /* @__PURE__ */ (0, import_jsx_runtime12.jsx)(
+            UnitLayer,
+            {
+              selected: selectedUnit,
+              onClick: onClickUnit,
+              onHover: onHoverUnit,
+              onHoverEnd: onHoverEndUnit
+            }
+          )
+        ] })
+      }
+    );
   }
 
   // src/components/UnitView.tsx
@@ -12934,34 +14363,15 @@
 
   // src/components/App.tsx
   var import_jsx_runtime14 = __toESM(require_jsx_runtime());
-  function getTerrainExtents(terrain) {
-    if (!terrain.length) return `0 0 100 100`;
-    let left = Infinity;
-    let right = -Infinity;
-    let top = Infinity;
-    let bottom = -Infinity;
-    for (const { x, y } of terrain) {
-      left = Math.min(left, x);
-      right = Math.max(right, x);
-      top = Math.min(top, y);
-      bottom = Math.max(bottom, y);
-    }
-    const width = 30 + (right - left) * 15;
-    const height = 50 + (bottom - top) * 17;
-    return `0 -15 ${width} ${height}`;
-  }
   function App() {
-    const { width, height } = useWindowSize();
-    const [hoverXY, setHoverXY] = (0, import_react12.useState)();
+    const [hoverXY, setHoverXY] = (0, import_react13.useState)();
     const hoverHex = useAppSelector(
       (state) => hoverXY ? getHexById(state, xyTag(hoverXY)) : void 0
     );
     const [hoverUnit, setHoverUnit, clearHoverUnit] = useClearableState();
     const [clickUnit, setClickUnit, clearClickUnit] = useClearableState();
     const dispatch = useAppDispatch();
-    const hexes = useAppSelector(selectAllTerrain);
-    const viewBox = (0, import_react12.useMemo)(() => getTerrainExtents(hexes), [hexes]);
-    (0, import_react12.useEffect)(() => {
+    (0, import_react13.useEffect)(() => {
       dispatch(setTerrain(hexData));
       dispatch(setBorders(borders));
       dispatch(setLocations(locations));
@@ -12993,25 +14403,14 @@
         hoverUnit && hoverUnit !== clickUnit && /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(UnitView, { unit: hoverUnit })
       ] }),
       /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
-        HexGrid,
+        StrategyView,
         {
-          width: width ?? void 0,
-          height: height ?? void 0,
-          viewBox,
-          children: /* @__PURE__ */ (0, import_jsx_runtime14.jsxs)(Layout, { size: { x: 10, y: 10 }, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(HexLayer, { onClick: clearClickUnit, onHover: setHoverXY }),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(BorderLayer, {}),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(LocationLayer, {}),
-            /* @__PURE__ */ (0, import_jsx_runtime14.jsx)(
-              UnitLayer,
-              {
-                selected: clickUnit,
-                onClick: setClickUnit,
-                onHover: setHoverUnit,
-                onHoverEnd: clearHoverUnit
-              }
-            )
-          ] })
+          onClickHex: clearClickUnit,
+          onHoverHex: setHoverXY,
+          selectedUnit: clickUnit,
+          onClickUnit: setClickUnit,
+          onHoverUnit: setHoverUnit,
+          onHoverEndUnit: clearHoverUnit
         }
       )
     ] });
@@ -13026,7 +14425,7 @@
   var import_jsx_runtime15 = __toESM(require_jsx_runtime());
   var root = (0, import_client.createRoot)(document.getElementById("app"));
   root.render(
-    /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(import_react13.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(Provider_default, { store, children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(App, {}) }) })
+    /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(import_react14.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(Provider_default, { store, children: /* @__PURE__ */ (0, import_jsx_runtime15.jsx)(App, {}) }) })
   );
 })();
 /*! Bundled license information:

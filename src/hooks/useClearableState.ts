@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 
-export function useClearableState<T>(
+export default function useClearableState<T>(
   initialValue?: T,
 ): [
   value: T | undefined,

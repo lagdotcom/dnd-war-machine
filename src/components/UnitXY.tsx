@@ -3,13 +3,14 @@ import { useCallback, useMemo } from "react";
 import { HexUtils, Text } from "react-hexgrid";
 import { useLayoutContext } from "react-hexgrid/lib/Layout";
 
-import { oddq_to_cube, xyTag } from "../coord-tools";
+import { oddQToCube, xyTag } from "../coord-tools";
 import { useAppSelector } from "../state/hooks";
 import { getHexById } from "../state/terrain";
 import { Unit } from "../state/units";
+import clamp from "../tools/clamp";
 
 function getUnitRadius(troops: number) {
-  return Math.min(10, Math.max(troops / 50, 4));
+  return clamp(troops / 50, 4, 10);
 }
 
 export default function UnitXY({
@@ -30,7 +31,7 @@ export default function UnitXY({
   const mouseEnter = useCallback(() => onHover?.(unit), [onHover, unit]);
   const mouseLeave = useCallback(() => onHoverEnd?.(unit), [onHoverEnd, unit]);
 
-  const { q, r, s } = useMemo(() => oddq_to_cube(unit), [unit]);
+  const { q, r, s } = useMemo(() => oddQToCube(unit), [unit]);
   const { layout } = useLayoutContext();
   const pixel = useMemo(
     () => HexUtils.hexToPixel({ q, r, s }, layout),

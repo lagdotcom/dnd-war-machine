@@ -1,6 +1,4 @@
-import { useWindowSize } from "@uidotdev/usehooks";
-import { useEffect, useMemo, useState } from "react";
-import { HexGrid, Layout } from "react-hexgrid";
+import { useEffect, useState } from "react";
 
 import { xyTag } from "../coord-tools";
 import {
@@ -9,49 +7,17 @@ import {
   locations,
   scenario3Units,
 } from "../data/karameikos";
-import { useClearableState } from "../hooks";
+import useClearableState from "../hooks/useClearableState";
 import { setBorders } from "../state/borders";
 import { useAppDispatch, useAppSelector } from "../state/hooks";
 import { setLocations } from "../state/locations";
-import {
-  getHexById,
-  HexData,
-  selectAllTerrain,
-  setTerrain,
-} from "../state/terrain";
+import { getHexById, setTerrain } from "../state/terrain";
 import { setUnits, Unit } from "../state/units";
 import { XY } from "../types";
-import BorderLayer from "./BorderLayer";
-import HexLayer from "./HexLayer";
-import LocationLayer from "./LocationLayer";
-import UnitLayer from "./UnitLayer";
+import { StrategyView } from "./StrategyView";
 import UnitView from "./UnitView";
 
-function getTerrainExtents(terrain: HexData[]) {
-  if (!terrain.length) return `0 0 100 100`;
-
-  let left = Infinity;
-  let right = -Infinity;
-  let top = Infinity;
-  let bottom = -Infinity;
-
-  for (const { x, y } of terrain) {
-    left = Math.min(left, x);
-    right = Math.max(right, x);
-    top = Math.min(top, y);
-    bottom = Math.max(bottom, y);
-  }
-
-  const width = 30 + (right - left) * 15;
-  const height = 50 + (bottom - top) * 17;
-
-  // "0 -15 870 610"
-  // TODO left and top
-  return `0 -15 ${width} ${height}`;
-}
-
 export default function App() {
-  const { width, height } = useWindowSize();
   const [hoverXY, setHoverXY] = useState<XY>();
   const hoverHex = useAppSelector((state) =>
     hoverXY ? getHexById(state, xyTag(hoverXY)) : undefined,
@@ -61,8 +27,6 @@ export default function App() {
   const [clickUnit, setClickUnit, clearClickUnit] = useClearableState<Unit>();
 
   const dispatch = useAppDispatch();
-  const hexes = useAppSelector(selectAllTerrain);
-  const viewBox = useMemo(() => getTerrainExtents(hexes), [hexes]);
 
   useEffect(() => {
     dispatch(setTerrain(hexData));
@@ -91,23 +55,14 @@ export default function App() {
         {clickUnit && <UnitView unit={clickUnit} />}
         {hoverUnit && hoverUnit !== clickUnit && <UnitView unit={hoverUnit} />}
       </div>
-      <HexGrid
-        width={width ?? undefined}
-        height={height ?? undefined}
-        viewBox={viewBox}
-      >
-        <Layout size={{ x: 10, y: 10 }}>
-          <HexLayer onClick={clearClickUnit} onHover={setHoverXY} />
-          <BorderLayer />
-          <LocationLayer />
-          <UnitLayer
-            selected={clickUnit}
-            onClick={setClickUnit}
-            onHover={setHoverUnit}
-            onHoverEnd={clearHoverUnit}
-          />
-        </Layout>
-      </HexGrid>
+      <StrategyView
+        onClickHex={clearClickUnit}
+        onHoverHex={setHoverXY}
+        selectedUnit={clickUnit}
+        onClickUnit={setClickUnit}
+        onHoverUnit={setHoverUnit}
+        onHoverEndUnit={clearHoverUnit}
+      />
     </>
   );
 }

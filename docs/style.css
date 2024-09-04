@@ -15,6 +15,9 @@ body {
   flex-grow: 1;
   z-index: 0;
 }
+.grid.dragging {
+  cursor: move;
+}
 
 .hexagon polygon {
   stroke: #666;

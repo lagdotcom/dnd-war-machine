@@ -1,6 +1,8 @@
+import classNames from "classnames";
 import panZoom, { Transform } from "panzoom";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
+import useFlag from "../hooks/useFlag";
 import { Unit } from "../state/units";
 import { XY } from "../types";
 import BorderLayer from "./BorderLayer";
@@ -36,6 +38,27 @@ export default function StrategyView({
     y: 0,
   });
 
+  const [dragging, setDragging, clearDragging] = useFlag();
+  const clearDraggingSoon = useCallback(() => {
+    setTimeout(clearDragging, 0);
+  }, [clearDragging]);
+
+  const clickHex = useCallback(
+    (xy: XY) => {
+      if (dragging) return;
+      onClickHex(xy);
+    },
+    [dragging],
+  );
+
+  const clickUnit = useCallback(
+    (u: Unit) => {
+      if (dragging) return;
+      onClickUnit(u);
+    },
+    [dragging],
+  );
+
   useEffect(() => {
     if (ref.current) {
       const instance = panZoom(ref.current, {
@@ -49,6 +72,9 @@ export default function StrategyView({
       instance.on("zoom", updateTransform);
       instance.on("zoomend", updateTransform);
 
+      instance.on("pan", setDragging);
+      instance.on("panend", clearDraggingSoon);
+
       return () => instance.dispose();
     }
   }, []);
@@ -56,7 +82,7 @@ export default function StrategyView({
   return (
     <svg
       ref={ref}
-      className="grid"
+      className={classNames("grid", { dragging })}
       version="1.1"
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -64,14 +90,14 @@ export default function StrategyView({
         <HexLayer
           zoom={transform.scale}
           offset={transform}
-          onClick={onClickHex}
+          onClick={clickHex}
           onHover={onHoverHex}
         />
         <BorderLayer />
         <LocationLayer />
         <UnitLayer
           selected={selectedUnit}
-          onClick={onClickUnit}
+          onClick={clickUnit}
           onHover={onHoverUnit}
           onHoverEnd={onHoverEndUnit}
         />

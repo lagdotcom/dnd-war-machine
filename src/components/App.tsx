@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { xyTag } from "../coord-tools";
 import {
@@ -26,8 +26,15 @@ export default function App() {
   const [hoverUnit, setHoverUnit, clearHoverUnit] = useClearableState<Unit>();
   const [clickUnit, setClickUnit, clearClickUnit] = useClearableState<Unit>();
 
-  const dispatch = useAppDispatch();
+  const onHoverUnit = useCallback(
+    (u: Unit) => {
+      setHoverUnit(u);
+      setHoverXY(u);
+    },
+    [setHoverUnit, setHoverXY],
+  );
 
+  const dispatch = useAppDispatch();
   useEffect(() => {
     dispatch(setTerrain(hexData));
     dispatch(setBorders(borders));
@@ -60,7 +67,7 @@ export default function App() {
         onHoverHex={setHoverXY}
         selectedUnit={clickUnit}
         onClickUnit={setClickUnit}
-        onHoverUnit={setHoverUnit}
+        onHoverUnit={onHoverUnit}
         onHoverEndUnit={clearHoverUnit}
       />
     </>

@@ -1,2 +1,2 @@
-/docs/*.map
+/docs/bundle*
 /node_modules

@@ -1,5 +1,5 @@
-import panzoom from "panzoom";
-import { useEffect, useRef } from "react";
+import panzoom, { Transform } from "panzoom";
+import { useEffect, useRef, useState } from "react";
 import { Layout } from "react-hexgrid";
 
 import { Unit } from "../state/units";
@@ -28,13 +28,25 @@ export function StrategyView({
   onHoverHex,
 }: StrategyViewProps) {
   const ref = useRef<SVGSVGElement>(null);
+  const [transform, setTransform] = useState<Transform>({
+    scale: 2,
+    x: 0,
+    y: 0,
+  });
 
   useEffect(() => {
     if (ref.current) {
       const instance = panzoom(ref.current, {
         smoothScroll: false,
         initialZoom: 2,
+        maxZoom: 10,
+        minZoom: 0.5,
       });
+
+      setTransform(instance.getTransform());
+      instance.on("zoom", () => setTransform(instance.getTransform()));
+      instance.on("zoomend", () => setTransform(instance.getTransform()));
+
       return () => instance.dispose();
     }
   }, []);
@@ -47,7 +59,12 @@ export function StrategyView({
       xmlns="http://www.w3.org/2000/svg"
     >
       <Layout size={{ x: 10, y: 10 }} origin={{ x: 0, y: 15 }}>
-        <HexLayer onClick={onClickHex} onHover={onHoverHex} />
+        <HexLayer
+          zoom={transform.scale}
+          offset={transform}
+          onClick={onClickHex}
+          onHover={onHoverHex}
+        />
         <BorderLayer />
         <LocationLayer />
         <UnitLayer

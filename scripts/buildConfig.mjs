@@ -1,4 +1,4 @@
-/*eslint-env node*/
+/*global console,process*/
 
 import { config as loadDotEnvConfig } from "dotenv";
 

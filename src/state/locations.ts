@@ -8,7 +8,7 @@ export interface HexLocation extends XY {
   id: XYTag;
   type: LocationType;
   name: string;
-  defence?: "walled" | "stronghold";
+  defense?: "walled" | "stronghold";
 }
 
 const locationsAdapter = createEntityAdapter<HexLocation>();

@@ -205,8 +205,8 @@ const location = (
   y: CartesianCoord,
   type: LocationType,
   name: string,
-  defence?: "walled" | "stronghold",
-): HexLocation => ({ id: xyTag({ x, y }), x, y, type, name, defence });
+  defense?: "walled" | "stronghold",
+): HexLocation => ({ id: xyTag({ x, y }), x, y, type, name, defense });
 
 export const locations = [
   location(29, 8, "village", "Threshold", "walled"),

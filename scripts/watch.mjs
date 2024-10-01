@@ -1,4 +1,4 @@
-/*eslint-env node*/
+/*global console*/
 
 import { context } from "esbuild";
 

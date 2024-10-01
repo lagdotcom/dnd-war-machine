@@ -6,7 +6,7 @@ import { oddQToCube } from "../coord-tools";
 import { HexLocation } from "../state/locations";
 import { useLayoutContext } from "./Layout";
 
-export default function LocationXY({ x, y, type, name, defence }: HexLocation) {
+export default function LocationXY({ x, y, type, name, defense }: HexLocation) {
   const { q, r, s } = useMemo(() => oddQToCube({ x, y }), [x, y]);
   const { layout, pointsAsString } = useLayoutContext();
   const pixel = useMemo(
@@ -16,7 +16,7 @@ export default function LocationXY({ x, y, type, name, defence }: HexLocation) {
 
   return (
     <g
-      className={classNames("location", type, defence)}
+      className={classNames("location", type, defense)}
       transform={`translate(${pixel.x},${pixel.y})`}
     >
       <polygon points={pointsAsString} />

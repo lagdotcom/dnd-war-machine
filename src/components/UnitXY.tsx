@@ -54,7 +54,7 @@ export default function UnitXY({
       onMouseLeave={mouseLeave}
     >
       <circle r={getUnitRadius(force.numberOfTroops)} />
-      <Text y="1.25em">{force.name} </Text>
+      <Text y="1.25em">{force.name}</Text>
       {inTerritoryOfLiege && <Text>👑</Text>}
     </g>
   );

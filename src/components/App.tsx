@@ -1,38 +1,44 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
+import { HexUtils } from "react-hexgrid";
 
-import { xyTag } from "../coord-tools";
+import { cubeToOddQ, oddQToCube, tagToXY, xyTag } from "../coord-tools";
 import {
   borders,
   hexData,
   locations,
   scenario3Units,
 } from "../data/karameikos";
-import useClearableState from "../hooks/useClearableState";
+import { UnitID } from "../flavours";
 import { setBorders } from "../state/borders";
 import { useAppDispatch, useAppSelector } from "../state/hooks";
 import { setLocations } from "../state/locations";
-import { getHexById, setTerrain } from "../state/terrain";
-import { setUnits, Unit } from "../state/units";
-import { XY } from "../types";
+import {
+  selectHoveredHex,
+  selectHoveredUnit,
+  selectMoveHexTags,
+  selectSelectedUnit,
+} from "../state/selectors";
+import { selectTerrainEntities, setTerrain } from "../state/terrain";
+import {
+  deselectUnit,
+  hoverHex,
+  selectUnit,
+  setAttackHexes,
+  setMoveHexes,
+} from "../state/ui";
+import { selectAllUnits, setUnits, Unit, updateUnit } from "../state/units";
+import { XY, XYTag } from "../types";
 import StrategyView from "./StrategyView";
 import UnitView from "./UnitView";
 
 export default function App() {
-  const [hoverXY, setHoverXY] = useState<XY>();
-  const hoverHex = useAppSelector((state) =>
-    hoverXY ? getHexById(state, xyTag(hoverXY)) : undefined,
-  );
+  const units = useAppSelector(selectAllUnits);
+  const hexes = useAppSelector(selectTerrainEntities);
+  const movableHexes = useAppSelector(selectMoveHexTags);
 
-  const [hoverUnit, setHoverUnit, clearHoverUnit] = useClearableState<Unit>();
-  const [clickUnit, setClickUnit, clearClickUnit] = useClearableState<Unit>();
-
-  const onHoverUnit = useCallback(
-    (u: Unit) => {
-      setHoverUnit(u);
-      setHoverXY(u);
-    },
-    [setHoverUnit, setHoverXY],
-  );
+  const hoveredHex = useAppSelector(selectHoveredHex);
+  const hovered = useAppSelector(selectHoveredUnit);
+  const selected = useAppSelector(selectSelectedUnit);
 
   const dispatch = useAppDispatch();
   useEffect(() => {
@@ -42,9 +48,60 @@ export default function App() {
     dispatch(setUnits(scenario3Units));
   }, [dispatch]);
 
+  const updateHexHighlights = useCallback(
+    (id: UnitID, xy: XY) => {
+      const tags = HexUtils.neighbors(oddQToCube(xy))
+        .map(cubeToOddQ)
+        .map(xyTag)
+        .map((tag) => hexes[tag])
+        .filter((h) => h.terrain !== "sea")
+        .map(xyTag);
+
+      const unitTags = units.filter((u) => u.id !== id).map(xyTag);
+
+      dispatch(setAttackHexes(tags.filter((tag) => unitTags.includes(tag))));
+      dispatch(setMoveHexes(tags.filter((tag) => !unitTags.includes(tag))));
+    },
+    [dispatch, hexes, units],
+  );
+
+  const onClickHex = useCallback(
+    (tag: XYTag) => {
+      if (movableHexes.includes(tag) && selected) {
+        const xy = tagToXY(tag);
+        dispatch(updateUnit({ id: selected.id, changes: xy }));
+        updateHexHighlights(selected.id, xy);
+        return;
+      }
+
+      dispatch(deselectUnit());
+    },
+    [dispatch, updateHexHighlights, movableHexes, selected],
+  );
+
+  const onClickUnit = useCallback(
+    (u: Unit) => {
+      dispatch(selectUnit(u.id));
+      updateHexHighlights(u.id, u);
+    },
+    [dispatch, updateHexHighlights],
+  );
+
+  const onHoverHex = useCallback(
+    (tag: XYTag) => {
+      dispatch(hoverHex(tag));
+    },
+    [dispatch],
+  );
+
+  const onHoverUnit = useCallback(
+    (u: Unit) => onHoverHex(xyTag(u)),
+    [onHoverHex],
+  );
+
   return (
     <>
-      {hoverHex && (
+      {hoveredHex && (
         <div
           className="panel"
           style={{
@@ -55,20 +112,18 @@ export default function App() {
             pointerEvents: "none",
           }}
         >
-          {xyTag(hoverHex)} {hoverHex.terrain} {hoverHex.tags.join(", ")}
+          {xyTag(hoveredHex)} {hoveredHex.terrain} {hoveredHex.tags.join(", ")}
         </div>
       )}
       <div className="unit-views">
-        {clickUnit && <UnitView unit={clickUnit} />}
-        {hoverUnit && hoverUnit !== clickUnit && <UnitView unit={hoverUnit} />}
+        {selected && <UnitView unit={selected} />}
+        {hovered && hovered !== selected && <UnitView unit={hovered} />}
       </div>
       <StrategyView
-        onClickHex={clearClickUnit}
-        onHoverHex={setHoverXY}
-        selectedUnit={clickUnit}
-        onClickUnit={setClickUnit}
+        onClickHex={onClickHex}
+        onHoverHex={onHoverHex}
+        onClickUnit={onClickUnit}
         onHoverUnit={onHoverUnit}
-        onHoverEndUnit={clearHoverUnit}
       />
     </>
   );

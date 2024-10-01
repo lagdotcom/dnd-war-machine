@@ -1,10 +1,11 @@
 import { MouseEvent, MouseEventHandler, useCallback, useMemo } from "react";
 
-import { pixelToOddQ } from "../coord-tools";
+import { pixelToOddQ, xyTag } from "../coord-tools";
 import { ClassName } from "../flavours";
 import { useAppSelector } from "../state/hooks";
+import { selectAttackHexTags, selectMoveHexTags } from "../state/selectors";
 import { selectAllTerrain } from "../state/terrain";
-import { XY } from "../types";
+import { XY, XYTag } from "../types";
 import HexagonXY from "./HexagonXY";
 import { useLayoutContext } from "./Layout";
 
@@ -12,8 +13,8 @@ interface HexLayerProps {
   offset: XY;
   zoom: number;
 
-  onClick?: (xy: XY) => void;
-  onHover?: (xy: XY) => void;
+  onClick?: (xy: XYTag) => void;
+  onHover?: (xy: XYTag) => void;
 }
 
 export default function HexLayer({
@@ -25,12 +26,30 @@ export default function HexLayer({
   const { layout } = useLayoutContext();
 
   const hexes = useAppSelector(selectAllTerrain);
+  const canAttack = useAppSelector(selectAttackHexTags);
+  const canMove = useAppSelector(selectMoveHexTags);
+
+  const getExtraClass = useCallback(
+    (xy: XY) => {
+      const tag = xyTag(xy);
+      if (canAttack.includes(tag)) return "can-attack";
+      if (canMove.includes(tag)) return "can-move";
+    },
+    [canAttack, canMove],
+  );
+
   const hexElements = useMemo(
     () =>
-      hexes.map(({ x, y, terrain }, i) => (
-        <HexagonXY key={i} x={x} y={y} className={terrain as ClassName} />
+      hexes.map((h, i) => (
+        <HexagonXY
+          key={i}
+          x={h.x}
+          y={h.y}
+          className={h.terrain as ClassName}
+          extra={getExtraClass(h)}
+        />
       )),
-    [hexes],
+    [getExtraClass, hexes],
   );
 
   const convert = useCallback(
@@ -42,11 +61,11 @@ export default function HexLayer({
   );
 
   const click = useCallback<MouseEventHandler>(
-    (e) => onClick?.(pixelToOddQ(layout, convert(e))),
+    (e) => onClick?.(xyTag(pixelToOddQ(layout, convert(e)))),
     [convert, layout, onClick],
   );
   const move = useCallback<MouseEventHandler>(
-    (e) => onHover?.(pixelToOddQ(layout, convert(e))),
+    (e) => onHover?.(xyTag(pixelToOddQ(layout, convert(e)))),
     [convert, layout, onHover],
   );
 

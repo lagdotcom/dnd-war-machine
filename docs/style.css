@@ -19,48 +19,73 @@ body {
   cursor: move;
 }
 
-.hexagon polygon {
+.hexagon .terrain {
   stroke: #666;
   stroke-width: 0.5px;
 }
-.hexagon polygon:hover {
+.hexagon .terrain:hover {
   filter: brightness(1.2);
 }
 
-.beach polygon {
+@keyframes opacityPulse {
+  from {
+    opacity: 0.25;
+  }
+  to {
+    opacity: 0.5;
+  }
+}
+.hexagon .can-attack {
+  fill: #f88;
+  animation-name: opacityPulse;
+  animation-duration: 2s;
+  animation-direction: alternate;
+  animation-iteration-count: infinite;
+  cursor: crosshair;
+}
+.hexagon .can-move {
+  fill: #ff8;
+  animation-name: opacityPulse;
+  animation-duration: 2s;
+  animation-direction: alternate;
+  animation-iteration-count: infinite;
+  cursor: move;
+}
+
+.beach .terrain {
   fill: #fff899;
 }
-.deepsea polygon {
+.deepsea .terrain {
   fill: #6699cc;
 }
-.forest polygon {
+.forest .terrain {
   fill: #4f9e44;
 }
-.grass polygon {
+.grass .terrain {
   fill: #9fd66b;
 }
-.grassland polygon {
+.grassland .terrain {
   fill: #e5f29b;
 }
-.hill polygon {
+.hill .terrain {
   fill: #e8ce59;
 }
-.lake polygon {
+.lake .terrain {
   fill: #99ccff;
 }
-.marsh polygon {
+.marsh .terrain {
   fill: #84ce93;
 }
-.mountain polygon {
+.mountain .terrain {
   fill: #c68e00;
 }
-.sea polygon {
+.sea .terrain {
   fill: #8cb2d8;
 }
-.swamp polygon {
+.swamp .terrain {
   fill: #addda5;
 }
-.wood polygon {
+.wood .terrain {
   fill: #7ab244;
 }
 
@@ -107,6 +132,7 @@ body {
 
 .unit circle {
   stroke: white;
+  cursor: pointer;
 }
 .unit text {
   font-size: 5px;
@@ -119,7 +145,6 @@ body {
 
 .unit.side-1 circle {
   fill: green;
-  cursor: pointer;
 }
 .unit.side-1 text {
   fill: #020;
@@ -128,7 +153,6 @@ body {
 
 .unit.side-2 circle {
   fill: red;
-  cursor: not-allowed;
 }
 .unit.side-2 text {
   fill: #200;
@@ -137,6 +161,9 @@ body {
 
 .unit.in-liege circle {
   stroke: gold;
+}
+.unit.can-attack circle {
+  cursor: crosshair;
 }
 
 .panel {

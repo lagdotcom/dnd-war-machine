@@ -8,6 +8,7 @@ export type ClassName = Flavour<string, "ClassName">;
 export type HexTag = Flavour<string, "HexTag">;
 export type LocationType = Flavour<string, "LocationType">;
 export type TerrainType = Flavour<string, "TerrainType">;
+export type UnitID = Flavour<string, "UnitID">;
 
 export type AbilityBonus = Flavour<number, "AbilityBonus">;
 export type ArmourClass = Flavour<number, "ArmourClass">;

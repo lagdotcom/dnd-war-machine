@@ -21,5 +21,8 @@ const terrainSlice = createSlice({
 export const { setTerrain, updateHex } = terrainSlice.actions;
 export default terrainSlice.reducer;
 
-export const { selectAll: selectAllTerrain, selectById: getHexById } =
-  hexAdapter.getSelectors<RootState>((s) => s.terrain);
+export const {
+  selectAll: selectAllTerrain,
+  selectById: selectHexById,
+  selectEntities: selectTerrainEntities,
+} = hexAdapter.getSelectors<RootState>((s) => s.terrain);

@@ -1,4 +1,3 @@
-import classNames from "classnames";
 import { PropsWithChildren, useMemo } from "react";
 import { HexUtils } from "react-hexgrid";
 
@@ -11,6 +10,7 @@ export type HexagonXYProps = PropsWithChildren<
   XY & {
     className?: ClassName;
     fill?: string;
+    extra?: ClassName;
   }
 >;
 
@@ -20,6 +20,7 @@ export default function HexagonXY({
   y,
   className,
   fill,
+  extra,
 }: HexagonXYProps) {
   const { layout, pointsAsString } = useLayoutContext();
 
@@ -30,9 +31,14 @@ export default function HexagonXY({
   }, [x, y, layout]);
 
   return (
-    <g className={classNames("hexagon-group", className)} transform={transform}>
+    <g className={className} transform={transform}>
       <g className="hexagon">
-        <polygon points={pointsAsString} fill={fill && `url(#${fill})`} />
+        <polygon
+          className="terrain"
+          points={pointsAsString}
+          fill={fill && `url(#${fill})`}
+        />
+        {extra && <polygon className={extra} points={pointsAsString} />}
         {children}
       </g>
     </g>

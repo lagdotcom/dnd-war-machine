@@ -4,7 +4,8 @@ import { HexUtils, Text } from "react-hexgrid";
 
 import { oddQToCube, xyTag } from "../coord-tools";
 import { useAppSelector } from "../state/hooks";
-import { getHexById } from "../state/terrain";
+import { selectAttackHexTags, selectSelectedUnitId } from "../state/selectors";
+import { selectHexById } from "../state/terrain";
 import { Unit } from "../state/units";
 import clamp from "../tools/clamp";
 import { useLayoutContext } from "./Layout";
@@ -14,22 +15,17 @@ function getUnitRadius(troops: number) {
 }
 
 export default function UnitXY({
-  selected,
   unit,
   onClick,
   onHover,
-  onHoverEnd,
 }: {
-  selected?: boolean;
   unit: Unit;
   onClick?: (unit: Unit) => void;
   onHover?: (unit: Unit) => void;
-  onHoverEnd?: (unit: Unit) => void;
 }) {
   const { liegeTag, side, force } = unit;
   const click = useCallback(() => onClick?.(unit), [onClick, unit]);
   const mouseEnter = useCallback(() => onHover?.(unit), [onHover, unit]);
-  const mouseLeave = useCallback(() => onHoverEnd?.(unit), [onHoverEnd, unit]);
 
   const { q, r, s } = useMemo(() => oddQToCube(unit), [unit]);
   const { layout } = useLayoutContext();
@@ -39,19 +35,22 @@ export default function UnitXY({
   );
 
   const tag = xyTag(unit);
-  const inHex = useAppSelector((state) => getHexById(state, tag));
+  const inHex = useAppSelector((state) => selectHexById(state, tag));
   const inTerritoryOfLiege = liegeTag && inHex.tags.includes(liegeTag);
+
+  const selectedId = useAppSelector(selectSelectedUnitId);
+  const attackable = useAppSelector(selectAttackHexTags);
 
   return (
     <g
       className={classNames("unit", `side-${side}`, {
+        "can-attack": attackable.includes(tag),
         "in-liege": inTerritoryOfLiege,
-        selected,
+        selected: unit.id === selectedId,
       })}
       transform={`translate(${pixel.x},${pixel.y})`}
       onClick={click}
       onMouseEnter={mouseEnter}
-      onMouseLeave={mouseLeave}
     >
       <circle r={getUnitRadius(force.numberOfTroops)} />
       <Text y="1.25em">{force.name}</Text>

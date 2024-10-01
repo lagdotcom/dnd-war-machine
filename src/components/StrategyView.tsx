@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import useFlag from "../hooks/useFlag";
 import { Unit } from "../state/units";
-import { XY } from "../types";
+import { XYTag } from "../types";
 import BorderLayer from "./BorderLayer";
 import HexLayer from "./HexLayer";
 import Layout from "./Layout";
@@ -12,22 +12,18 @@ import LocationLayer from "./LocationLayer";
 import UnitLayer from "./UnitLayer";
 
 export interface StrategyViewProps {
-  selectedUnit?: Unit;
   onClickUnit(u: Unit): void;
   onHoverUnit(u: Unit): void;
-  onHoverEndUnit(u: Unit): void;
 
-  onClickHex(xy: XY): void;
-  onHoverHex(xy: XY): void;
+  onClickHex(tag: XYTag): void;
+  onHoverHex(tag: XYTag): void;
 }
 
 const LAYOUT_ORIGIN = { x: 0, y: 15 };
 
 export default function StrategyView({
-  selectedUnit,
   onClickUnit,
   onHoverUnit,
-  onHoverEndUnit,
   onClickHex,
   onHoverHex,
 }: StrategyViewProps) {
@@ -44,9 +40,9 @@ export default function StrategyView({
   }, [clearDragging]);
 
   const clickHex = useCallback(
-    (xy: XY) => {
+    (tag: XYTag) => {
       if (dragging) return;
-      onClickHex(xy);
+      onClickHex(tag);
     },
     [dragging, onClickHex],
   );
@@ -95,12 +91,7 @@ export default function StrategyView({
         />
         <BorderLayer />
         <LocationLayer />
-        <UnitLayer
-          selected={selectedUnit}
-          onClick={clickUnit}
-          onHover={onHoverUnit}
-          onHoverEnd={onHoverEndUnit}
-        />
+        <UnitLayer onClick={clickUnit} onHover={onHoverUnit} />
       </Layout>
     </svg>
   );

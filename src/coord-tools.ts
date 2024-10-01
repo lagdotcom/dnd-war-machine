@@ -18,6 +18,10 @@ export function oddQToCube({ x, y }: XY) {
 }
 
 export const xyTag = ({ x, y }: XY): XYTag => `${x},${y}`;
+export const tagToXY = (tag: XYTag): XY => {
+  const [x, y] = tag.split(",").map(Number);
+  return { x, y };
+};
 
 export function pixelToOddQ(layout: LayoutDimension, p: XY) {
   const hex = HexUtils.pixelToHex(p, layout);

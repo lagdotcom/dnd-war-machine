@@ -71,7 +71,7 @@ export const useLayoutContext = () => useContext(Context);
  * Calculates the points for a hexagon given the size, angle, and center
  * @param circumradius Radius of the Hexagon
  * @param angle Angle offset for the hexagon in radians
- * @param center Central point for the heaxagon
+ * @param center Central point for the hexagon
  * @returns Array of 6 points
  */
 

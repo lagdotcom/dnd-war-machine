@@ -15,10 +15,10 @@ const hexAdapter = createEntityAdapter<HexData>();
 const terrainSlice = createSlice({
   name: "terrain",
   initialState: hexAdapter.getInitialState(),
-  reducers: { setTerrain: hexAdapter.setAll, updateHex: hexAdapter.updateOne },
+  reducers: { setTerrain: hexAdapter.setAll },
 });
 
-export const { setTerrain, updateHex } = terrainSlice.actions;
+export const { setTerrain } = terrainSlice.actions;
 export default terrainSlice.reducer;
 
 export const {

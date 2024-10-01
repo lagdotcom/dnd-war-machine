@@ -27,17 +27,13 @@ const unitsSlice = createSlice({
   name: "units",
   initialState: unitsAdapter.getInitialState(),
   reducers: {
-    addUnit: unitsAdapter.addOne,
     setUnits: unitsAdapter.setAll,
     updateUnit: unitsAdapter.updateOne,
   },
 });
 
-export const { addUnit, setUnits, updateUnit } = unitsSlice.actions;
+export const { setUnits, updateUnit } = unitsSlice.actions;
 export default unitsSlice.reducer;
 
-export const {
-  selectAll: selectAllUnits,
-  selectById: getUnitById,
-  selectEntities: selectUnitEntities,
-} = unitsAdapter.getSelectors<RootState>((s) => s.units);
+export const { selectAll: selectAllUnits, selectEntities: selectUnitEntities } =
+  unitsAdapter.getSelectors<RootState>((s) => s.units);

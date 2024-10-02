@@ -3,12 +3,16 @@ import { Force, HitDice, QuickForce, Situation } from "./types";
 export class BasicForceRater {
   ratings: Map<string, number>;
   factors: Map<string, number>;
+  factorRatings: Record<string, string[]>;
   private currentFactor: number;
+  private currentFactorRatings: string[];
 
   constructor() {
     this.ratings = new Map();
     this.factors = new Map();
+    this.factorRatings = {};
     this.currentFactor = 0;
+    this.currentFactorRatings = [];
   }
 
   get total() {
@@ -33,11 +37,15 @@ export class BasicForceRater {
     this.ratings.set(name, value);
 
     this.currentFactor += value;
+    this.currentFactorRatings.push(name);
   }
 
   private endFactor(name: string) {
     this.factors.set(name, this.currentFactor);
+    this.factorRatings[name] = this.currentFactorRatings;
+
     this.currentFactor = 0;
+    this.currentFactorRatings = [];
   }
 
   private rateLeadershipFactor(f: Force) {
@@ -106,15 +114,18 @@ export function percentage(count: number, max: number) {
 }
 
 export class BattleRater {
+  amount: number;
   bonuses: Set<string>;
 
   constructor() {
+    this.amount = 0;
     this.bonuses = new Set();
   }
 
   rate(f: Force, bfr: number) {
     this.bonuses.clear();
     const bfrBonus = Math.ceil(bfr / 10);
+    this.amount = bfrBonus;
 
     const pMounted = percentage(f.mountedTroops, f.numberOfTroops);
     this.addBonus("20% mounted", pMounted >= 20);

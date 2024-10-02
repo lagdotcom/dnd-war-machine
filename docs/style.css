@@ -187,7 +187,21 @@ body {
   margin: 4px;
 }
 
-.unit-view .name {
+.unit-view > .name {
   font-size: 1.1em;
   font-weight: bold;
+}
+
+.level-1 {
+  font-size: 0.8em;
+}
+.level-2 {
+  font-size: 0.7em;
+}
+.level-3 {
+  font-size: 0.6em;
+}
+
+.ratings .value {
+  text-align: center;
 }

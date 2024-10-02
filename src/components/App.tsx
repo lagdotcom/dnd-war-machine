@@ -13,29 +13,36 @@ import { setBorders } from "../state/borders";
 import { useAppDispatch, useAppSelector } from "../state/hooks";
 import { setLocations } from "../state/locations";
 import {
+  selectAttackHexTags,
   selectHoveredHex,
   selectHoveredUnit,
   selectMoveHexTags,
+  selectPendingBattle,
   selectSelectedUnit,
 } from "../state/selectors";
 import { selectTerrainEntities, setTerrain } from "../state/terrain";
 import {
   deselectUnit,
   hoverHex,
+  PendingBattle,
   selectUnit,
   setAttackHexes,
   setMoveHexes,
+  setPendingBattle,
 } from "../state/ui";
 import { selectAllUnits, setUnits, Unit, updateUnit } from "../state/units";
 import { XY, XYTag } from "../types";
+import PendingBattleView from "./PendingBattleView";
 import StrategyView from "./StrategyView";
 import UnitView from "./UnitView";
 
 export default function App() {
   const units = useAppSelector(selectAllUnits);
   const hexes = useAppSelector(selectTerrainEntities);
+  const attackHexes = useAppSelector(selectAttackHexTags);
   const movableHexes = useAppSelector(selectMoveHexTags);
 
+  const pendingBattle = useAppSelector(selectPendingBattle);
   const hoveredHex = useAppSelector(selectHoveredHex);
   const hovered = useAppSelector(selectHoveredUnit);
   const selected = useAppSelector(selectSelectedUnit);
@@ -90,8 +97,16 @@ export default function App() {
   const onHoverHex = useCallback(
     (tag: XYTag) => {
       dispatch(hoverHex(tag));
+
+      let pending: PendingBattle | undefined;
+      if (attackHexes.includes(tag) && selected) {
+        const defender = units.find((u) => xyTag(u) === tag);
+        if (defender)
+          pending = { attacker: selected.id, defender: defender.id };
+      }
+      dispatch(setPendingBattle(pending));
     },
-    [dispatch],
+    [attackHexes, dispatch, selected, units],
   );
 
   const onHoverUnit = useCallback(
@@ -116,6 +131,7 @@ export default function App() {
         </div>
       )}
       <div className="unit-views">
+        {pendingBattle && <PendingBattleView battle={pendingBattle} />}
         {selected && <UnitView unit={selected} />}
         {hovered && hovered !== selected && <UnitView unit={hovered} />}
       </div>

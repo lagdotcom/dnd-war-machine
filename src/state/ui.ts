@@ -3,6 +3,11 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { UnitID } from "../flavours";
 import { XYTag } from "../types";
 
+export interface PendingBattle {
+  attacker: UnitID;
+  defender: UnitID;
+}
+
 interface UIState {
   hoverHex?: XYTag;
 
@@ -10,6 +15,8 @@ interface UIState {
 
   attackTags: XYTag[];
   moveTags: XYTag[];
+
+  pendingBattle?: PendingBattle;
 }
 
 const initialState: UIState = { attackTags: [], moveTags: [] };
@@ -38,6 +45,13 @@ const uiSlice = createSlice({
     setMoveHexes(state, { payload }: PayloadAction<XYTag[]>) {
       state.moveTags = payload;
     },
+
+    setPendingBattle(
+      state,
+      { payload }: PayloadAction<PendingBattle | undefined>,
+    ) {
+      state.pendingBattle = payload;
+    },
   },
 });
 
@@ -47,5 +61,6 @@ export const {
   selectUnit,
   setAttackHexes,
   setMoveHexes,
+  setPendingBattle,
 } = uiSlice.actions;
 export default uiSlice.reducer;

@@ -221,12 +221,16 @@ export function quickBattleRating(f: QuickForce) {
 export class BattleRatingModifier {
   ratings: Map<string, number>;
   factors: Map<string, number>;
+  factorRatings: Record<string, string[]>;
   private currentFactor: number;
+  private currentFactorRatings: string[];
 
   constructor() {
     this.ratings = new Map();
     this.factors = new Map();
+    this.factorRatings = {};
     this.currentFactor = 0;
+    this.currentFactorRatings = [];
   }
 
   get total() {
@@ -250,11 +254,15 @@ export class BattleRatingModifier {
   private item(name: string, value: number) {
     this.ratings.set(name, value);
     this.currentFactor += value;
+    this.currentFactorRatings.push(name);
   }
 
   private endFactor(name: string) {
     this.factors.set(name, this.currentFactor);
+    this.factorRatings[name] = this.currentFactorRatings;
+
     this.currentFactor = 0;
+    this.currentFactorRatings = [];
   }
 
   rateTroopRatio(s: Situation) {

@@ -125,6 +125,7 @@ body {
 
 .unit {
   filter: drop-shadow(0 0 2px black);
+  transition: transform 0.2s;
 }
 .unit.selected {
   filter: brightness(1.2) drop-shadow(0 0 6px black);

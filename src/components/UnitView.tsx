@@ -8,36 +8,7 @@ import {
 } from "../calculations";
 import { Unit } from "../state/units";
 import { Force, HitDice, QuickForce } from "../types";
-
-interface RatingSection {
-  type: "section";
-  name: string;
-  value: number;
-  items: (RatingSection | RatingItem)[];
-}
-
-interface RatingItem {
-  type: "item";
-  name: string;
-  value: number;
-}
-
-const section = (
-  name: string,
-  value: number,
-  items: (RatingSection | RatingItem)[],
-): RatingSection => ({
-  type: "section",
-  name,
-  value,
-  items: items.filter((i) => i.value),
-});
-
-const item = (name: string, value: number): RatingItem => ({
-  type: "item",
-  name,
-  value,
-});
+import SectionView, { item, RatingSection, section } from "./SectionView";
 
 function getRatings(u: Unit): RatingSection[] {
   if (u.type === "normal") {
@@ -140,38 +111,5 @@ function QuickForceView({ force }: { force: QuickForce }) {
       <div>up to {force.highestMaximumDamagePerRound} damage per round</div>
       {tags && <div>has: {tags}</div>}
     </>
-  );
-}
-
-function SectionView({
-  level = 1,
-  section,
-}: {
-  level?: number;
-  section: RatingSection;
-}) {
-  return (
-    <>
-      <tr className={`section level-${level}`}>
-        <th className="name">{section.name}</th>
-        <th className="value">{section.value}</th>
-      </tr>
-      {section.items.map((thing, i) =>
-        thing.type === "section" ? (
-          <SectionView key={i} level={level + 1} section={thing} />
-        ) : (
-          <ItemView key={i} level={level + 1} item={thing} />
-        ),
-      )}
-    </>
-  );
-}
-
-function ItemView({ level, item }: { level: number; item: RatingItem }) {
-  return (
-    <tr className={`item level-${level}`}>
-      <td className="name">{item.name}</td>
-      <td className="value">{item.value}</td>
-    </tr>
   );
 }

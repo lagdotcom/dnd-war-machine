@@ -1,5 +1,6 @@
 import { xyTag } from "../coord-tools";
 import { CartesianCoord, HexTag, TerrainType } from "../flavours";
+import { TerrainEffect } from "../movement";
 import { HexData } from "../state/terrain";
 import { XY } from "../types";
 
@@ -7,22 +8,27 @@ const hex = (
   terrain: TerrainType,
   x: CartesianCoord,
   y: CartesianCoord,
+  effects: TerrainEffect[],
   tags: HexTag[] = [],
 ): HexData => ({
   id: xyTag({ x, y }),
   x,
   y,
   terrain,
+  effects,
   tags,
 });
 
-const conversions: Record<string, TerrainType> = {
-  h: "hill",
-  H: "mountain",
-  g: "grass",
-  w: "wood",
-  m: "marsh",
-  s: "sea",
+const conversions: Record<
+  string,
+  { type: TerrainType; effects: TerrainEffect[] }
+> = {
+  h: { type: "hill", effects: ["hill"] },
+  H: { type: "mountain", effects: ["mountain"] },
+  g: { type: "grass", effects: ["grassland"] },
+  w: { type: "wood", effects: ["forest"] },
+  m: { type: "marsh", effects: ["swamp"] },
+  s: { type: "sea", effects: [] },
 };
 
 class Tags {
@@ -72,7 +78,7 @@ export function* row(
   const tagsByX = makeHexTags(...hexTagParams);
   for (const ch of data) {
     const terrain = conversions[ch];
-    if (terrain) yield hex(terrain, x, y, tagsByX[x]);
+    if (terrain) yield hex(terrain.type, x, y, terrain.effects, tagsByX[x]);
     x++;
   }
 }

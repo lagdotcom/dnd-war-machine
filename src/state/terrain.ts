@@ -1,12 +1,14 @@
 import { createEntityAdapter, createSlice } from "@reduxjs/toolkit";
 
 import { HexTag, TerrainType } from "../flavours";
+import { TerrainEffect } from "../movement";
 import { XY, XYTag } from "../types";
 import { RootState } from "./store";
 
 export interface HexData extends XY {
   id: XYTag;
   terrain: TerrainType;
+  effects: TerrainEffect[];
   tags: HexTag[];
 }
 

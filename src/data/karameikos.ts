@@ -1,323 +1,205 @@
-import { xyTag } from "../coord-tools";
-import { CartesianCoord, HexTag, LocationType } from "../flavours";
-import { HexBorder } from "../state/borders";
-import { HexLocation } from "../state/locations";
+import { HexTag } from "../flavours";
 import { Unit } from "../state/units";
 import { Force, QuickForce } from "../types";
-import { row, xy } from "./tools";
+import MapBuilder from "./MapBuilder";
+import { xy } from "./tools";
 
 const rebel: HexTag = "Black Eagle";
 const loyal: HexTag = "Karameikos";
 
-const stronghold: HexTag = "stronghold";
-const walled: HexTag = "walled";
+const map = new MapBuilder();
 
-export const hexData = [
-  ...row(0, 1, "HHHHHHhHHHHHHHHhHhHHhhhhHhHHhhhhhhhHHHHHHHHHHHhhHHHhHHHhh", [
-    loyal,
-    [10, 12],
-    [43, 53],
-  ]),
-  ...row(1, 1, "HhHhhhhHhhHHHHHHhhHHhhhhHHHHHhhhhHHhhHHHHHhHHHhHHHHHHHHHH", [
-    loyal,
-    [8, 15],
-    [41, 53],
-  ]),
-  ...row(2, 1, "HhHhhhhhhhhHHhhHHhHHHhhHhhhhhhHhhHHHHHHhHHhHHHhHHHHHHHhHH", [
-    loyal,
-    [6, 16],
-    [39, 53],
-  ]),
-  ...row(3, 1, "hhhhhhhhhhHHhHhHHHhHHHHHHHHHHHHHhhHHHHHhHHhHHhhhhhhHHhHhH", [
-    loyal,
-    [6, 18],
-    [37, 53],
-  ]),
-  ...row(4, 1, "hhhhhhhhhhhhhhHHhhHHHHHHHHHHHHHhHHHHHHhhhHhhhhhhhhHHhhHhH", [
-    loyal,
-    [6, 21],
-    [35, 53],
-  ]),
-  ...row(5, 1, "hhhhhhggghhhhhHHhhHHHHHHHHHHHHHHHHHHHHHhhhhhhhhhhHHHHHHhh", [
-    loyal,
-    [6, 53],
-  ]),
-  ...row(6, 1, "hhhhggggghhhhhhhhhHhHHHHHHHhHHHHHHhhhHhhhhhhhhhhhhhhHHhHh", [
-    loyal,
-    [6, 53],
-  ]),
-  ...row(7, 1, "hhhhggggggghhhhhhhhhhHhHHHHhHHhHhHHHhhhhhhhhhhhhhhHHHHhhh", [
-    loyal,
-    [6, 53],
-  ]),
-  ...row(
-    8,
-    1,
-    "HhhhggggggghhhhhhhhhhhHHHHHhhHhHHhhHhhhhhhhhhhhhhhHHhhhhh",
-    [loyal, [6, 53]],
-    [walled, 29],
-  ),
-  ...row(9, 1, "hhhhggggggggghghghhhhHHhhHHhhHhHHhhhhhhhhhhhhhhhhhHHhhhhh", [
-    loyal,
-    [6, 53],
-  ]),
-  ...row(10, 1, "hhhhhgwwwgggggggghhhhhhhhHhHhhhhhhhhhhhhhhhhhhhhhhHhhhhhw", [
-    loyal,
-    [6, 53],
-  ]),
-  ...row(
-    11,
-    1,
-    "hhghgwwwwwwghhhhhhhhhhhhhHhHHhhhhhhhhhhhhhhhhhhhhhhhhwwww",
-    [loyal, [6, 57]],
-    [walled, 3],
-  ),
-  ...row(
-    12,
-    1,
-    "gggggwwwwwwwhhhhhhhhhhhhhhghhhhhhhghghghhhgghhhhhhhhhwwww",
-    [loyal, [6, 57]],
-    [walled, 50],
-  ),
-  ...row(13, 1, "ggggggmwwwwwhhhhhhhhhhggggggghhhhhggggghgwggghhhhhhhhhhww", [
-    loyal,
-    [6, 57],
-  ]),
-  ...row(14, 1, "hgggggmmmwgwhhhhhhhhhhwgggggghwhhhggggggwwgggghhhhhhhhwww", [
-    loyal,
-    [6, 57],
-  ]),
-  ...row(
-    15,
-    1,
-    "gggggmmmmgggghhhhhhhhwwggggggwwwhhgggggwwgggghwwwhhhhwwww",
-    [loyal, [6, 57]],
-    [walled, 35],
-  ),
-  ...row(
-    16,
-    1,
-    "ggggmmmmmgggghhhhhwhwhwwwgggwwwwwhggwwwwwgwgwwwwwhhhwwwww",
-    [rebel, 13],
-    [loyal, [6, 12], [14, 57]],
-  ),
-  ...row(
-    17,
-    1,
-    "ggsgsssmmgggghhwhhwwgwgwwwgwwwwwwggggwwwwwwwwwwwwwwwwwwww",
-    [rebel, [8, 13]],
-    [loyal, [14, 57]],
-    [walled, 18],
-  ),
-  ...row(
-    18,
-    1,
-    "ggsssssssggggghhwwwwgggggwwwwwgwggggggwwwwwwwwwwwwwwwwwww",
-    [rebel, [10, 13]],
-    [loyal, [14, 57]],
-  ),
-  ...row(
-    19,
-    1,
-    "ggssssssssgggghhhhgwgggggwwwggggggggggwwwwwwwwwwwwwwwwwww",
-    [rebel, 11, 12],
-    [loyal, [13, 57]],
-    [stronghold, 11],
-  ),
-  ...row(
-    20,
-    1,
-    "gsssssssssggghhhhhgggggggggggggggggggwwwwwwwwwwwwwwwwwwww",
-    [rebel, 11, 12],
-    [loyal, [13, 57]],
-  ),
-  ...row(
-    21,
-    1,
-    "gssssssssgggghhhgggggggggggggggggggggwwwwwwwwwwwwwwwwwwgg",
-    [rebel, [10, 12]],
-    [loyal, [13, 56]],
-  ),
-  ...row(
-    22,
-    1,
-    "sssssssssgggggghgggggggggggggggggggggggggwwwwwwwwwwwggggg",
-    [rebel, 10],
-    [loyal, [11, 54]],
-  ),
-  ...row(
-    23,
-    1,
-    "ssssssssssgggggggggggggggggggggggggggggggwwwwwwwwwwwggggg",
-    [loyal, [6, 53]],
-    [walled, 31],
-  ),
-  ...row(24, 1, "sssssssssssgggggggggggggggggggggggggggggswsgswwwwwsssgsgs", [
-    loyal,
-    [6, 53],
-  ]),
-  ...row(
-    25,
-    1,
-    "sssssssssssssgggggggggggggggggggggggggssssssssswsssssssss",
-    [loyal, [6, 53]],
-    [walled, 26],
-  ),
-  ...row(
-    26,
-    1,
-    "sssssssssssssggggggggggssssgsggggggggssssssssssssssssssss",
-    [loyal, [6, 53]],
-    [stronghold, 28],
-  ),
-  ...row(27, 1, "ssssssssssssssggggggsssssssssggggggggggssssssssssssssssss", [
-    loyal,
-    [6, 53],
-  ]),
-  ...row(28, 1, "ssssssssssssssgggggggssssssssssggggggggssssssssssssssssss", [
-    loyal,
-    [6, 53],
-  ]),
-  ...row(29, 1, "sssssssssssssssgssggggssssssssssgggggggssssssssssssssssss", [
-    loyal,
-    [6, 53],
-  ]),
-  ...row(30, 1, "sssssssssssssssssssgssssssssssssgggggggssssssssssssssssss", [
-    loyal,
-    [6, 53],
-  ]),
-  ...row(31, 1, "sssssssssssssssssssssssssssssssggssssggssssssssssssssssss", [
-    loyal,
-    [6, 53],
-  ]),
-  ...row(32, 1, "sssssssssssssssssssssssssssssssggsssssgssssssssssssssssss", [
-    loyal,
-    [6, 53],
-  ]),
-  ...row(33, 1, "sssssssssssssssssssssssssssssssgsssssssssssssssssssssssss", [
-    loyal,
-    [6, 53],
-  ]),
-];
+map.terrain(
+  1,
+  0,
+  `
+HHHHHHhHHHHHHHHhHhHHhhhhHhHHhhhhhhhHHHHHHHHHHHhhHHHhHHHhh
+HhHhhhhHhhHHHHHHhhHHhhhhHHHHHhhhhHHhhHHHHHhHHHhHHHHHHHHHH
+HhHhhhhhhhhHHhhHHhHHHhhHhhhhhhHhhHHHHHHhHHhHHHhHHHHHHHhHH
+hhhhhhhhhhHHhHhHHHhHHHHHHHHHHHHHhhHHHHHhHHhHHhhhhhhHHhHhH
+hhhhhhhhhhhhhhHHhhHHHHHHHHHHHHHhHHHHHHhhhHhhhhhhhhHHhhHhH
+hhhhhhggghhhhhHHhhHHHHHHHHHHHHHHHHHHHHHhhhhhhhhhhHHHHHHhh
+hhhhggggghhhhhhhhhHhHHHHHHHhHHHHHHhhhHhhhhhhhhhhhhhhHHhHh
+hhhhggggggghhhhhhhhhhHhHHHHhHHhHhHHHhhhhhhhhhhhhhhHHHHhhh
+HhhhggggggghhhhhhhhhhhHHHHHhhHhHHhhHhhhhhhhhhhhhhhHHhhhhh
+hhhhggggggggghghghhhhHHhhHHhhHhHHhhhhhhhhhhhhhhhhhHHhhhhh
+hhhhhgwwwgggggggghhhhhhhhHhHhhhhhhhhhhhhhhhhhhhhhhHhhhhhw
+hhghgwwwwwwghhhhhhhhhhhhhHhHHhhhhhhhhhhhhhhhhhhhhhhhhwwww
+gggggwwwwwwwhhhhhhhhhhhhhhghhhhhhhghghghhhgghhhhhhhhhwwww
+ggggggmwwwwwhhhhhhhhhhggggggghhhhhggggghgwggghhhhhhhhhhww
+hgggggmmmwgwhhhhhhhhhhwgggggghwhhhggggggwwgggghhhhhhhhwww
+gggggmmmmgggghhhhhhhhwwggggggwwwhhgggggwwgggghwwwhhhhwwww
+ggggmmmmmgggghhhhhwhwhwwwgggwwwwwhggwwwwwgwgwwwwwhhhwwwww
+ggsgsssmmgggghhwhhwwgwgwwwgwwwwwwggggwwwwwwwwwwwwwwwwwwww
+ggsssssssggggghhwwwwgggggwwwwwgwggggggwwwwwwwwwwwwwwwwwww
+ggssssssssgggghhhhgwgggggwwwggggggggggwwwwwwwwwwwwwwwwwww
+gsssssssssggghhhhhgggggggggggggggggggwwwwwwwwwwwwwwwwwwww
+gssssssssgggghhhgggggggggggggggggggggwwwwwwwwwwwwwwwwwwgg
+sssssssssgggggghgggggggggggggggggggggggggwwwwwwwwwwwggggg
+ssssssssssgggggggggggggggggggggggggggggggwwwwwwwwwwwggggg
+sssssssssssgggggggggggggggggggggggggggggswsgswwwwwsssgsgs
+sssssssssssssgggggggggggggggggggggggggssssssssswsssssssss
+sssssssssssssggggggggggssssgsggggggggssssssssssssssssssss
+ssssssssssssssggggggsssssssssggggggggggssssssssssssssssss
+ssssssssssssssgggggggssssssssssggggggggssssssssssssssssss
+sssssssssssssssgssggggssssssssssgggggggssssssssssssssssss
+sssssssssssssssssssgssssssssssssgggggggssssssssssssssssss
+sssssssssssssssssssssssssssssssggssssggssssssssssssssssss
+sssssssssssssssssssssssssssssssggsssssgssssssssssssssssss
+sssssssssssssssssssssssssssssssgsssssssssssssssssssssssss`,
+);
 
-const location = (
-  x: CartesianCoord,
-  y: CartesianCoord,
-  type: LocationType,
-  name: string,
-  defense?: "walled" | "stronghold",
-): HexLocation => ({ id: xyTag({ x, y }), x, y, type, name, defense });
+map.tag(loyal, 0, 10, 12);
+map.tag(loyal, 0, 43, 53);
+map.tag(loyal, 1, 8, 15);
+map.tag(loyal, 1, 41, 53);
+map.tag(loyal, 2, 6, 16);
+map.tag(loyal, 2, 39, 53);
+map.tag(loyal, 3, 6, 18);
+map.tag(loyal, 3, 37, 53);
+map.tag(loyal, 4, 6, 21);
+map.tag(loyal, 4, 35, 53);
+map.tag(loyal, 5, 6, 53);
+map.tag(loyal, 6, 6, 53);
+map.tag(loyal, 7, 6, 53);
+map.tag(loyal, 8, 6, 53);
+map.tag(loyal, 9, 6, 53);
+map.tag(loyal, 10, 6, 53);
+map.tag(loyal, 11, 6, 57);
+map.tag(loyal, 12, 6, 57);
+map.tag(loyal, 13, 6, 57);
+map.tag(loyal, 14, 6, 57);
+map.tag(loyal, 15, 6, 57);
+map.tag(loyal, 16, 6, 12);
+map.tag(loyal, 16, 14, 57);
+map.tag(loyal, 17, 14, 57);
+map.tag(loyal, 18, 14, 57);
+map.tag(loyal, 19, 13, 57);
+map.tag(loyal, 20, 13, 57);
+map.tag(loyal, 21, 13, 56);
+map.tag(loyal, 22, 11, 54);
+map.tag(loyal, 23, 6, 53);
+map.tag(loyal, 24, 6, 53);
+map.tag(loyal, 25, 6, 53);
+map.tag(loyal, 26, 6, 53);
+map.tag(loyal, 27, 6, 53);
+map.tag(loyal, 28, 6, 53);
+map.tag(loyal, 29, 6, 53);
+map.tag(loyal, 30, 6, 53);
+map.tag(loyal, 31, 6, 53);
+map.tag(loyal, 32, 6, 53);
+map.tag(loyal, 33, 6, 53);
 
-export const locations = [
-  location(29, 8, "village", "Threshold", "walled"),
-  location(3, 11, "ruins", "Wereskalot", "walled"),
-  location(50, 12, "village", "Haven", "walled"),
-  location(35, 15, "village", "Kelven", "walled"),
-  location(18, 17, "castle", "Haunted Keep", "walled"),
-  location(11, 19, "castle", "Fort Doom", "stronghold"),
-  location(31, 23, "castle", "Krakatos", "walled"),
-  location(26, 25, "castle", "Estate of Marilenev", "walled"),
-  location(28, 26, "capitol", "Specularum", "stronghold"),
-];
+map.tag(rebel, 16, 13, 13);
+map.tag(rebel, 17, 8, 13);
+map.tag(rebel, 18, 10, 13);
+map.tag(rebel, 19, 11, 12);
+map.tag(rebel, 20, 11, 12);
+map.tag(rebel, 21, 10, 12);
+map.tag(rebel, 22, 10, 10);
 
-const border = (
-  x: CartesianCoord,
-  y: CartesianCoord,
-  start: number,
-  end: number,
-  thickness = 1,
-): HexBorder => ({ id: xyTag({ x, y }), x, y, thickness, start, end });
+map.settlement(29, 8, "village", "Threshold", "walled");
+map.settlement(3, 11, "ruins", "Wereskalot", "walled");
+map.settlement(50, 12, "village", "Haven", "walled");
+map.settlement(35, 15, "village", "Kelven", "walled");
+map.settlement(18, 17, "castle", "Haunted Keep", "walled");
+map.settlement(11, 19, "castle", "Fort Doom", "stronghold");
+map.settlement(31, 23, "castle", "Krakatos", "walled");
+map.settlement(26, 25, "castle", "Estate of Marilenev", "walled");
+map.settlement(28, 26, "capitol", "Specularum", "stronghold");
 
-export const borders = [
-  // Black Eagle Barony
-  border(8, 17, 3, 6),
-  border(9, 17, 4, 5),
-  border(10, 17, 3, 6),
-  border(11, 17, 4, 5),
-  border(12, 17, 3, 5),
-  border(13, 16, 3, 7),
-  border(13, 17, 5, 7),
-  border(13, 18, 5, 8),
-  border(12, 19, 0, 1),
-  border(12, 20, 5, 7),
-  border(12, 21, 5, 8),
-  border(11, 21, 0, 2),
-  border(10, 22, 0, 2),
+// Black Eagle Barony
+map.border(8, 17, 3, 6);
+map.border(9, 17, 4, 5);
+map.border(10, 17, 3, 6);
+map.border(11, 17, 4, 5);
+map.border(12, 17, 3, 5);
+map.border(13, 16, 3, 7);
+map.border(13, 17, 5, 7);
+map.border(13, 18, 5, 8);
+map.border(12, 19, 0, 1);
+map.border(12, 20, 5, 7);
+map.border(12, 21, 5, 8);
+map.border(11, 21, 0, 2);
+map.border(10, 22, 0, 2);
 
-  // Grand Duchy of Karameikos
-  border(6, 16, 2, 4, 2),
-  border(6, 15, 2, 4, 2),
-  border(6, 14, 2, 4, 2),
-  border(6, 13, 2, 4, 2),
-  border(6, 12, 2, 4, 2),
-  border(6, 11, 2, 4, 2),
-  border(6, 10, 2, 4, 2),
-  border(6, 9, 2, 4, 2),
-  border(6, 8, 2, 4, 2),
-  border(6, 7, 2, 4, 2),
-  border(6, 6, 2, 4, 2),
-  border(6, 5, 2, 4, 2),
-  border(6, 4, 2, 4, 2),
-  border(6, 3, 2, 4, 2),
-  border(6, 2, 2, 5, 2),
-  border(7, 1, 3, 5, 2),
-  border(8, 1, 3, 5, 2),
-  border(9, 0, 3, 5, 2),
-  border(10, 0, 3, 5, 2),
-  border(12, 0, 4, 6, 2),
-  border(13, 0, 4, 6, 2),
-  border(14, 1, 4, 6, 2),
-  border(15, 1, 4, 6, 2),
-  border(16, 2, 4, 6, 2),
-  border(17, 2, 4, 6, 2),
-  border(18, 3, 4, 6, 2),
-  border(19, 3, 4, 6, 2),
-  border(20, 4, 4, 6, 2),
-  border(21, 4, 4, 6, 2),
-  border(22, 5, 4, 6, 2),
-  border(23, 5, 4, 5, 2),
-  border(24, 5, 3, 6, 2),
-  border(25, 5, 4, 5, 2),
-  border(26, 5, 3, 6, 2),
-  border(27, 5, 4, 5, 2),
-  border(28, 5, 3, 6, 2),
-  border(29, 5, 4, 5, 2),
-  border(30, 5, 3, 6, 2),
-  border(31, 5, 4, 5, 2),
-  border(32, 5, 3, 6, 2),
-  border(33, 5, 4, 5, 2),
-  border(34, 5, 3, 5, 2),
-  border(35, 4, 3, 5, 2),
-  border(36, 4, 3, 5, 2),
-  border(37, 3, 3, 5, 2),
-  border(38, 3, 3, 5, 2),
-  border(39, 2, 3, 5, 2),
-  border(40, 2, 3, 5, 2),
-  border(41, 1, 3, 5, 2),
-  border(42, 1, 3, 5, 2),
-  border(43, 0, 3, 5, 2),
-  border(53, 0, 5, 7, 2),
-  border(53, 1, 5, 7, 2),
-  border(53, 2, 5, 7, 2),
-  border(53, 3, 5, 7, 2),
-  border(53, 4, 5, 7, 2),
-  border(53, 5, 5, 7, 2),
-  border(53, 6, 5, 7, 2),
-  border(53, 7, 5, 7, 2),
-  border(53, 8, 5, 7, 2),
-  border(53, 9, 5, 7, 2),
-  border(53, 10, 5, 6, 2),
-  border(54, 11, 4, 6, 2),
-  border(55, 11, 4, 5, 2),
-  border(56, 11, 3, 6, 2),
-  border(57, 11, 4, 5, 2),
-  border(57, 20, 0, 2, 2),
-  border(56, 21, 0, 2, 2),
-  border(55, 21, 0, 2, 2),
-  border(54, 22, 0, 2, 2),
-  border(53, 22, 0, 1, 2),
-  border(53, 23, 5, 7, 2),
-];
+// Grand Duchy of Karameikos
+map.border(6, 16, 2, 4, 2);
+map.border(6, 15, 2, 4, 2);
+map.border(6, 14, 2, 4, 2);
+map.border(6, 13, 2, 4, 2);
+map.border(6, 12, 2, 4, 2);
+map.border(6, 11, 2, 4, 2);
+map.border(6, 10, 2, 4, 2);
+map.border(6, 9, 2, 4, 2);
+map.border(6, 8, 2, 4, 2);
+map.border(6, 7, 2, 4, 2);
+map.border(6, 6, 2, 4, 2);
+map.border(6, 5, 2, 4, 2);
+map.border(6, 4, 2, 4, 2);
+map.border(6, 3, 2, 4, 2);
+map.border(6, 2, 2, 5, 2);
+map.border(7, 1, 3, 5, 2);
+map.border(8, 1, 3, 5, 2);
+map.border(9, 0, 3, 5, 2);
+map.border(10, 0, 3, 5, 2);
+map.border(12, 0, 4, 6, 2);
+map.border(13, 0, 4, 6, 2);
+map.border(14, 1, 4, 6, 2);
+map.border(15, 1, 4, 6, 2);
+map.border(16, 2, 4, 6, 2);
+map.border(17, 2, 4, 6, 2);
+map.border(18, 3, 4, 6, 2);
+map.border(19, 3, 4, 6, 2);
+map.border(20, 4, 4, 6, 2);
+map.border(21, 4, 4, 6, 2);
+map.border(22, 5, 4, 6, 2);
+map.border(23, 5, 4, 5, 2);
+map.border(24, 5, 3, 6, 2);
+map.border(25, 5, 4, 5, 2);
+map.border(26, 5, 3, 6, 2);
+map.border(27, 5, 4, 5, 2);
+map.border(28, 5, 3, 6, 2);
+map.border(29, 5, 4, 5, 2);
+map.border(30, 5, 3, 6, 2);
+map.border(31, 5, 4, 5, 2);
+map.border(32, 5, 3, 6, 2);
+map.border(33, 5, 4, 5, 2);
+map.border(34, 5, 3, 5, 2);
+map.border(35, 4, 3, 5, 2);
+map.border(36, 4, 3, 5, 2);
+map.border(37, 3, 3, 5, 2);
+map.border(38, 3, 3, 5, 2);
+map.border(39, 2, 3, 5, 2);
+map.border(40, 2, 3, 5, 2);
+map.border(41, 1, 3, 5, 2);
+map.border(42, 1, 3, 5, 2);
+map.border(43, 0, 3, 5, 2);
+map.border(53, 0, 5, 7, 2);
+map.border(53, 1, 5, 7, 2);
+map.border(53, 2, 5, 7, 2);
+map.border(53, 3, 5, 7, 2);
+map.border(53, 4, 5, 7, 2);
+map.border(53, 5, 5, 7, 2);
+map.border(53, 6, 5, 7, 2);
+map.border(53, 7, 5, 7, 2);
+map.border(53, 8, 5, 7, 2);
+map.border(53, 9, 5, 7, 2);
+map.border(53, 10, 5, 6, 2);
+map.border(54, 11, 4, 6, 2);
+map.border(55, 11, 4, 5, 2);
+map.border(56, 11, 3, 6, 2);
+map.border(57, 11, 4, 5, 2);
+map.border(57, 20, 0, 2, 2);
+map.border(56, 21, 0, 2, 2);
+map.border(55, 21, 0, 2, 2);
+map.border(54, 22, 0, 2, 2);
+map.border(53, 22, 0, 1, 2);
+map.border(53, 23, 5, 7, 2);
+
+export const hexData = map.getHexData();
+export const locations = map.locations;
+export const borders = map.borders;
 
 export const positions = {
   "Black Eagle Guard": xy(11, 19),

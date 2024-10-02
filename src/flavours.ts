@@ -16,6 +16,7 @@ export type CartesianCoord = Flavour<number, "CartesianCoord">;
 export type Damage = Flavour<number, "Damage">;
 export type ExperienceLevel = Flavour<number, "ExperienceLevel">;
 export type CubicCoord = Flavour<number, "CubicCoord">;
+export type Miles = Flavour<number, "Miles">;
 export type Months = Flavour<number, "Months">;
 export type Percentage = Flavour<number, "Percentage">;
 export type Pixels = Flavour<number, "Pixels">;

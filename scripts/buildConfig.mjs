@@ -1,6 +1,7 @@
 /*global console,process*/
 
 import { config as loadDotEnvConfig } from "dotenv";
+import { postcssModules, sassPlugin } from "esbuild-sass-plugin";
 
 /**
  *
@@ -32,7 +33,15 @@ export default function getBuildConfig(nodeEnv = "development") {
     outfile: "docs/bundle.js",
     define,
     // minify: true,
-    plugins: [],
+    plugins: [
+      sassPlugin({
+        filter: /\.module\.scss$/,
+        transform: postcssModules({ basedir: "./src" }),
+      }),
+      sassPlugin({
+        filter: /\.scss$/,
+      }),
+    ],
     loader: {
       ".json": "file",
       ".ogg": "file",

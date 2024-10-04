@@ -35,5 +35,8 @@ const unitsSlice = createSlice({
 export const { setUnits, updateUnit } = unitsSlice.actions;
 export default unitsSlice.reducer;
 
-export const { selectAll: selectAllUnits, selectEntities: selectUnitEntities } =
-  unitsAdapter.getSelectors<RootState>((s) => s.units);
+export const {
+  selectAll: selectAllUnits,
+  selectById: selectUnitById,
+  selectEntities: selectUnitEntities,
+} = unitsAdapter.getSelectors<RootState>((s) => s.units);

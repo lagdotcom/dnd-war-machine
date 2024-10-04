@@ -1,3 +1,4 @@
+import isDefined from "./tools/isDefined";
 import { Force, HitDice, QuickForce, Situation } from "./types";
 
 export class BasicForceRater {
@@ -32,8 +33,8 @@ export class BasicForceRater {
   }
 
   private item(name: string, value: number, max?: number, min?: number) {
-    if (typeof max !== "undefined") value = Math.min(value, max);
-    if (typeof min !== "undefined") value = Math.max(value, min);
+    if (isDefined(max)) value = Math.min(value, max);
+    if (isDefined(min)) value = Math.max(value, min);
     this.ratings.set(name, value);
 
     this.currentFactor += value;

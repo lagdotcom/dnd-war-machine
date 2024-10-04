@@ -9,6 +9,7 @@ import BorderLayer from "./BorderLayer";
 import HexLayer from "./HexLayer";
 import Layout from "./Layout";
 import LocationLayer from "./LocationLayer";
+import styles from "./StrategyView.module.scss";
 import UnitLayer from "./UnitLayer";
 
 export interface StrategyViewProps {
@@ -78,7 +79,7 @@ export default function StrategyView({
   return (
     <svg
       ref={ref}
-      className={classNames("grid", { dragging })}
+      className={classNames(styles.grid, { [styles.dragging]: dragging })}
       version="1.1"
       xmlns="http://www.w3.org/2000/svg"
     >

@@ -5,18 +5,44 @@ body {
   padding: 0;
 }
 
-#app {
-  display: flex;
-  overflow: hidden;
-  height: 100vh;
+body {
+  --background-color: white;
+  --overlay-background: var(--background-color);
+  --text-color: black;
+  --text-color-disabled: #444;
+  --text-color-placeholder: #888;
+  --border-color: #ccc;
+  --border-color-disabled: #888;
+  --border-color-pressed: purple;
+  --highlight-background: purple;
+  --highlight-foreground: white;
+  --button-background: var(--background-color);
+  --button-background-pressed: var(--button-background);
+  --focus-ring-color: purple;
+
+  background-color: var(--background-color);
+}
+@media (prefers-color-scheme: dark) {
+  body {
+    --background-color: black;
+    --text-color: white;
+    --text-color-disabled: #ccc;
+    --border-color: #888;
+    --button-background: #222;
+  }
 }
 
-.grid {
-  flex-grow: 1;
-  z-index: 0;
-}
-.grid.dragging {
-  cursor: move;
+/* TODO: CONVERT THIS STUFF */
+
+.panel {
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  row-gap: 2px;
+  border: 2px solid var(--border-color);
+  background-color: var(--background-color);
+  color: var(--text-color);
+  padding: 4px;
 }
 
 .hexagon .terrain {
@@ -165,27 +191,6 @@ body {
 }
 .unit.can-attack circle {
   cursor: crosshair;
-}
-
-.panel {
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  row-gap: 2px;
-  border: 2px solid silver;
-  background-color: white;
-  padding: 4px;
-}
-
-.unit-views {
-  position: absolute;
-  top: 0;
-  left: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  row-gap: 4px;
-  margin: 4px;
 }
 
 .unit-view > .name {

@@ -1,3 +1,4 @@
+import classNames from "classnames";
 import { useCallback, useEffect } from "react";
 import { HexUtils } from "react-hexgrid";
 
@@ -14,6 +15,7 @@ import { useAppDispatch, useAppSelector } from "../state/hooks";
 import { setLocations } from "../state/locations";
 import {
   selectAttackHexTags,
+  selectChoosingTactics,
   selectHoveredHex,
   selectHoveredUnit,
   selectMoveHexTags,
@@ -27,21 +29,32 @@ import {
   PendingBattle,
   selectUnit,
   setAttackHexes,
+  setChoosingTactics,
   setMoveHexes,
   setPendingBattle,
 } from "../state/ui";
-import { selectAllUnits, setUnits, Unit, updateUnit } from "../state/units";
+import {
+  selectAllUnits,
+  selectUnitEntities,
+  setUnits,
+  Unit,
+  updateUnit,
+} from "../state/units";
 import { XY, XYTag } from "../types";
+import styles from "./App.module.scss";
+import ChooseTacticsDialog from "./ChooseTacticsDialog";
 import PendingBattleView from "./PendingBattleView";
 import StrategyView from "./StrategyView";
 import UnitView from "./UnitView";
 
 export default function App() {
   const units = useAppSelector(selectAllUnits);
+  const unitsById = useAppSelector(selectUnitEntities);
   const hexes = useAppSelector(selectTerrainEntities);
   const attackHexes = useAppSelector(selectAttackHexTags);
   const movableHexes = useAppSelector(selectMoveHexTags);
 
+  const choosing = useAppSelector(selectChoosingTactics);
   const pendingBattle = useAppSelector(selectPendingBattle);
   const hoveredHex = useAppSelector(selectHoveredHex);
   const hovered = useAppSelector(selectHoveredUnit);
@@ -64,12 +77,26 @@ export default function App() {
         .filter((h) => h.terrain !== "sea")
         .map(xyTag);
 
-      const unitTags = units.filter((u) => u.id !== id).map(xyTag);
+      const me = unitsById[id];
+      const enemies = units.filter((u) => u.id !== id).map(xyTag);
+      const blocked = units
+        .filter((u) => u.side === me.side && u.id !== id)
+        .map(xyTag);
 
-      dispatch(setAttackHexes(tags.filter((tag) => unitTags.includes(tag))));
-      dispatch(setMoveHexes(tags.filter((tag) => !unitTags.includes(tag))));
+      dispatch(
+        setAttackHexes(
+          tags.filter((tag) => enemies.includes(tag) && !blocked.includes(tag)),
+        ),
+      );
+      dispatch(
+        setMoveHexes(
+          tags.filter(
+            (tag) => !enemies.includes(tag) && !blocked.includes(tag),
+          ),
+        ),
+      );
     },
-    [dispatch, hexes, units],
+    [dispatch, hexes, units, unitsById],
   );
 
   const onClickHex = useCallback(
@@ -81,17 +108,27 @@ export default function App() {
         return;
       }
 
+      if (pendingBattle) {
+        dispatch(setChoosingTactics(pendingBattle));
+        return;
+      }
+
       dispatch(deselectUnit());
     },
-    [dispatch, updateHexHighlights, movableHexes, selected],
+    [dispatch, movableHexes, pendingBattle, selected, updateHexHighlights],
   );
 
   const onClickUnit = useCallback(
     (u: Unit) => {
+      if (pendingBattle?.defender === u.id) {
+        dispatch(setChoosingTactics(pendingBattle));
+        return;
+      }
+
       dispatch(selectUnit(u.id));
       updateHexHighlights(u.id, u);
     },
-    [dispatch, updateHexHighlights],
+    [dispatch, pendingBattle, updateHexHighlights],
   );
 
   const onHoverHex = useCallback(
@@ -116,31 +153,26 @@ export default function App() {
 
   return (
     <>
-      {hoveredHex && (
-        <div
-          className="panel"
-          style={{
-            position: "absolute",
-            fontSize: "3em",
-            left: 4,
-            bottom: 4,
-            pointerEvents: "none",
-          }}
-        >
-          {xyTag(hoveredHex)} {hoveredHex.terrain} {hoveredHex.tags.join(", ")}
+      <main className={styles.main}>
+        {hoveredHex && (
+          <div className={classNames("panel", styles.hoverHex)}>
+            {xyTag(hoveredHex)} {hoveredHex.terrain}{" "}
+            {hoveredHex.tags.join(", ")}
+          </div>
+        )}
+        <div className={styles.unitViews}>
+          {pendingBattle && <PendingBattleView battle={pendingBattle} />}
+          {selected && <UnitView unit={selected} />}
+          {hovered && hovered !== selected && <UnitView unit={hovered} />}
         </div>
-      )}
-      <div className="unit-views">
-        {pendingBattle && <PendingBattleView battle={pendingBattle} />}
-        {selected && <UnitView unit={selected} />}
-        {hovered && hovered !== selected && <UnitView unit={hovered} />}
-      </div>
-      <StrategyView
-        onClickHex={onClickHex}
-        onHoverHex={onHoverHex}
-        onClickUnit={onClickUnit}
-        onHoverUnit={onHoverUnit}
-      />
+        <StrategyView
+          onClickHex={onClickHex}
+          onHoverHex={onHoverHex}
+          onClickUnit={onClickUnit}
+          onHoverUnit={onHoverUnit}
+        />
+      </main>
+      {choosing && <ChooseTacticsDialog choose={choosing} />}
     </>
   );
 }

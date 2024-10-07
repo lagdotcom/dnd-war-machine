@@ -32,7 +32,7 @@ export default function HexLayer({
   const getExtraClass = useCallback(
     (xy: XY) => {
       const tag = xyTag(xy);
-      if (canAttack.includes(tag)) return "can-attack";
+      if (canAttack[tag]) return "can-attack";
       if (canMove.includes(tag)) return "can-move";
     },
     [canAttack, canMove],

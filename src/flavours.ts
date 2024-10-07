@@ -21,4 +21,5 @@ export type Months = Flavour<number, "Months">;
 export type Percentage = Flavour<number, "Percentage">;
 export type Pixels = Flavour<number, "Pixels">;
 export type Ratio = Flavour<number, "Ratio">;
+export type Side = Flavour<number, "Side">;
 export type Weeks = Flavour<number, "Weeks">;

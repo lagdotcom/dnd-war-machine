@@ -1,46 +1,33 @@
 import classNames from "classnames";
 import { useCallback, useEffect } from "react";
-import { HexUtils } from "react-hexgrid";
 
-import { cubeToOddQ, oddQToCube, tagToXY, xyTag } from "../coord-tools";
+import { xyTag } from "../coord-tools";
 import {
   borders,
   hexData,
   locations,
   scenario3Units,
 } from "../data/karameikos";
-import { UnitID } from "../flavours";
-import { setBorders } from "../state/borders";
 import { useAppDispatch, useAppSelector } from "../state/hooks";
-import { setLocations } from "../state/locations";
 import {
-  selectAttackHexTags,
   selectChoosingTactics,
+  selectGameState,
   selectHoveredHex,
   selectHoveredUnit,
   selectMoveHexTags,
   selectPendingBattle,
   selectSelectedUnit,
 } from "../state/selectors";
-import { selectTerrainEntities, setTerrain } from "../state/terrain";
 import {
+  beginGame,
   deselectUnit,
   hoverHex,
-  PendingBattle,
+  moveUnit,
   selectUnit,
-  setAttackHexes,
-  setChoosingTactics,
-  setMoveHexes,
-  setPendingBattle,
-} from "../state/ui";
-import {
-  selectAllUnits,
-  selectUnitEntities,
-  setUnits,
-  Unit,
-  updateUnit,
-} from "../state/units";
-import { XY, XYTag } from "../types";
+} from "../state/thunks";
+import { setChoosingTactics } from "../state/ui";
+import { Unit } from "../state/units";
+import { XYTag } from "../types";
 import styles from "./App.module.scss";
 import ChooseTacticsDialog from "./ChooseTacticsDialog";
 import PendingBattleView from "./PendingBattleView";
@@ -48,12 +35,8 @@ import StrategyView from "./StrategyView";
 import UnitView from "./UnitView";
 
 export default function App() {
-  const units = useAppSelector(selectAllUnits);
-  const unitsById = useAppSelector(selectUnitEntities);
-  const hexes = useAppSelector(selectTerrainEntities);
-  const attackHexes = useAppSelector(selectAttackHexTags);
+  const game = useAppSelector(selectGameState);
   const movableHexes = useAppSelector(selectMoveHexTags);
-
   const choosing = useAppSelector(selectChoosingTactics);
   const pendingBattle = useAppSelector(selectPendingBattle);
   const hoveredHex = useAppSelector(selectHoveredHex);
@@ -62,49 +45,13 @@ export default function App() {
 
   const dispatch = useAppDispatch();
   useEffect(() => {
-    dispatch(setTerrain(hexData));
-    dispatch(setBorders(borders));
-    dispatch(setLocations(locations));
-    dispatch(setUnits(scenario3Units));
+    dispatch(beginGame(hexData, borders, locations, scenario3Units, 1));
   }, [dispatch]);
-
-  const updateHexHighlights = useCallback(
-    (id: UnitID, xy: XY) => {
-      const tags = HexUtils.neighbors(oddQToCube(xy))
-        .map(cubeToOddQ)
-        .map(xyTag)
-        .map((tag) => hexes[tag])
-        .filter((h) => h.terrain !== "sea")
-        .map(xyTag);
-
-      const me = unitsById[id];
-      const enemies = units.filter((u) => u.id !== id).map(xyTag);
-      const blocked = units
-        .filter((u) => u.side === me.side && u.id !== id)
-        .map(xyTag);
-
-      dispatch(
-        setAttackHexes(
-          tags.filter((tag) => enemies.includes(tag) && !blocked.includes(tag)),
-        ),
-      );
-      dispatch(
-        setMoveHexes(
-          tags.filter(
-            (tag) => !enemies.includes(tag) && !blocked.includes(tag),
-          ),
-        ),
-      );
-    },
-    [dispatch, hexes, units, unitsById],
-  );
 
   const onClickHex = useCallback(
     (tag: XYTag) => {
       if (movableHexes.includes(tag) && selected) {
-        const xy = tagToXY(tag);
-        dispatch(updateUnit({ id: selected.id, changes: xy }));
-        updateHexHighlights(selected.id, xy);
+        dispatch(moveUnit(selected.id, tag));
         return;
       }
 
@@ -115,7 +62,7 @@ export default function App() {
 
       dispatch(deselectUnit());
     },
-    [dispatch, movableHexes, pendingBattle, selected, updateHexHighlights],
+    [dispatch, movableHexes, pendingBattle, selected],
   );
 
   const onClickUnit = useCallback(
@@ -125,25 +72,17 @@ export default function App() {
         return;
       }
 
-      dispatch(selectUnit(u.id));
-      updateHexHighlights(u.id, u);
+      if (game.type === "move" && game.side === u.side)
+        dispatch(selectUnit(u.id));
     },
-    [dispatch, pendingBattle, updateHexHighlights],
+    [dispatch, game, pendingBattle],
   );
 
   const onHoverHex = useCallback(
     (tag: XYTag) => {
       dispatch(hoverHex(tag));
-
-      let pending: PendingBattle | undefined;
-      if (attackHexes.includes(tag) && selected) {
-        const defender = units.find((u) => xyTag(u) === tag);
-        if (defender)
-          pending = { attacker: selected.id, defender: defender.id };
-      }
-      dispatch(setPendingBattle(pending));
     },
-    [attackHexes, dispatch, selected, units],
+    [dispatch],
   );
 
   const onHoverUnit = useCallback(

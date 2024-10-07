@@ -1,6 +1,6 @@
 import { createEntityAdapter, createSlice } from "@reduxjs/toolkit";
 
-import { HexTag, UnitID } from "../flavours";
+import { HexTag, Side, UnitID } from "../flavours";
 import { Force, QuickForce, XY } from "../types";
 import { RootState } from "./store";
 
@@ -17,7 +17,7 @@ interface QuickUnit {
 export type Unit = {
   id: UnitID;
   liegeTag?: HexTag;
-  side: number;
+  side: Side;
 } & XY &
   (NormalUnit | QuickUnit);
 

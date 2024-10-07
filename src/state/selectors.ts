@@ -6,10 +6,11 @@ import { selectAllUnits, selectUnitEntities } from "./units";
 export const selectAttackHexTags = (state: RootState) => state.ui.attackTags;
 export const selectChoosingTactics = (state: RootState) =>
   state.ui.choosingTactics;
+export const selectGameState = (state: RootState) => state.ui.game;
 export const selectHoveredHexTag = (state: RootState) => state.ui.hoverHex;
 export const selectMoveHexTags = (state: RootState) => state.ui.moveTags;
 export const selectPendingBattle = (state: RootState) => state.ui.pendingBattle;
-export const selectSelectedUnitId = (state: RootState) => state.ui.selectUnit;
+export const selectSelectedUnitId = (state: RootState) => state.ui.selectedUnit;
 
 export const selectHoveredHex = createAppSelector(
   [selectTerrainEntities, selectHoveredHexTag],

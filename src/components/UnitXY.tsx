@@ -39,12 +39,12 @@ export default function UnitXY({
   const inTerritoryOfLiege = liegeTag && inHex.tags.includes(liegeTag);
 
   const selectedId = useAppSelector(selectSelectedUnitId);
-  const attackable = useAppSelector(selectAttackHexTags);
+  const canAttack = useAppSelector(selectAttackHexTags);
 
   return (
     <g
       className={classNames("unit", `side-${side}`, {
-        "can-attack": attackable.includes(tag),
+        "can-attack": canAttack[tag],
         "in-liege": inTerritoryOfLiege,
         selected: unit.id === selectedId,
       })}

@@ -8,6 +8,7 @@ import { XYTag } from "../types";
 import BorderLayer from "./BorderLayer";
 import HexLayer from "./HexLayer";
 import Layout from "./Layout";
+import LineLayer from "./LineLayer";
 import LocationLayer from "./LocationLayer";
 import styles from "./StrategyView.module.scss";
 import UnitLayer from "./UnitLayer";
@@ -90,6 +91,7 @@ export default function StrategyView({
           onClick={clickHex}
           onHover={onHoverHex}
         />
+        <LineLayer />
         <BorderLayer />
         <LocationLayer />
         <UnitLayer onClick={clickUnit} onHover={onHoverUnit} />

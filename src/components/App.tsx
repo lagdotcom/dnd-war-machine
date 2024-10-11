@@ -5,12 +5,12 @@ import { xyTag } from "../coord-tools";
 import {
   borders,
   hexData,
+  lines,
   locations,
   scenario3Units,
 } from "../data/karameikos";
 import { useAppDispatch, useAppSelector } from "../state/hooks";
 import {
-  selectChoosingTactics,
   selectGameState,
   selectHoveredHex,
   selectHoveredUnit,
@@ -25,7 +25,7 @@ import {
   moveUnit,
   selectUnit,
 } from "../state/thunks";
-import { setChoosingTactics } from "../state/ui";
+import { setGameState } from "../state/ui";
 import { Unit } from "../state/units";
 import { XYTag } from "../types";
 import styles from "./App.module.scss";
@@ -37,7 +37,6 @@ import UnitView from "./UnitView";
 export default function App() {
   const game = useAppSelector(selectGameState);
   const movableHexes = useAppSelector(selectMoveHexTags);
-  const choosing = useAppSelector(selectChoosingTactics);
   const pendingBattle = useAppSelector(selectPendingBattle);
   const hoveredHex = useAppSelector(selectHoveredHex);
   const hovered = useAppSelector(selectHoveredUnit);
@@ -45,7 +44,7 @@ export default function App() {
 
   const dispatch = useAppDispatch();
   useEffect(() => {
-    dispatch(beginGame(hexData, borders, locations, scenario3Units, 1));
+    dispatch(beginGame(hexData, borders, locations, lines, scenario3Units, 1));
   }, [dispatch]);
 
   const onClickHex = useCallback(
@@ -56,19 +55,23 @@ export default function App() {
       }
 
       if (pendingBattle) {
-        dispatch(setChoosingTactics(pendingBattle));
+        dispatch(
+          setGameState({ ...pendingBattle, type: "tactics", previous: game }),
+        );
         return;
       }
 
       dispatch(deselectUnit());
     },
-    [dispatch, movableHexes, pendingBattle, selected],
+    [dispatch, game, movableHexes, pendingBattle, selected],
   );
 
   const onClickUnit = useCallback(
     (u: Unit) => {
       if (pendingBattle?.defender === u.id) {
-        dispatch(setChoosingTactics(pendingBattle));
+        dispatch(
+          setGameState({ ...pendingBattle, type: "tactics", previous: game }),
+        );
         return;
       }
 
@@ -111,7 +114,7 @@ export default function App() {
           onHoverUnit={onHoverUnit}
         />
       </main>
-      {choosing && <ChooseTacticsDialog choose={choosing} />}
+      <ChooseTacticsDialog />
     </>
   );
 }

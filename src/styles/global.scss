@@ -123,6 +123,15 @@ body {
   fill: transparent;
 }
 
+#lines {
+  pointer-events: none;
+
+  .water {
+    stroke: #8cb2d8;
+    stroke-linecap: round;
+  }
+}
+
 .coord {
   font-family: "Courier New", Courier, monospace;
   font-size: 3px;

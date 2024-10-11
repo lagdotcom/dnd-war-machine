@@ -10,6 +10,12 @@ import {
   Weeks,
 } from "./flavours";
 
+export enum Fatigue {
+  None = 0,
+  Moderate,
+  Serious,
+}
+
 export interface Force {
   name: string;
   numberOfTroops: number;

@@ -1,10 +1,21 @@
-import { xyTag } from "../coord-tools";
-import { CartesianCoord, HexTag, LocationType, TerrainType } from "../flavours";
+import { HexUtils } from "react-hexgrid";
+
+import { cubeToOddQ, oddQToCube, xyTag } from "../coord-tools";
+import {
+  CartesianCoord,
+  ClassName,
+  HexTag,
+  LineID,
+  LocationType,
+  Pixels,
+  TerrainType,
+} from "../flavours";
 import { TerrainEffect } from "../movement";
 import { HexBorder } from "../state/borders";
+import { HexLine } from "../state/lines";
 import { HexLocation } from "../state/locations";
 import { HexData } from "../state/terrain";
-import { XYTag } from "../types";
+import { XY, XYTag } from "../types";
 
 const conversions: Record<
   string,
@@ -22,11 +33,15 @@ export default class MapBuilder {
   borders: HexBorder[];
   hexes: Record<XYTag, HexData>;
   locations: HexLocation[];
+  lines: HexLine[];
+  private nextLineID: LineID;
 
   constructor() {
     this.borders = [];
     this.hexes = {};
     this.locations = [];
+    this.lines = [];
+    this.nextLineID = 1;
   }
 
   terrain(startX: CartesianCoord, y: CartesianCoord, data: string) {
@@ -87,13 +102,58 @@ export default class MapBuilder {
     y: CartesianCoord,
     start: number,
     end: number,
-    thickness = 1,
+    thickness: Pixels = 1,
   ) {
-    this.borders.push({ id: xyTag({ x, y }), x, y, start, end, thickness });
+    this.borders.push({
+      id: xyTag({ x, y }),
+      x,
+      y,
+      start,
+      end,
+      thickness,
+    });
     return this;
   }
 
   getHexData() {
     return Object.values(this.hexes);
   }
+
+  line(
+    className: ClassName,
+    thickness: Pixels,
+    x: CartesianCoord,
+    y: CartesianCoord,
+    path: string,
+  ) {
+    let lastPathChar = path[0];
+    let start: XY = { x, y };
+    let end: XY = { x, y };
+
+    for (const ch of path + "!") {
+      const dir = pathToDir[ch];
+      if (ch !== lastPathChar) {
+        this.lines.push({
+          id: this.nextLineID++,
+          className,
+          thickness,
+          start,
+          end,
+        });
+        start = end;
+        lastPathChar = ch;
+      }
+
+      end = cubeToOddQ(HexUtils.neighbor(oddQToCube(end), dir ?? 0));
+    }
+  }
 }
+
+const pathToDir: Record<string, number> = {
+  "6": 0,
+  "5": 5,
+  "4": 4,
+  "7": 3,
+  "8": 2,
+  "9": 1,
+};

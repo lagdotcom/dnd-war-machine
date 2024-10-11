@@ -1,18 +1,15 @@
-type FatigueResult = "N" | "M" | "S" | "Rout";
-type LocationResult =
-  | "F"
-  | "R"
-  | "R+1"
-  | "R+2"
-  | "R+3"
-  | "F+1"
-  | "F+3"
-  | "F+5"
-  | "Rout";
+import { Percentage } from "./flavours";
+import { Fatigue } from "./types";
+
+export type FatigueResult = Fatigue | "Rout";
+export type LocationResult =
+  | { type: "forward"; bonus: number }
+  | { type: "retreat"; bonus: number }
+  | { type: "rout" };
 
 type AttackResult = [
-  winnerCasualties: number,
-  loserCasualties: number,
+  winnerCasualties: Percentage,
+  loserCasualties: Percentage,
   winnerFatigue: FatigueResult,
   loserFatigue: FatigueResult,
   winnerLocation: LocationResult,
@@ -20,19 +17,122 @@ type AttackResult = [
 ];
 
 export function getAttackResults(diff: number): AttackResult {
-  if (diff < 9) return [0, 10, "N", "N", "F", "R"];
-  if (diff < 16) return [0, 20, "N", "N", "F", "R"];
-  if (diff < 25) return [10, 20, "N", "M", "F", "R"];
-  if (diff < 31) return [10, 30, "N", "M", "F", "R+1"];
-  if (diff < 39) return [20, 40, "M", "S", "R", "R"];
-  if (diff < 51) return [0, 30, "N", "S", "F", "R+2"];
-  if (diff < 64) return [20, 50, "M", "S", "F+1", "R+3"];
-  if (diff < 81) return [30, 60, "M", "S", "F+1", "R+3"];
-  if (diff < 91) return [10, 50, "N", "S", "F+3", "R+2"];
-  if (diff < 101) return [0, 30, "N", "Rout", "F+3", "Rout"];
-  if (diff < 121) return [20, 70, "N", "Rout", "F+3", "Rout"];
-  if (diff < 151) return [10, 70, "N", "Rout", "F+3", "Rout"];
-  return [10, 100, "N", "Rout", "F+5", "Rout"];
+  if (diff < 9)
+    return [
+      0,
+      10,
+      Fatigue.None,
+      Fatigue.None,
+      { type: "forward", bonus: 0 },
+      { type: "retreat", bonus: 0 },
+    ];
+  if (diff < 16)
+    return [
+      0,
+      20,
+      Fatigue.None,
+      Fatigue.None,
+      { type: "forward", bonus: 0 },
+      { type: "retreat", bonus: 0 },
+    ];
+  if (diff < 25)
+    return [
+      10,
+      20,
+      Fatigue.None,
+      Fatigue.Moderate,
+      { type: "forward", bonus: 0 },
+      { type: "retreat", bonus: 0 },
+    ];
+  if (diff < 31)
+    return [
+      10,
+      30,
+      Fatigue.None,
+      Fatigue.Moderate,
+      { type: "forward", bonus: 0 },
+      { type: "retreat", bonus: 1 },
+    ];
+  if (diff < 39)
+    return [
+      20,
+      40,
+      Fatigue.Moderate,
+      Fatigue.Serious,
+      { type: "retreat", bonus: 0 },
+      { type: "retreat", bonus: 0 },
+    ];
+  if (diff < 51)
+    return [
+      0,
+      30,
+      Fatigue.None,
+      Fatigue.Serious,
+      { type: "forward", bonus: 0 },
+      { type: "retreat", bonus: 2 },
+    ];
+  if (diff < 64)
+    return [
+      20,
+      50,
+      Fatigue.Moderate,
+      Fatigue.Serious,
+      { type: "forward", bonus: 1 },
+      { type: "retreat", bonus: 3 },
+    ];
+  if (diff < 81)
+    return [
+      30,
+      60,
+      Fatigue.Moderate,
+      Fatigue.Serious,
+      { type: "forward", bonus: 1 },
+      { type: "retreat", bonus: 3 },
+    ];
+  if (diff < 91)
+    return [
+      10,
+      50,
+      Fatigue.None,
+      Fatigue.Serious,
+      { type: "forward", bonus: 3 },
+      { type: "retreat", bonus: 2 },
+    ];
+  if (diff < 101)
+    return [
+      0,
+      30,
+      Fatigue.None,
+      "Rout",
+      { type: "forward", bonus: 3 },
+      { type: "rout" },
+    ];
+  if (diff < 121)
+    return [
+      20,
+      70,
+      Fatigue.None,
+      "Rout",
+      { type: "forward", bonus: 3 },
+      { type: "rout" },
+    ];
+  if (diff < 151)
+    return [
+      10,
+      70,
+      Fatigue.None,
+      "Rout",
+      { type: "forward", bonus: 3 },
+      { type: "rout" },
+    ];
+  return [
+    10,
+    100,
+    Fatigue.None,
+    "Rout",
+    { type: "forward", bonus: 5 },
+    { type: "rout" },
+  ];
 }
 
 export enum Tactics {
@@ -43,14 +143,6 @@ export enum Tactics {
   Hold,
   Withdraw,
 }
-export const TacticsNames: (keyof typeof Tactics)[] = [
-  "Overrun",
-  "Attack",
-  "Envelop",
-  "Trap",
-  "Hold",
-  "Withdraw",
-];
 
 type TacticResult =
   | "--"
@@ -103,7 +195,7 @@ export const TacticsResults: ("NC" | TacticResult[])[][] = [
 
 export function getAttackEffects(
   r: TacticResult,
-): [casualtiesMod: number, brMod: number] {
+): [casualtiesMod: Percentage, brMod: number] {
   switch (r) {
     case "--":
       return [0, 0];

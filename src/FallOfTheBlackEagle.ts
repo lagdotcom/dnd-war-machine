@@ -1,3 +1,4 @@
+import { d100 } from "./battle";
 import {
   BasicForceRater,
   basicForceRating,
@@ -62,10 +63,6 @@ for (const force of [
   const br = b.rate(force);
 
   console.log(`${force.name} - qBR ${br}`);
-}
-
-function d100() {
-  return Math.ceil(Math.random() * 100);
 }
 
 function simulateAttack(
@@ -155,7 +152,7 @@ function simulateAttack(
   );
   if (aCR === dCR) console.log("It's a draw!");
 
-  const [winner, loser, wcmod, lcmod] =
+  const [winner, loser, wcMod, lcMod] =
     aCR > dCR ? [aForce, dForce, acMod, dcMod] : [dForce, aForce, dcMod, acMod];
   const diffCR = Math.abs(aCR - dCR);
   console.log(`${winner.name} wins! (+${diffCR})`);
@@ -163,10 +160,10 @@ function simulateAttack(
   const [wc, lc, wf, lf, wl, ll] = getAttackResults(diffCR);
 
   console.log(
-    `${winner.name} loses ${wc + wcmod}% troops, fatigue ${wf}, location ${wl}`,
+    `${winner.name} loses ${wc + wcMod}% troops, fatigue ${wf}, location ${wl}`,
   );
   console.log(
-    `${loser.name} loses ${lc + lcmod}% troops, fatigue ${lf}, location ${ll}`,
+    `${loser.name} loses ${lc + lcMod}% troops, fatigue ${lf}, location ${ll}`,
   );
 }
 

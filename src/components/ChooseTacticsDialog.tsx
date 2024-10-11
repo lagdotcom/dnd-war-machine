@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useState } from "react";
 import {
   Button,
   Dialog,
@@ -14,63 +14,70 @@ import {
 } from "react-aria-components";
 
 import { useAppDispatch, useAppSelector } from "../state/hooks";
-import {
-  ChooseTactics,
-  setChoosingTactics,
-  updateChoosingTactics,
-} from "../state/ui";
+import { selectGameState } from "../state/selectors";
+import { combat } from "../state/thunks";
+import { ChooseTacticsGameState, setGameState } from "../state/ui";
 import { selectUnitById } from "../state/units";
-import { Tactics, TacticsNames } from "../tactics";
-import isDefined from "../tools/isDefined";
+import { Tactics } from "../tactics";
 
-export default function ChooseTacticsDialog({
-  choose,
-}: {
-  choose: ChooseTactics;
-}) {
-  const attacker = useAppSelector((state) =>
-    selectUnitById(state, choose.attacker),
+const TacticsValues: Record<Key, Tactics> = {
+  Overrun: Tactics.Overrun,
+  Attack: Tactics.Attack,
+  Envelop: Tactics.Envelop,
+  Trap: Tactics.Trap,
+  Hold: Tactics.Hold,
+  Withdraw: Tactics.Withdraw,
+};
+
+const tacticsPopover = (
+  <Popover>
+    <ListBox>
+      <ListBoxItem id="Overrun">Overrun</ListBoxItem>
+      <ListBoxItem id="Attack">Attack</ListBoxItem>
+      <ListBoxItem id="Envelop">Envelop</ListBoxItem>
+      <ListBoxItem id="Trap">Trap</ListBoxItem>
+      <ListBoxItem id="Hold">Hold</ListBoxItem>
+      <ListBoxItem id="Withdraw">Withdraw</ListBoxItem>
+    </ListBox>
+  </Popover>
+);
+
+function ChooseTacticsDialog_inner({
+  attacker,
+  defender,
+  previous,
+}: ChooseTacticsGameState) {
+  const attackerUnit = useAppSelector((state) =>
+    selectUnitById(state, attacker),
   );
-  const defender = useAppSelector((state) =>
-    selectUnitById(state, choose.defender),
+  const defenderUnit = useAppSelector((state) =>
+    selectUnitById(state, defender),
   );
+
+  const [attackerTactics, setAttackerTactics] = useState<Key>("");
+  const [defenderTactics, setDefenderTactics] = useState<Key>("");
 
   const dispatch = useAppDispatch();
   const onOpenChange = useCallback(
     (isOpen: boolean) => {
-      if (!isOpen) dispatch(setChoosingTactics(undefined));
+      if (!isOpen) dispatch(setGameState(previous));
     },
-    [dispatch],
+    [dispatch, previous],
   );
 
-  const tacticsPopover = useMemo(
-    () => (
-      <Popover>
-        <ListBox>
-          {TacticsNames.map((name) => (
-            <ListBoxItem key={name}>{name}</ListBoxItem>
-          ))}
-        </ListBox>
-      </Popover>
-    ),
-    [],
-  );
+  const startFight = useCallback(() => {
+    if (attackerTactics && defenderTactics)
+      dispatch(
+        combat(
+          attacker,
+          TacticsValues[attackerTactics],
+          defender,
+          TacticsValues[defenderTactics],
+        ),
+      );
+  }, [attacker, attackerTactics, defender, defenderTactics, dispatch]);
 
-  const changeAttacker = useCallback(
-    (value: Key) => {
-      dispatch(updateChoosingTactics({ attackerTactics: value as Tactics }));
-    },
-    [dispatch],
-  );
-  const changeDefender = useCallback(
-    (value: Key) => {
-      dispatch(updateChoosingTactics({ defenderTactics: value as Tactics }));
-    },
-    [dispatch],
-  );
-
-  const isDisabled =
-    !isDefined(choose.attackerTactics) || !isDefined(choose.defenderTactics);
+  const isDisabled = attackerTactics === "" || defenderTactics === "";
 
   return (
     <Modal isDismissable isOpen onOpenChange={onOpenChange}>
@@ -79,10 +86,10 @@ export default function ChooseTacticsDialog({
 
         <div>
           <Select
-            selectedKey={choose.attackerTactics}
-            onSelectionChange={changeAttacker}
+            selectedKey={attackerTactics}
+            onSelectionChange={setAttackerTactics}
           >
-            <Label>{attacker.force.name}</Label>
+            <Label>{attackerUnit.force.name}</Label>
             <Button>
               <SelectValue />
               <span aria-hidden="true">▼</span>
@@ -90,10 +97,10 @@ export default function ChooseTacticsDialog({
             {tacticsPopover}
           </Select>
           <Select
-            selectedKey={choose.defenderTactics}
-            onSelectionChange={changeDefender}
+            selectedKey={defenderTactics}
+            onSelectionChange={setDefenderTactics}
           >
-            <Label>{defender.force.name}</Label>
+            <Label>{defenderUnit.force.name}</Label>
             <Button>
               <SelectValue />
               <span aria-hidden="true">▼</span>
@@ -102,8 +109,17 @@ export default function ChooseTacticsDialog({
           </Select>
         </div>
 
-        <Button isDisabled={isDisabled}>Fight!</Button>
+        <Button isDisabled={isDisabled} onPress={startFight}>
+          Fight!
+        </Button>
       </Dialog>
     </Modal>
   );
+}
+
+export default function ChooseTacticsDialog() {
+  const game = useAppSelector(selectGameState);
+
+  if (game.type !== "tactics") return;
+  return <ChooseTacticsDialog_inner {...game} />;
 }

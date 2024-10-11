@@ -1,6 +1,6 @@
-import { HexTag } from "../flavours";
+import { HexTag, Pixels } from "../flavours";
 import { Unit } from "../state/units";
-import { Force, QuickForce } from "../types";
+import { Fatigue, Force, QuickForce, XY } from "../types";
 import MapBuilder from "./MapBuilder";
 import { xy } from "./tools";
 
@@ -109,113 +109,118 @@ map.settlement(26, 25, "castle", "Estate of Marilenev", "walled");
 map.settlement(28, 26, "capitol", "Specularum", "stronghold");
 
 // Black Eagle Barony
-map.border(8, 17, 3, 6);
-map.border(9, 17, 4, 5);
-map.border(10, 17, 3, 6);
-map.border(11, 17, 4, 5);
-map.border(12, 17, 3, 5);
-map.border(13, 16, 3, 7);
-map.border(13, 17, 5, 7);
-map.border(13, 18, 5, 8);
-map.border(12, 19, 0, 1);
-map.border(12, 20, 5, 7);
-map.border(12, 21, 5, 8);
-map.border(11, 21, 0, 2);
-map.border(10, 22, 0, 2);
+const barony: Pixels = 1;
+map.border(8, 17, 3, 6, barony);
+map.border(9, 17, 4, 5, barony);
+map.border(10, 17, 3, 6, barony);
+map.border(11, 17, 4, 5, barony);
+map.border(12, 17, 3, 5, barony);
+map.border(13, 16, 3, 7, barony);
+map.border(13, 17, 5, 7, barony);
+map.border(13, 18, 5, 8, barony);
+map.border(12, 19, 0, 1, barony);
+map.border(12, 20, 5, 7, barony);
+map.border(12, 21, 5, 8, barony);
+map.border(11, 21, 0, 2, barony);
+map.border(10, 22, 0, 2, barony);
 
 // Grand Duchy of Karameikos
-map.border(6, 16, 2, 4, 2);
-map.border(6, 15, 2, 4, 2);
-map.border(6, 14, 2, 4, 2);
-map.border(6, 13, 2, 4, 2);
-map.border(6, 12, 2, 4, 2);
-map.border(6, 11, 2, 4, 2);
-map.border(6, 10, 2, 4, 2);
-map.border(6, 9, 2, 4, 2);
-map.border(6, 8, 2, 4, 2);
-map.border(6, 7, 2, 4, 2);
-map.border(6, 6, 2, 4, 2);
-map.border(6, 5, 2, 4, 2);
-map.border(6, 4, 2, 4, 2);
-map.border(6, 3, 2, 4, 2);
-map.border(6, 2, 2, 5, 2);
-map.border(7, 1, 3, 5, 2);
-map.border(8, 1, 3, 5, 2);
-map.border(9, 0, 3, 5, 2);
-map.border(10, 0, 3, 5, 2);
-map.border(12, 0, 4, 6, 2);
-map.border(13, 0, 4, 6, 2);
-map.border(14, 1, 4, 6, 2);
-map.border(15, 1, 4, 6, 2);
-map.border(16, 2, 4, 6, 2);
-map.border(17, 2, 4, 6, 2);
-map.border(18, 3, 4, 6, 2);
-map.border(19, 3, 4, 6, 2);
-map.border(20, 4, 4, 6, 2);
-map.border(21, 4, 4, 6, 2);
-map.border(22, 5, 4, 6, 2);
-map.border(23, 5, 4, 5, 2);
-map.border(24, 5, 3, 6, 2);
-map.border(25, 5, 4, 5, 2);
-map.border(26, 5, 3, 6, 2);
-map.border(27, 5, 4, 5, 2);
-map.border(28, 5, 3, 6, 2);
-map.border(29, 5, 4, 5, 2);
-map.border(30, 5, 3, 6, 2);
-map.border(31, 5, 4, 5, 2);
-map.border(32, 5, 3, 6, 2);
-map.border(33, 5, 4, 5, 2);
-map.border(34, 5, 3, 5, 2);
-map.border(35, 4, 3, 5, 2);
-map.border(36, 4, 3, 5, 2);
-map.border(37, 3, 3, 5, 2);
-map.border(38, 3, 3, 5, 2);
-map.border(39, 2, 3, 5, 2);
-map.border(40, 2, 3, 5, 2);
-map.border(41, 1, 3, 5, 2);
-map.border(42, 1, 3, 5, 2);
-map.border(43, 0, 3, 5, 2);
-map.border(53, 0, 5, 7, 2);
-map.border(53, 1, 5, 7, 2);
-map.border(53, 2, 5, 7, 2);
-map.border(53, 3, 5, 7, 2);
-map.border(53, 4, 5, 7, 2);
-map.border(53, 5, 5, 7, 2);
-map.border(53, 6, 5, 7, 2);
-map.border(53, 7, 5, 7, 2);
-map.border(53, 8, 5, 7, 2);
-map.border(53, 9, 5, 7, 2);
-map.border(53, 10, 5, 6, 2);
-map.border(54, 11, 4, 6, 2);
-map.border(55, 11, 4, 5, 2);
-map.border(56, 11, 3, 6, 2);
-map.border(57, 11, 4, 5, 2);
-map.border(57, 20, 0, 2, 2);
-map.border(56, 21, 0, 2, 2);
-map.border(55, 21, 0, 2, 2);
-map.border(54, 22, 0, 2, 2);
-map.border(53, 22, 0, 1, 2);
-map.border(53, 23, 5, 7, 2);
+const grandDuchy: Pixels = 2;
+map.border(6, 16, 2, 4, grandDuchy);
+map.border(6, 15, 2, 4, grandDuchy);
+map.border(6, 14, 2, 4, grandDuchy);
+map.border(6, 13, 2, 4, grandDuchy);
+map.border(6, 12, 2, 4, grandDuchy);
+map.border(6, 11, 2, 4, grandDuchy);
+map.border(6, 10, 2, 4, grandDuchy);
+map.border(6, 9, 2, 4, grandDuchy);
+map.border(6, 8, 2, 4, grandDuchy);
+map.border(6, 7, 2, 4, grandDuchy);
+map.border(6, 6, 2, 4, grandDuchy);
+map.border(6, 5, 2, 4, grandDuchy);
+map.border(6, 4, 2, 4, grandDuchy);
+map.border(6, 3, 2, 4, grandDuchy);
+map.border(6, 2, 2, 5, grandDuchy);
+map.border(7, 1, 3, 5, grandDuchy);
+map.border(8, 1, 3, 5, grandDuchy);
+map.border(9, 0, 3, 5, grandDuchy);
+map.border(10, 0, 3, 5, grandDuchy);
+map.border(12, 0, 4, 6, grandDuchy);
+map.border(13, 0, 4, 6, grandDuchy);
+map.border(14, 1, 4, 6, grandDuchy);
+map.border(15, 1, 4, 6, grandDuchy);
+map.border(16, 2, 4, 6, grandDuchy);
+map.border(17, 2, 4, 6, grandDuchy);
+map.border(18, 3, 4, 6, grandDuchy);
+map.border(19, 3, 4, 6, grandDuchy);
+map.border(20, 4, 4, 6, grandDuchy);
+map.border(21, 4, 4, 6, grandDuchy);
+map.border(22, 5, 4, 6, grandDuchy);
+map.border(23, 5, 4, 5, grandDuchy);
+map.border(24, 5, 3, 6, grandDuchy);
+map.border(25, 5, 4, 5, grandDuchy);
+map.border(26, 5, 3, 6, grandDuchy);
+map.border(27, 5, 4, 5, grandDuchy);
+map.border(28, 5, 3, 6, grandDuchy);
+map.border(29, 5, 4, 5, grandDuchy);
+map.border(30, 5, 3, 6, grandDuchy);
+map.border(31, 5, 4, 5, grandDuchy);
+map.border(32, 5, 3, 6, grandDuchy);
+map.border(33, 5, 4, 5, grandDuchy);
+map.border(34, 5, 3, 5, grandDuchy);
+map.border(35, 4, 3, 5, grandDuchy);
+map.border(36, 4, 3, 5, grandDuchy);
+map.border(37, 3, 3, 5, grandDuchy);
+map.border(38, 3, 3, 5, grandDuchy);
+map.border(39, 2, 3, 5, grandDuchy);
+map.border(40, 2, 3, 5, grandDuchy);
+map.border(41, 1, 3, 5, grandDuchy);
+map.border(42, 1, 3, 5, grandDuchy);
+map.border(43, 0, 3, 5, grandDuchy);
+map.border(53, 0, 5, 7, grandDuchy);
+map.border(53, 1, 5, 7, grandDuchy);
+map.border(53, 2, 5, 7, grandDuchy);
+map.border(53, 3, 5, 7, grandDuchy);
+map.border(53, 4, 5, 7, grandDuchy);
+map.border(53, 5, 5, 7, grandDuchy);
+map.border(53, 6, 5, 7, grandDuchy);
+map.border(53, 7, 5, 7, grandDuchy);
+map.border(53, 8, 5, 7, grandDuchy);
+map.border(53, 9, 5, 7, grandDuchy);
+map.border(53, 10, 5, 6, grandDuchy);
+map.border(54, 11, 4, 6, grandDuchy);
+map.border(55, 11, 4, 5, grandDuchy);
+map.border(56, 11, 3, 6, grandDuchy);
+map.border(57, 11, 4, 5, grandDuchy);
+map.border(57, 20, 0, 2, grandDuchy);
+map.border(56, 21, 0, 2, grandDuchy);
+map.border(55, 21, 0, 2, grandDuchy);
+map.border(54, 22, 0, 2, grandDuchy);
+map.border(53, 22, 0, 1, grandDuchy);
+map.border(53, 23, 5, 7, grandDuchy);
+
+// Highreach River etc.
+const river: Pixels = 4;
+map.line("water", river, 29, 26, "8999878989898");
+map.line("water", river - 1, 34, 17, "787788877887889");
+map.line("water", river - 1, 34, 17, "888898999998888888889");
+map.line("water", river - 1, 34, 17, "999699899899");
+map.line("water", river - 2, 44, 11, "88988899898988");
+map.line("water", river - 2, 44, 11, "969898696989");
+map.line("water", river - 2, 30, 11, "88");
+
+// Blight Swamp etc.
+map.line("water", river, 7, 17, "89898898");
+map.line("water", river - 1, 10, 12, "999699699889999");
+map.line("water", river - 1, 10, 11, "98998896");
+map.line("water", river - 1, 10, 11, "7");
+map.line("water", river - 2, 9, 10, "8898899988988");
+map.line("water", river - 2, 9, 10, "78788778888898");
 
 export const hexData = map.getHexData();
 export const locations = map.locations;
 export const borders = map.borders;
-
-export const positions = {
-  "Black Eagle Guard": xy(11, 19),
-  "Goblins E": xy(49, 19),
-  "Goblins NE": xy(43, 6),
-  Orcs: xy(52, 11),
-  Bugbears: xy(20, 21),
-  "Were-creatures": xy(3, 11),
-
-  "Ducal Guard": xy(28, 26),
-  "Men of Kelven": xy(35, 15),
-  "Thyatian Mercenaries": xy(54, 23),
-  "Western Elves": xy(31, 16),
-  "Eastern Elves": xy(55, 16),
-  Gnomes: xy(33, 10),
-};
+export const lines = map.lines;
 
 /* The Fall of the Black Eagle
 
@@ -527,92 +532,96 @@ export const Lycanthropes: QuickForce = {
   hasMagicalBeings: true,
 };
 
+const unit = (
+  force: Force,
+  position: XY,
+  side: number,
+  liegeTag?: HexTag,
+): Unit => ({
+  id: force.name,
+  side,
+  liegeTag,
+  type: "normal",
+  force,
+  fatigue: Fatigue.None,
+  fatigueDuration: 0,
+  ...position,
+});
+const quickUnit = (
+  force: QuickForce,
+  position: XY,
+  side: number,
+  liegeTag?: HexTag,
+): Unit => ({
+  id: force.name,
+  side,
+  liegeTag,
+  type: "quick",
+  force,
+  fatigue: Fatigue.None,
+  fatigueDuration: 0,
+  x: position.x,
+  y: position.y,
+});
+
+const BlackEagleGuardUnit = unit(BlackEagleGuard, xy(11, 19), 2, rebel);
+const EasternGoblinsUnit = quickUnit(EasternGoblins, xy(49, 19), 2);
+const BugbearsUnit = quickUnit(Bugbears, xy(20, 21), 2);
+const NorthEasternGoblinsUnit = quickUnit(NorthEasternGoblins, xy(43, 6), 2);
+const OrcsUnit = quickUnit(Orcs, xy(52, 11), 2);
+const LycanthropesUnit = quickUnit(Lycanthropes, xy(3, 11), 2);
+
+const DucalGuardUnit = unit(DucalGuard, xy(28, 26), 1, loyal);
+const MenOfKelvenUnit = unit(MenOfKelven, xy(35, 15), 1, loyal);
+const WesternElvesUnit = unit(WesternElves, xy(31, 16), 1);
+const GnomesUnit = quickUnit(Gnomes, xy(33, 10), 1);
+const EasternElvesUnit = unit(EasternElves, xy(55, 16), 1);
+const ThyatianMercenariesUnit = unit(ThyatianMercenaries, xy(54, 23), 1);
+
+export const scenario1Units: Unit[] = [
+  BlackEagleGuardUnit,
+  EasternGoblinsUnit,
+  BugbearsUnit,
+  DucalGuardUnit,
+  MenOfKelvenUnit,
+  WesternElvesUnit,
+  GnomesUnit,
+];
+
+/*
+You are playing a war game with the given map. You will be playing the forces in red. Your goal will be to capture and hold the city of Kelven, where the 'Men of Kelven' unit currently is. Ask me questions about the disposition of forces or any other relevant topic.
+
+Forces Overview:
+- Black Eagle Guard (200 men, well trained, excellent weapons, mounted, spellcasters)
+- Orcs (300 orcs, HD 1, Leader LV 3, archers)
+- Bugbears (80 bugbears, HD 3, Leader LV 5)
+- Eastern Goblins (300 goblins, HD 1+1, Leader LV 3)
+- Northeastern Goblins (300 goblins, HD 1+1, Leader LV 3)
+- Lycanthropes (100 monsters, HD 4, Leader LV 4, archers, resistant to non-silvered weaponry)
+
+- Ducal Guard (500 men, well trained, good weapons, mounted, spellcasters)
+- Men of Kelven (80 men, poor training)
+- Western Elves (100 elves, well trained, spellcasters, missile weapons)
+- Eastern Elves (250 elves, well trained, good weapons, spellcasters, missile weapons, silvered weapons)
+- Thyatian Mercenaries (800 men, well trained, spellcasters, missile weapons, mounted)
+- Gnomes (150 gnomes, HD 1, Leader LV 4, archers)
+
+No reinforcements are expected. Supply lines are not relevant for this scenario.
+
+Brown hexes are mountains and hinder all troops. Dark green hexes are forests which elves prefer to fight in. Hexes with grey outlines are walled and provide defensive bonuses. There is a river between Specularum (Ducal Guard location) and Kelven which splits at Kelven, requiring river crossings to attack Kelven from any direction except north and northeast.
+*/
+
 export const scenario3Units: Unit[] = [
-  {
-    id: BlackEagleGuard.name,
-    side: 2,
-    liegeTag: rebel,
-    type: "normal",
-    force: BlackEagleGuard,
-    ...positions["Black Eagle Guard"],
-  },
-  {
-    id: EasternGoblins.name,
-    side: 2,
-    type: "quick",
-    force: EasternGoblins,
-    ...positions["Goblins E"],
-  },
-  {
-    id: Bugbears.name,
-    side: 2,
-    type: "quick",
-    force: Bugbears,
-    ...positions["Bugbears"],
-  },
-  {
-    id: NorthEasternGoblins.name,
-    side: 2,
-    type: "quick",
-    force: NorthEasternGoblins,
-    ...positions["Goblins NE"],
-  },
-  {
-    id: Orcs.name,
-    side: 2,
-    type: "quick",
-    force: Orcs,
-    ...positions["Orcs"],
-  },
-  {
-    id: Lycanthropes.name,
-    side: 2,
-    type: "quick",
-    force: Lycanthropes,
-    ...positions["Were-creatures"],
-  },
-  {
-    id: DucalGuard.name,
-    side: 1,
-    liegeTag: loyal,
-    type: "normal",
-    force: DucalGuard,
-    ...positions["Ducal Guard"],
-  },
-  {
-    id: MenOfKelven.name,
-    side: 1,
-    liegeTag: loyal,
-    type: "normal",
-    force: MenOfKelven,
-    ...positions["Men of Kelven"],
-  },
-  {
-    id: WesternElves.name,
-    side: 1,
-    type: "normal",
-    force: WesternElves,
-    ...positions["Western Elves"],
-  },
-  {
-    id: Gnomes.name,
-    side: 1,
-    type: "quick",
-    force: Gnomes,
-    ...positions["Gnomes"],
-  },
-  {
-    id: EasternElves.name,
-    side: 1,
-    type: "normal",
-    force: EasternElves, // TODO these elves are equipped with silver weapons
-    ...positions["Eastern Elves"],
-  },
-  {
-    id: ThyatianMercenaries.name,
-    side: 1,
-    type: "normal",
-    force: ThyatianMercenaries,
-    ...positions["Thyatian Mercenaries"],
-  },
+  BlackEagleGuardUnit,
+  EasternGoblinsUnit,
+  BugbearsUnit,
+  NorthEasternGoblinsUnit,
+  OrcsUnit,
+  LycanthropesUnit,
+  DucalGuardUnit,
+  MenOfKelvenUnit,
+  WesternElvesUnit,
+  GnomesUnit,
+  EasternElvesUnit, // TODO these elves are equipped with silver weapons
+  ThyatianMercenariesUnit,
 ];

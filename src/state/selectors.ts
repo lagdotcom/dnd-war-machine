@@ -4,8 +4,6 @@ import { selectTerrainEntities } from "./terrain";
 import { selectAllUnits, selectUnitEntities } from "./units";
 
 export const selectAttackHexTags = (state: RootState) => state.ui.attackTags;
-export const selectChoosingTactics = (state: RootState) =>
-  state.ui.choosingTactics;
 export const selectGameState = (state: RootState) => state.ui.game;
 export const selectHoveredHexTag = (state: RootState) => state.ui.hoverHex;
 export const selectMoveHexTags = (state: RootState) => state.ui.moveTags;

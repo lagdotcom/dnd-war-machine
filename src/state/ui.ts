@@ -1,17 +1,11 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 import { Miles, Side, UnitID } from "../flavours";
-import { Tactics } from "../tactics";
 import { XYTag } from "../types";
 
 export interface PendingBattle {
   attacker: UnitID;
   defender: UnitID;
-}
-
-export interface ChooseTactics extends PendingBattle {
-  attackerTactics?: Tactics;
-  defenderTactics?: Tactics;
 }
 
 export interface MoveGameState {
@@ -20,7 +14,25 @@ export interface MoveGameState {
   movedSoFar: Record<UnitID, Miles>;
 }
 
-type GameState = MoveGameState;
+export interface ChooseTacticsGameState {
+  type: "tactics";
+  attacker: UnitID;
+  defender: UnitID;
+  previous: GameState;
+}
+
+export interface PostBattleMoveGameState {
+  type: "postMove";
+  unit: UnitID;
+  previous: GameState;
+  distance: number;
+  flee?: UnitID;
+}
+
+export type GameState =
+  | MoveGameState
+  | ChooseTacticsGameState
+  | PostBattleMoveGameState;
 
 interface UIState {
   game: GameState;
@@ -32,7 +44,6 @@ interface UIState {
   moveTags: XYTag[];
 
   pendingBattle?: PendingBattle;
-  choosingTactics?: ChooseTactics;
 }
 
 const initialState: UIState = {
@@ -71,31 +82,15 @@ const uiSlice = createSlice({
     ) {
       state.pendingBattle = payload;
     },
-
-    setChoosingTactics(
-      state,
-      { payload }: PayloadAction<ChooseTactics | undefined>,
-    ) {
-      state.choosingTactics = payload;
-    },
-    updateChoosingTactics(
-      state,
-      { payload }: PayloadAction<Partial<ChooseTactics>>,
-    ) {
-      if (state.choosingTactics)
-        state.choosingTactics = { ...state.choosingTactics, ...payload };
-    },
   },
 });
 
 export const {
   setAttackHexes,
-  setChoosingTactics,
   setGameState,
   setHoveredHex,
   setMoveHexes,
   setPendingBattle,
   setSelectedUnit,
-  updateChoosingTactics,
 } = uiSlice.actions;
 export default uiSlice.reducer;

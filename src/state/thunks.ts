@@ -1,14 +1,25 @@
 import { ThunkAction, UnknownAction } from "@reduxjs/toolkit";
 import { HexUtils } from "react-hexgrid";
 
+import { d4, d100, getPendingBattleData, getTacticsEffects } from "../battle";
+import { TroopClass } from "../calculations";
 import { cubeToOddQ, oddQToCube, tagToXY, xyTag } from "../coord-tools";
-import { Side, UnitID } from "../flavours";
-import { XYTag } from "../types";
+import { Percentage, Side, UnitID } from "../flavours";
+import {
+  FatigueResult,
+  getAttackResults,
+  LocationResult,
+  Tactics,
+} from "../tactics";
+import isDefined from "../tools/isDefined";
+import { Fatigue, XY, XYTag } from "../types";
 import { HexBorder, setBorders } from "./borders";
+import { HexLine, setLines } from "./lines";
 import { HexLocation, setLocations } from "./locations";
 import { RootState } from "./store";
 import { HexData, setTerrain } from "./terrain";
 import {
+  GameState,
   PendingBattle,
   setAttackHexes,
   setGameState,
@@ -17,7 +28,14 @@ import {
   setPendingBattle,
   setSelectedUnit,
 } from "./ui";
-import { setUnits, Unit, updateUnit } from "./units";
+import {
+  postCombatUnitUpdate,
+  PostCombatUpdate,
+  removeUnit,
+  setUnits,
+  Unit,
+  updateUnit,
+} from "./units";
 
 type AppThunk = ThunkAction<void, RootState, undefined, UnknownAction>;
 
@@ -26,6 +44,7 @@ export const beginGame =
     terrain: HexData[],
     borders: HexBorder[],
     locations: HexLocation[],
+    lines: HexLine[],
     units: Unit[],
     side: Side,
   ): AppThunk =>
@@ -33,6 +52,7 @@ export const beginGame =
     dispatch(setTerrain(terrain));
     dispatch(setBorders(borders));
     dispatch(setLocations(locations));
+    dispatch(setLines(lines));
     dispatch(setUnits(units));
     dispatch(setGameState({ type: "move", side, movedSoFar: {} }));
   };
@@ -63,28 +83,42 @@ const updateHexHighlights =
   (dispatch, getState) => {
     const {
       terrain: { entities: hexByTag },
+      ui: { game },
       units: { entities: unitByID },
     } = getState();
 
     const units = Object.values(unitByID);
     const me = unitByID[id];
-    const canAttack: Record<XYTag, UnitID> = {};
-    const canMove: XYTag[] = [];
+    const canAttack = game.type === "move";
+    const fleeFromCubic =
+      game.type === "postMove" && game.flee
+        ? oddQToCube(unitByID[game.flee])
+        : undefined;
+    const attackHexes: Record<XYTag, UnitID> = {};
+    const moveHexes: XYTag[] = [];
 
-    for (const xy of HexUtils.neighbors(oddQToCube(me))
+    const meCubic = oddQToCube(me);
+
+    for (const xy of HexUtils.neighbors(meCubic)
       .map(cubeToOddQ)
       .map(xyTag)
       .map((tag) => hexByTag[tag])
-      .filter((h) => h.terrain !== "sea")
-      .map(xyTag)) {
-      const u = units.find((u) => xyTag(u) === xy);
+      .filter(isDefined)
+      .filter((h) => h.terrain !== "sea")) {
+      const tag = xyTag(xy);
+      const u = units.find((u) => xyTag(u) === tag);
       if (u) {
-        if (u.side !== me.side) canAttack[xy] = u.id;
-      } else canMove.push(xy);
+        if (canAttack && u.side !== me.side) attackHexes[tag] = u.id;
+      } else if (
+        !fleeFromCubic ||
+        HexUtils.distance(meCubic, fleeFromCubic) <
+          HexUtils.distance(oddQToCube(xy), fleeFromCubic)
+      )
+        moveHexes.push(tag);
     }
 
-    dispatch(setAttackHexes(canAttack));
-    dispatch(setMoveHexes(canMove));
+    dispatch(setAttackHexes(attackHexes));
+    dispatch(setMoveHexes(moveHexes));
   };
 
 export const selectUnit =
@@ -105,4 +139,191 @@ export const moveUnit =
   (dispatch) => {
     dispatch(updateUnit({ id, changes: tagToXY(tag) }));
     dispatch(updateHexHighlights(id));
+  };
+
+function getBattleResults(
+  unit: Unit,
+  casualties: Percentage,
+  fatigue: FatigueResult,
+  location: LocationResult,
+  game: GameState,
+  battleHex: XY,
+  otherUnit: Unit,
+) {
+  const update: PostCombatUpdate = { id: unit.id, casualties: 0 };
+  let routed = false;
+
+  if (casualties >= 100 || fatigue === "Rout" || location.type === "rout") {
+    routed = true;
+  } else {
+    if (casualties)
+      update.casualties = Math.ceil(
+        (casualties / 100) * unit.force.numberOfTroops,
+      );
+
+    if (fatigue !== Fatigue.None)
+      update.fatigue = { level: fatigue, duration: d4() };
+
+    switch (location.type) {
+      case "forward":
+        update.position = battleHex;
+        if (location.bonus)
+          game = {
+            type: "postMove",
+            previous: game,
+            unit: unit.id,
+            distance: location.bonus,
+          };
+        break;
+
+      case "retreat":
+        game = {
+          type: "postMove",
+          previous: game,
+          unit: unit.id,
+          distance: location.bonus + 1,
+          flee: otherUnit.id,
+        };
+    }
+  }
+
+  return { routed, update, game };
+}
+
+const rout =
+  (id: UnitID): AppThunk =>
+  (dispatch, getState) => {
+    const unit = getState().units.entities[id];
+    console.log(`${unit.force.name} is routed!`);
+
+    dispatch(removeUnit(id));
+  };
+
+export const combat =
+  (
+    attackerID: UnitID,
+    attackerTactics: Tactics,
+    defenderID: UnitID,
+    defenderTactics: Tactics,
+  ): AppThunk =>
+  (dispatch, getState) => {
+    const {
+      ui: { game },
+      terrain: { entities: hexByTag },
+      units: { entities: unitByID },
+    } = getState();
+
+    if (game.type !== "tactics") throw new Error("not in tactics state");
+    dispatch(setPendingBattle());
+
+    const attacker = unitByID[attackerID];
+    const defender = unitByID[defenderID];
+
+    const defenderTag = xyTag(defender);
+
+    const attackerHex = hexByTag[xyTag(attacker)];
+    const defenderHex = hexByTag[defenderTag];
+
+    const data = getPendingBattleData(
+      attacker,
+      defender,
+      attackerHex,
+      defenderHex,
+    );
+
+    console.log(
+      `${attacker.force.name} (${attacker.force.numberOfTroops}, ${TroopClass[data.attack.tc]}) vs. ${defender.force.name} (${defender.force.numberOfTroops}, ${TroopClass[data.defense.tc]})`,
+    );
+
+    const effects = getTacticsEffects(attackerTactics, defenderTactics);
+    if (!effects) {
+      // TODO
+      throw new Error("no combat");
+    }
+
+    console.log(
+      `Attacker: ${Tactics[attackerTactics]} (${effects.attack.casualties}c/${effects.attack.rating}r) vs. Defender: ${Tactics[defenderTactics]} (${effects.defense.casualties}c/${effects.defense.rating}r)`,
+    );
+
+    const aRoll = d100();
+    const attackerRating = aRoll + data.attack.total + effects.attack.rating;
+    const attackerCasualtiesMod = effects.attack.casualties;
+
+    const dRoll = d100();
+    const defenderRating = dRoll + data.defense.total + effects.defense.rating;
+    const defenderCasualtiesMod = effects.defense.casualties;
+
+    console.log(
+      `${attackerRating} (r ${aRoll} + BR ${data.attack.br} + sit ${data.attack.sr} + tac ${effects.attack.rating}) vs. ${defenderRating} (r ${dRoll} + BR ${data.defense.br} + sit ${data.defense.sr} + tac ${effects.defense.rating})`,
+    );
+    if (attackerRating === defenderRating) {
+      // TODO
+      throw new Error("it's a draw!");
+    }
+
+    const [winner, loser, winnerCasualtyMod, loserCasualtyMod] =
+      attackerRating > defenderRating
+        ? [attacker, defender, attackerCasualtiesMod, defenderCasualtiesMod]
+        : [defender, attacker, defenderCasualtiesMod, attackerCasualtiesMod];
+    const ratingDifference = Math.abs(attackerRating - defenderRating);
+    const [
+      winnerCasualties,
+      loserCasualties,
+      winnerFatigue,
+      loserFatigue,
+      winnerLocation,
+      loserLocation,
+    ] = getAttackResults(ratingDifference);
+
+    console.log(
+      `${winner.force.name} loses ${winnerCasualties + winnerCasualtyMod}% troops, fatigue ${winnerFatigue}, location ${winnerLocation.type}+${winnerLocation.type === "rout" ? "0" : winnerLocation.bonus}`,
+    );
+    console.log(
+      `${loser.force.name} loses ${loserCasualties + loserCasualtyMod}% troops, fatigue ${loserFatigue}, location ${loserLocation.type}+${loserLocation.type === "rout" ? "0" : loserLocation.bonus}`,
+    );
+
+    let nextGame = game.previous;
+
+    {
+      const results = getBattleResults(
+        winner,
+        winnerCasualties + winnerCasualtyMod,
+        winnerFatigue,
+        winnerLocation,
+        nextGame,
+        defenderHex,
+        loser,
+      );
+      nextGame = results.game;
+
+      if (results.routed) {
+        dispatch(rout(winner.id));
+      } else {
+        dispatch(postCombatUnitUpdate(results.update));
+      }
+    }
+
+    {
+      const results = getBattleResults(
+        loser,
+        loserCasualties + loserCasualtyMod,
+        loserFatigue,
+        loserLocation,
+        nextGame,
+        defenderHex,
+        winner,
+      );
+      nextGame = results.game;
+
+      if (results.routed) {
+        dispatch(rout(loser.id));
+      } else {
+        dispatch(postCombatUnitUpdate(results.update));
+      }
+    }
+
+    // TODO this is dumb
+    dispatch(setGameState(nextGame));
+    if (nextGame.type === "postMove") dispatch(selectUnit(nextGame.unit));
+    else dispatch(deselectUnit());
   };

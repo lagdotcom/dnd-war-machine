@@ -4,7 +4,7 @@ import { ClassName, LineID, Pixels } from "../flavours";
 import { XY } from "../types";
 import { RootState } from "./store";
 
-export interface HexLine {
+export interface LineData {
   id: LineID;
   start: XY;
   end: XY;
@@ -12,7 +12,7 @@ export interface HexLine {
   className: ClassName;
 }
 
-const linesAdapter = createEntityAdapter<HexLine>();
+const linesAdapter = createEntityAdapter<LineData>();
 
 const linesSlice = createSlice({
   name: "lines",

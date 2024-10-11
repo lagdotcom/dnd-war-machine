@@ -3,7 +3,7 @@ import panZoom, { Transform } from "panzoom";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import useFlag from "../hooks/useFlag";
-import { Unit } from "../state/units";
+import { UnitData } from "../state/units";
 import { XYTag } from "../types";
 import BorderLayer from "./BorderLayer";
 import HexLayer from "./HexLayer";
@@ -14,8 +14,8 @@ import styles from "./StrategyView.module.scss";
 import UnitLayer from "./UnitLayer";
 
 export interface StrategyViewProps {
-  onClickUnit(u: Unit): void;
-  onHoverUnit(u: Unit): void;
+  onClickUnit(u: UnitData): void;
+  onHoverUnit(u: UnitData): void;
 
   onClickHex(tag: XYTag): void;
   onHoverHex(tag: XYTag): void;
@@ -50,7 +50,7 @@ export default function StrategyView({
   );
 
   const clickUnit = useCallback(
-    (u: Unit) => {
+    (u: UnitData) => {
       if (dragging) return;
       onClickUnit(u);
     },

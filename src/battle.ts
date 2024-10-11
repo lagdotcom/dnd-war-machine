@@ -8,12 +8,12 @@ import {
   troopClass,
 } from "./calculations";
 import { item, section } from "./components/SectionView";
-import { HexData } from "./state/terrain";
-import { Unit } from "./state/units";
+import { TerrainData } from "./state/terrain";
+import { UnitData } from "./state/units";
 import { getAttackEffects, Tactics, TacticsResults } from "./tactics";
 import { Fatigue, Situation } from "./types";
 
-function getBRandTC(u: Unit): [battleRating: number, troopClass: number] {
+function getBRandTC(u: UnitData): [battleRating: number, troopClass: number] {
   if (u.type === "normal") {
     const bfr = basicForceRating(u.force);
     const tc = troopClass(bfr);
@@ -25,7 +25,7 @@ function getBRandTC(u: Unit): [battleRating: number, troopClass: number] {
   return [quickBattleRating(u.force), TroopClass.Average];
 }
 
-function getFlyingAttackers(u: Unit) {
+function getFlyingAttackers(u: UnitData) {
   if (u.type === "normal")
     return percentage(u.force.flyingTroops, u.force.numberOfTroops);
 
@@ -33,10 +33,10 @@ function getFlyingAttackers(u: Unit) {
 }
 
 function getSideData(
-  unit: Unit,
+  unit: UnitData,
   tc: TroopClass,
   br: number,
-  hex: HexData,
+  hex: TerrainData,
   situation: Situation,
 ) {
   const rater = new BattleRatingModifier();
@@ -67,10 +67,10 @@ function getSideData(
 }
 
 export function getPendingBattleData(
-  attacker: Unit,
-  defender: Unit,
-  attackerHex: HexData,
-  defenderHex: HexData,
+  attacker: UnitData,
+  defender: UnitData,
+  attackerHex: TerrainData,
+  defenderHex: TerrainData,
 ) {
   const [attackerBr, attackerTc] = getBRandTC(attacker);
   const [defenderBr, defenderTc] = getBRandTC(defender);

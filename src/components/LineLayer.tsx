@@ -2,13 +2,13 @@ import { useMemo } from "react";
 
 import { useAppSelector } from "../state/hooks";
 import { selectAllLines } from "../state/lines";
-import LineXY from "./LineXY";
+import Line from "./Line";
 
 export default function LineLayer() {
   const lines = useAppSelector(selectAllLines);
 
   const lineElements = useMemo(
-    () => lines.map((line, i) => <LineXY key={i} {...line} />),
+    () => lines.map((line, i) => <Line key={i} {...line} />),
     [lines],
   );
 

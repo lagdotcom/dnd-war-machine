@@ -1,5 +1,5 @@
 import { HexTag, Pixels } from "../flavours";
-import { Unit } from "../state/units";
+import { UnitData } from "../state/units";
 import { Fatigue, Force, QuickForce, XY } from "../types";
 import MapBuilder from "./MapBuilder";
 import { xy } from "./tools";
@@ -537,7 +537,7 @@ const unit = (
   position: XY,
   side: number,
   liegeTag?: HexTag,
-): Unit => ({
+): UnitData => ({
   id: force.name,
   side,
   liegeTag,
@@ -552,7 +552,7 @@ const quickUnit = (
   position: XY,
   side: number,
   liegeTag?: HexTag,
-): Unit => ({
+): UnitData => ({
   id: force.name,
   side,
   liegeTag,
@@ -578,7 +578,7 @@ const GnomesUnit = quickUnit(Gnomes, xy(33, 10), 1);
 const EasternElvesUnit = unit(EasternElves, xy(55, 16), 1);
 const ThyatianMercenariesUnit = unit(ThyatianMercenaries, xy(54, 23), 1);
 
-export const scenario1Units: Unit[] = [
+export const scenario1Units: UnitData[] = [
   BlackEagleGuardUnit,
   EasternGoblinsUnit,
   BugbearsUnit,
@@ -611,7 +611,7 @@ No reinforcements are expected. Supply lines are not relevant for this scenario.
 Brown hexes are mountains and hinder all troops. Dark green hexes are forests which elves prefer to fight in. Hexes with grey outlines are walled and provide defensive bonuses. There is a river between Specularum (Ducal Guard location) and Kelven which splits at Kelven, requiring river crossings to attack Kelven from any direction except north and northeast.
 */
 
-export const scenario3Units: Unit[] = [
+export const scenario3Units: UnitData[] = [
   BlackEagleGuardUnit,
   EasternGoblinsUnit,
   BugbearsUnit,

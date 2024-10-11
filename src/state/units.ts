@@ -18,7 +18,7 @@ interface QuickUnit {
   force: QuickForce;
 }
 
-export type Unit = {
+export type UnitData = {
   id: UnitID;
   liegeTag?: HexTag;
   side: Side;
@@ -34,7 +34,7 @@ export interface PostCombatUpdate {
   position?: XY;
 }
 
-const unitsAdapter = createEntityAdapter<Unit>();
+const unitsAdapter = createEntityAdapter<UnitData>();
 
 const unitsSlice = createSlice({
   name: "units",

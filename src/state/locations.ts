@@ -4,14 +4,14 @@ import { LocationType } from "../flavours";
 import { XY, XYTag } from "../types";
 import { RootState } from "./store";
 
-export interface HexLocation extends XY {
+export interface LocationData extends XY {
   id: XYTag;
   type: LocationType;
   name: string;
   defense?: "walled" | "stronghold";
 }
 
-const locationsAdapter = createEntityAdapter<HexLocation>();
+const locationsAdapter = createEntityAdapter<LocationData>();
 
 const locationsSlice = createSlice({
   name: "locations",

@@ -6,7 +6,7 @@ import { useAppSelector } from "../state/hooks";
 import { selectAttackHexTags, selectMoveHexTags } from "../state/selectors";
 import { selectAllTerrain } from "../state/terrain";
 import { XY, XYTag } from "../types";
-import HexagonXY from "./HexagonXY";
+import Hexagon from "./Hexagon";
 import { useLayoutContext } from "./Layout";
 
 interface HexLayerProps {
@@ -41,7 +41,7 @@ export default function HexLayer({
   const hexElements = useMemo(
     () =>
       hexes.map((h, i) => (
-        <HexagonXY
+        <Hexagon
           key={i}
           x={h.x}
           y={h.y}

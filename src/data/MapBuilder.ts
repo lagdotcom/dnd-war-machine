@@ -1,6 +1,4 @@
-import { HexUtils } from "react-hexgrid";
-
-import { cubeToOddQ, oddQToCube, xyTag } from "../coord-tools";
+import { HexDir, oddQOffsetNeighbor, xyTag } from "../coord-tools";
 import {
   CartesianCoord,
   ClassName,
@@ -11,10 +9,11 @@ import {
   TerrainType,
 } from "../flavours";
 import { TerrainEffect } from "../movement";
-import { HexBorder } from "../state/borders";
-import { HexLine } from "../state/lines";
-import { HexLocation } from "../state/locations";
-import { HexData } from "../state/terrain";
+import { BorderData } from "../state/borders";
+import { LineData } from "../state/lines";
+import { LocationData } from "../state/locations";
+import { TerrainData } from "../state/terrain";
+import isDefined from "../tools/isDefined";
 import { XY, XYTag } from "../types";
 
 const conversions: Record<
@@ -30,10 +29,10 @@ const conversions: Record<
 };
 
 export default class MapBuilder {
-  borders: HexBorder[];
-  hexes: Record<XYTag, HexData>;
-  locations: HexLocation[];
-  lines: HexLine[];
+  borders: BorderData[];
+  hexes: Record<XYTag, TerrainData>;
+  locations: LocationData[];
+  lines: LineData[];
   private nextLineID: LineID;
 
   constructor() {
@@ -143,17 +142,18 @@ export default class MapBuilder {
         start = end;
         lastPathChar = ch;
       }
+      if (!isDefined(dir)) return;
 
-      end = cubeToOddQ(HexUtils.neighbor(oddQToCube(end), dir ?? 0));
+      end = oddQOffsetNeighbor(end, dir);
     }
   }
 }
 
-const pathToDir: Record<string, number> = {
-  "6": 0,
-  "5": 5,
-  "4": 4,
-  "7": 3,
-  "8": 2,
-  "9": 1,
+const pathToDir: Partial<Record<string, HexDir>> = {
+  "4": HexDir.SW,
+  "5": HexDir.S,
+  "6": HexDir.SE,
+  "7": HexDir.NW,
+  "8": HexDir.N,
+  "9": HexDir.NE,
 };

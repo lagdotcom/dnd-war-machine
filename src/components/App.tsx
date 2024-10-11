@@ -26,7 +26,7 @@ import {
   selectUnit,
 } from "../state/thunks";
 import { setGameState } from "../state/ui";
-import { Unit } from "../state/units";
+import { UnitData } from "../state/units";
 import { XYTag } from "../types";
 import styles from "./App.module.scss";
 import ChooseTacticsDialog from "./ChooseTacticsDialog";
@@ -67,7 +67,7 @@ export default function App() {
   );
 
   const onClickUnit = useCallback(
-    (u: Unit) => {
+    (u: UnitData) => {
       if (pendingBattle?.defender === u.id) {
         dispatch(
           setGameState({ ...pendingBattle, type: "tactics", previous: game }),
@@ -89,7 +89,7 @@ export default function App() {
   );
 
   const onHoverUnit = useCallback(
-    (u: Unit) => onHoverHex(xyTag(u)),
+    (u: UnitData) => onHoverHex(xyTag(u)),
     [onHoverHex],
   );
 

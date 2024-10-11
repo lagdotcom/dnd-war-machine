@@ -4,14 +4,14 @@ import { Pixels } from "../flavours";
 import { XY, XYTag } from "../types";
 import { RootState } from "./store";
 
-export interface HexBorder extends XY {
+export interface BorderData extends XY {
   id: XYTag;
   thickness: Pixels;
   start: number;
   end: number;
 }
 
-const bordersAdapter = createEntityAdapter<HexBorder>();
+const bordersAdapter = createEntityAdapter<BorderData>();
 
 const bordersSlice = createSlice({
   name: "borders",

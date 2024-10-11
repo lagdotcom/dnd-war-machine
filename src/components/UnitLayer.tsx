@@ -1,10 +1,10 @@
 import { useAppSelector } from "../state/hooks";
-import { selectAllUnits, Unit } from "../state/units";
-import UnitXY from "./UnitXY";
+import { selectAllUnits, UnitData } from "../state/units";
+import Unit from "./Unit";
 
 export interface UnitLayerProps {
-  onClick?: (unit: Unit) => void;
-  onHover?: (unit: Unit) => void;
+  onClick?: (unit: UnitData) => void;
+  onHover?: (unit: UnitData) => void;
 }
 
 export default function UnitLayer({ onClick, onHover }: UnitLayerProps) {
@@ -13,7 +13,7 @@ export default function UnitLayer({ onClick, onHover }: UnitLayerProps) {
   return (
     <g id="units">
       {units.map((u) => (
-        <UnitXY key={u.id} unit={u} onClick={onClick} onHover={onHover} />
+        <Unit key={u.id} unit={u} onClick={onClick} onHover={onHover} />
       ))}
     </g>
   );

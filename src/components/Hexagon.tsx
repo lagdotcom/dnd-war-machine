@@ -1,12 +1,11 @@
 import { PropsWithChildren, useMemo } from "react";
-import { HexUtils } from "react-hexgrid";
 
-import { oddQToCube } from "../coord-tools";
+import { oddQToPixel } from "../coord-tools";
 import { ClassName } from "../flavours";
 import { XY } from "../types";
 import { useLayoutContext } from "./Layout";
 
-export type HexagonXYProps = PropsWithChildren<
+export type HexagonProps = PropsWithChildren<
   XY & {
     className?: ClassName;
     fill?: string;
@@ -14,19 +13,18 @@ export type HexagonXYProps = PropsWithChildren<
   }
 >;
 
-export default function HexagonXY({
+export default function Hexagon({
   children,
   x,
   y,
   className,
   fill,
   extra,
-}: HexagonXYProps) {
+}: HexagonProps) {
   const { layout, pointsAsString } = useLayoutContext();
 
   const transform = useMemo(() => {
-    const qrs = oddQToCube({ x, y });
-    const pixel = HexUtils.hexToPixel(qrs, layout);
+    const pixel = oddQToPixel(layout, { x, y });
     return `translate(${pixel.x}, ${pixel.y})`;
   }, [x, y, layout]);
 

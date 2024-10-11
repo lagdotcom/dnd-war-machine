@@ -6,11 +6,11 @@ import {
   BattleRater,
   QuickBattleRater,
 } from "../calculations";
-import { Unit } from "../state/units";
+import { UnitData } from "../state/units";
 import { Force, HitDice, QuickForce } from "../types";
 import SectionView, { item, RatingSection, section } from "./SectionView";
 
-function getRatings(u: Unit): RatingSection[] {
+function getRatings(u: UnitData): RatingSection[] {
   if (u.type === "normal") {
     const forceRater = new BasicForceRater();
     const bfr = forceRater.rate(u.force);
@@ -55,7 +55,7 @@ function getRatings(u: Unit): RatingSection[] {
 }
 
 export interface UnitViewProps {
-  unit: Unit;
+  unit: UnitData;
 }
 
 export default function UnitView({ unit }: UnitViewProps) {

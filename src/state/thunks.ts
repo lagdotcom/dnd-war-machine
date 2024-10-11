@@ -1,9 +1,8 @@
 import { ThunkAction, UnknownAction } from "@reduxjs/toolkit";
-import { HexUtils } from "react-hexgrid";
 
 import { d4, d100, getPendingBattleData, getTacticsEffects } from "../battle";
 import { TroopClass } from "../calculations";
-import { cubeToOddQ, oddQToCube, tagToXY, xyTag } from "../coord-tools";
+import { oddQDistance, oddQNeighbors, tagToXY, xyTag } from "../coord-tools";
 import { Percentage, Side, UnitID } from "../flavours";
 import {
   FatigueResult,
@@ -13,11 +12,11 @@ import {
 } from "../tactics";
 import isDefined from "../tools/isDefined";
 import { Fatigue, XY, XYTag } from "../types";
-import { HexBorder, setBorders } from "./borders";
-import { HexLine, setLines } from "./lines";
-import { HexLocation, setLocations } from "./locations";
+import { BorderData, setBorders } from "./borders";
+import { LineData, setLines } from "./lines";
+import { LocationData, setLocations } from "./locations";
 import { RootState } from "./store";
-import { HexData, setTerrain } from "./terrain";
+import { TerrainData, setTerrain } from "./terrain";
 import {
   GameState,
   PendingBattle,
@@ -33,7 +32,7 @@ import {
   PostCombatUpdate,
   removeUnit,
   setUnits,
-  Unit,
+  UnitData,
   updateUnit,
 } from "./units";
 
@@ -41,11 +40,11 @@ type AppThunk = ThunkAction<void, RootState, undefined, UnknownAction>;
 
 export const beginGame =
   (
-    terrain: HexData[],
-    borders: HexBorder[],
-    locations: HexLocation[],
-    lines: HexLine[],
-    units: Unit[],
+    terrain: TerrainData[],
+    borders: BorderData[],
+    locations: LocationData[],
+    lines: LineData[],
+    units: UnitData[],
     side: Side,
   ): AppThunk =>
   (dispatch) => {
@@ -90,17 +89,12 @@ const updateHexHighlights =
     const units = Object.values(unitByID);
     const me = unitByID[id];
     const canAttack = game.type === "move";
-    const fleeFromCubic =
-      game.type === "postMove" && game.flee
-        ? oddQToCube(unitByID[game.flee])
-        : undefined;
+    const fleeFrom =
+      game.type === "postMove" && game.flee ? unitByID[game.flee] : undefined;
     const attackHexes: Record<XYTag, UnitID> = {};
     const moveHexes: XYTag[] = [];
 
-    const meCubic = oddQToCube(me);
-
-    for (const xy of HexUtils.neighbors(meCubic)
-      .map(cubeToOddQ)
+    for (const xy of oddQNeighbors(me)
       .map(xyTag)
       .map((tag) => hexByTag[tag])
       .filter(isDefined)
@@ -110,9 +104,8 @@ const updateHexHighlights =
       if (u) {
         if (canAttack && u.side !== me.side) attackHexes[tag] = u.id;
       } else if (
-        !fleeFromCubic ||
-        HexUtils.distance(meCubic, fleeFromCubic) <
-          HexUtils.distance(oddQToCube(xy), fleeFromCubic)
+        !fleeFrom ||
+        oddQDistance(me, fleeFrom) < oddQDistance(xy, fleeFrom)
       )
         moveHexes.push(tag);
     }
@@ -142,13 +135,13 @@ export const moveUnit =
   };
 
 function getBattleResults(
-  unit: Unit,
+  unit: UnitData,
   casualties: Percentage,
   fatigue: FatigueResult,
   location: LocationResult,
   game: GameState,
   battleHex: XY,
-  otherUnit: Unit,
+  otherUnit: UnitData,
 ) {
   const update: PostCombatUpdate = { id: unit.id, casualties: 0 };
   let routed = false;

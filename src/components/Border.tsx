@@ -1,11 +1,10 @@
 import { useMemo } from "react";
-import { HexUtils } from "react-hexgrid";
 
-import { oddQToCube } from "../coord-tools";
-import { HexBorder } from "../state/borders";
+import { oddQToPixel } from "../coord-tools";
+import { BorderData } from "../state/borders";
 import { useLayoutContext } from "./Layout";
 
-export default function BorderXY({ x, y, thickness, start, end }: HexBorder) {
+export default function Border({ x, y, thickness, start, end }: BorderData) {
   const { layout, points } = useLayoutContext();
 
   const linePoints = useMemo(() => {
@@ -20,8 +19,7 @@ export default function BorderXY({ x, y, thickness, start, end }: HexBorder) {
   }, [points, start, end]);
 
   const transform = useMemo(() => {
-    const qrs = oddQToCube({ x, y });
-    const pixel = HexUtils.hexToPixel(qrs, layout);
+    const pixel = oddQToPixel(layout, { x, y });
     return `translate(${pixel.x},${pixel.y})`;
   }, [x, y, layout]);
 
